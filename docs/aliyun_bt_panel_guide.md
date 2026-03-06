@@ -12,10 +12,11 @@
 2. [环境软件安装](#2-环境软件安装)
 3. [数据库配置](#3-数据库配置)
 4. [后端服务部署](#4-后端服务部署)
-5. [网站与 SSL 配置](#5-网站与 ssl 配置)
-6. [Nginx 反向代理配置](#6-nginx 反向代理配置)
+5. [网站与 SSL 配置](#5-网站与-ssl-配置)
+6. [Nginx 反向代理配置](#6-nginx-反向代理配置)
 7. [客户端配置](#7-客户端配置)
 8. [常见问题排查](#8-常见问题排查)
+9. [前端网站部署](#9-前端网站部署)
 
 ---
 
@@ -602,6 +603,67 @@ netstat -tlnp | grep 8080
 - 定期更新宝塔面板
 - 定期更新 Node.js 依赖
 - 定期更新 SSL 证书（Let's Encrypt 90 天有效期）
+
+---
+
+## 🌐 前端网站部署
+
+### 9.1 前端文件结构
+
+前端网站文件位于项目根目录的 `web/` 目录下：
+
+```
+web/
+├── index.html          # 首页（登录/注册）
+├── download.html       # 下载页面
+├── about.html          # 关于页面
+├── css/
+│   ├── style.css       # 通用样式
+│   ├── download.css    # 下载页面样式
+│   └── about.css       # 关于页面样式
+├── js/
+│   └── main.js         # JavaScript 逻辑
+├── images/             # 图片资源
+└── downloads/          # 客户端安装包目录
+```
+
+### 9.2 上传前端文件
+
+1. 将 `web/` 目录上传到服务器项目目录
+2. 确保文件权限正确（通常 644 即可）
+
+### 9.3 配置客户端下载包
+
+将编译好的客户端安装包放入 `web/downloads/` 目录：
+
+- `XWChat-Setup-Windows.exe` - Windows 安装包
+- `XWChat-Setup-macOS.dmg` - macOS 安装包
+- `XWChat-Setup-Linux.AppImage` - Linux 安装包
+
+### 9.4 访问网站
+
+部署完成后，通过以下方式访问：
+
+- **首页**: `https://your-domain.com/`
+- **下载页**: `https://your-domain.com/download.html`
+- **关于页**: `https://your-domain.com/about.html`
+
+### 9.5 API 配置说明
+
+前端 JavaScript 会自动根据环境配置 API 地址：
+
+- **本地开发**: `http://localhost:8080/api`
+- **生产环境**: `/api` (通过 Nginx 反向代理)
+
+确保 Nginx 反向代理配置正确，将 `/api` 请求代理到 Node.js 服务。
+
+### 9.6 自定义网站内容
+
+如需修改网站内容，编辑以下文件：
+
+- **网站标题/文案**: 编辑各 HTML 文件
+- **样式颜色**: 编辑 `css/style.css` 中的 CSS 变量
+- **联系方式**: 编辑 `about.html` 中的联系信息
 
 ---
 

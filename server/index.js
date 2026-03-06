@@ -9,6 +9,8 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { Pool } = require('pg');
 const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -25,6 +27,22 @@ const pool = new Pool({
 
 app.use(cors());
 app.use(express.json());
+
+// 静态文件服务 - 前端网站
+const webPath = path.join(__dirname, '..', 'web');
+if (fs.existsSync(webPath)) {
+    app.use(express.static(webPath));
+    console.log('[Static] Serving frontend from:', webPath);
+} else {
+    console.warn('[Static] Web directory not found:', webPath);
+}
+
+// 下载目录静态文件服务
+const downloadsPath = path.join(__dirname, '..', 'web', 'downloads');
+if (fs.existsSync(downloadsPath)) {
+    app.use('/downloads', express.static(downloadsPath));
+    console.log('[Static] Serving downloads from:', downloadsPath);
+}
 
 // 请求日志中间件
 app.use((req, res, next) => {
@@ -543,6 +561,62 @@ app.put('/api/users/:userId/password', authenticateToken, async (req, res) => {
         console.error('Admin set password error:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+// --- 下载 API ---
+
+// 获取可用的下载文件列表
+app.get('/api/downloads', (req, res) => {
+    const downloadsDir = path.join(__dirname, '..', 'web', 'downloads');
+    
+    if (!fs.existsSync(downloadsDir)) {
+        return res.json({ files: [], message: 'No downloads available' });
+    }
+    
+    const files = fs.readdirSync(downloadsDir).map(file => {
+        const filePath = path.join(downloadsDir, file);
+        const stats = fs.statSync(filePath);
+        return {
+            name: file,
+            size: stats.size,
+            sizeFormatted: formatFileSize(stats.size),
+            downloadUrl: `/downloads/${file}`
+        };
+    });
+    
+    res.json({ files });
+});
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let size = bytes;
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+        size /= 1024;
+        unitIndex++;
+    }
+    return `${size.toFixed(2)} ${units[unitIndex]}`;
+}
+
+// 下载文件
+app.get('/api/download/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, '..', 'web', 'downloads', filename);
+    
+    // 安全检查：防止目录遍历攻击
+    const normalizedPath = path.normalize(filePath);
+    const downloadsDir = path.join(__dirname, '..', 'web', 'downloads');
+    
+    if (!normalizedPath.startsWith(downloadsDir)) {
+        return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+    
+    res.download(filePath, filename);
 });
 
 // --- WebSocket 处理 ---

@@ -72,7 +72,6 @@ public:
     Q_INVOKABLE void setCurrentConversation(const QString &conversationId);
     Q_INVOKABLE void refreshConversations();
     Q_INVOKABLE void refreshMessages(const QString &conversationId);
-
     Q_INVOKABLE void logout();
     Q_INVOKABLE void changePassword(const QString &newPassword);
     Q_INVOKABLE void connectToDefaultChatServer();
@@ -123,6 +122,7 @@ signals:
     void currentConversationIdChanged();
     void messageReceived(const QString &conversationId, const QVariantMap &message);
     void conversationUpdated(const QString &conversationId);
+    void messagesRefreshed(const QString &conversationId);  // 消息刷新完成信号
     void connectedChanged(bool connected);
     void currentUserIdChanged();
     void currentUserNameChanged();

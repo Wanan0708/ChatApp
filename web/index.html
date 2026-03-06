@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XWChat - 即时通讯，连接你我</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <span class="logo-icon">💬</span>
+                <span class="logo-text">XWChat</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home" class="active">首页</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="btn btn-ghost" onclick="showLogin()">登录</button>
+                <button class="btn btn-primary" onclick="showRegister()">注册</button>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main>
+        <!-- Hero 区域 -->
+        <section id="home" class="hero">
+            <div class="hero-bg">
+                <div class="gradient-orb orb-1"></div>
+                <div class="gradient-orb orb-2"></div>
+                <div class="gradient-orb orb-3"></div>
+            </div>
+            <div class="container hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">
+                        <span class="gradient-text">即时通讯</span>
+                        <br>连接你我
+                    </h1>
+                    <p class="hero-subtitle">
+                        XWChat 是一款现代化的即时通讯应用，支持实时消息、好友管理、
+                        群组聊天等功能，让您随时随地与他人保持联系。
+                    </p>
+                    <div class="hero-actions">
+                        <a href="download.html" class="btn btn-primary btn-lg">
+                            <span>📥</span> 立即下载
+                        </a>
+                        <a href="#features" class="btn btn-outline btn-lg">
+                            了解更多
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-number">10K+</span>
+                            <span class="stat-label">活跃用户</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">99.9%</span>
+                            <span class="stat-label">在线率</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">24/7</span>
+                            <span class="stat-label">技术支持</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="chat-preview">
+                        <div class="chat-header">
+                            <div class="chat-avatar"></div>
+                            <div class="chat-info">
+                                <span class="chat-name">XWChat</span>
+                                <span class="chat-status">在线</span>
+                            </div>
+                        </div>
+                        <div class="chat-messages">
+                            <div class="message received">
+                                <div class="message-bubble">你好！欢迎使用 XWChat 👋</div>
+                                <span class="message-time">10:30</span>
+                            </div>
+                            <div class="message sent">
+                                <div class="message-bubble">很高兴加入这个平台！</div>
+                                <span class="message-time">10:31</span>
+                            </div>
+                            <div class="message received">
+                                <div class="message-bubble">让我们一起探索即时通讯的乐趣吧！✨</div>
+                                <span class="message-time">10:32</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 功能特性 -->
+        <section id="features" class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">核心功能</h2>
+                    <p class="section-subtitle">为您提供全方位的即时通讯体验</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>实时消息</h3>
+                        <p>基于 WebSocket 技术，消息即时送达，零延迟沟通体验</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">👥</div>
+                        <h3>好友管理</h3>
+                        <p>轻松添加好友，管理联系人，建立您的社交网络</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3>安全加密</h3>
+                        <p>采用 JWT 认证和加密传输，保障您的通讯安全</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3>群组聊天</h3>
+                        <p>支持多人同时在线聊天，团队协作更高效</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>跨平台支持</h3>
+                        <p>Windows、macOS、Linux 全平台覆盖，随时随地畅聊</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎨</div>
+                        <h3>个性化主题</h3>
+                        <p>丰富的主题和个性化设置，打造专属聊天体验</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 下载引导 -->
+        <section class="download-cta">
+            <div class="container">
+                <div class="download-content">
+                    <h2>开始您的即时通讯之旅</h2>
+                    <p>立即下载 XWChat 客户端，体验流畅的沟通乐趣</p>
+                    <a href="download.html" class="btn btn-primary btn-lg">
+                        <span>🚀</span> 免费下载
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <span class="logo-icon">💬</span>
+                        <span class="logo-text">XWChat</span>
+                    </div>
+                    <p>让沟通更简单，让连接更紧密</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>产品</h4>
+                        <ul>
+                            <li><a href="download.html">下载</a></li>
+                            <li><a href="about.html">关于</a></li>
+                            <li><a href="#features">功能</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>支持</h4>
+                        <ul>
+                            <li><a href="#">帮助中心</a></li>
+                            <li><a href="#">联系我们</a></li>
+                            <li><a href="#">隐私政策</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 XWChat. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 登录模态框 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content auth-modal">
+            <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
+            <div class="auth-header">
+                <h2>欢迎回来</h2>
+                <p>登录您的 XWChat 账号</p>
+            </div>
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername">用户名</label>
+                    <input type="text" id="loginUsername" name="username" required placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">密码</label>
+                    <input type="password" id="loginPassword" name="password" required placeholder="请输入密码">
+                </div>
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember">
+                        <span>记住我</span>
+                    </label>
+                    <a href="#" class="forgot-link">忘记密码？</a>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">登录</button>
+            </form>
+            <div class="auth-footer">
+                <p>还没有账号？<a href="#" onclick="showRegister()">立即注册</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content auth-modal">
+            <button class="modal-close" onclick="closeModal('registerModal')">&times;</button>
+            <div class="auth-header">
+                <h2>创建账号</h2>
+                <p>加入我们，开始畅聊</p>
+            </div>
+            <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="registerUsername">用户名</label>
+                    <input type="text" id="registerUsername" name="username" required placeholder="3-20 位字母、数字或下划线">
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">密码</label>
+                    <input type="password" id="registerPassword" name="password" required placeholder="至少 6 位字符">
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirm">确认密码</label>
+                    <input type="password" id="registerConfirm" name="confirmPassword" required placeholder="再次输入密码">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">注册</button>
+            </form>
+            <div class="auth-footer">
+                <p>已有账号？<a href="#" onclick="showLogin()">立即登录</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

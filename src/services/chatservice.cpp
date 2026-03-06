@@ -138,6 +138,9 @@ void ChatService::handleMessagesLoaded(const QString &conversationId, const QVec
         msgMap["timestamp"] = msg.timestamp;
         msgModel->addMessage(msgMap);
     }
+    
+    // 发出消息刷新完成信号，通知 QML 滚动到底部
+    emit messagesRefreshed(conversationId);
 }
 
 MessageModel* ChatService::getMessageModel(const QString &conversationId)

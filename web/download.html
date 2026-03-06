@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下载 - XWChat</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/download.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <span class="logo-icon">💬</span>
+                <span class="logo-text">XWChat</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="download.html" class="active">下载</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="btn btn-ghost" onclick="showLogin()">登录</button>
+                <button class="btn btn-primary" onclick="showRegister()">注册</button>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main>
+        <!-- 下载头部 -->
+        <section class="download-hero">
+            <div class="container">
+                <h1>选择您的平台</h1>
+                <p>下载 XWChat 客户端，开始您的即时通讯之旅</p>
+            </div>
+        </section>
+
+        <!-- 下载卡片 -->
+        <section class="download-section">
+            <div class="container">
+                <div class="download-grid">
+                    <!-- Windows -->
+                    <div class="download-card">
+                        <div class="platform-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4h-13.05M0 12.6h9.75v9.451L0 20.551M10.949 12.6H24V24l-12.9-1.801"/>
+                            </svg>
+                        </div>
+                        <h3>Windows</h3>
+                        <p class="platform-desc">适用于 Windows 10/11</p>
+                        <p class="version-info">版本 1.0.0 | 64 位</p>
+                        <div class="download-actions">
+                            <button class="btn btn-primary btn-block" onclick="downloadClient('windows')">
+                                <span>📥</span> 下载客户端
+                            </button>
+                            <span class="file-size">约 150 MB</span>
+                            <p class="download-note">📦 解压后即可运行</p>
+                        </div>
+                    </div>
+
+                    <!-- macOS -->
+                    <div class="download-card">
+                        <div class="platform-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-.8 1.94-.8s.16 1.06-.59 1.91c-.73.85-1.94.8-1.94.8s-.17-1.06.59-1.91"/>
+                            </svg>
+                        </div>
+                        <h3>macOS</h3>
+                        <p class="platform-desc">适用于 macOS 10.15+</p>
+                        <p class="version-info">版本 1.0.0 | Intel/Apple Silicon</p>
+                        <div class="download-actions">
+                            <button class="btn btn-primary btn-block" onclick="downloadClient('macos')">
+                                <span>📥</span> 下载客户端
+                            </button>
+                            <span class="file-size">约 160 MB</span>
+                            <p class="download-note">📦 解压后即可运行</p>
+                        </div>
+                    </div>
+
+                    <!-- Linux -->
+                    <div class="download-card">
+                        <div class="platform-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                            </svg>
+                        </div>
+                        <h3>Linux</h3>
+                        <p class="platform-desc">适用于 Ubuntu/Debian/CentOS</p>
+                        <p class="version-info">版本 1.0.0 | 64 位</p>
+                        <div class="download-actions">
+                            <button class="btn btn-primary btn-block" onclick="downloadClient('linux')">
+                                <span>📥</span> 下载客户端
+                            </button>
+                            <span class="file-size">约 140 MB</span>
+                            <p class="download-note">📦 解压后即可运行</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 其他下载选项 -->
+                <div class="more-downloads">
+                    <h3>其他下载方式</h3>
+                    <div class="download-links">
+                        <a href="#" class="download-link">
+                            <span>📦</span> Windows MSI 安装包
+                            <span class="badge">企业版</span>
+                        </a>
+                        <a href="#" class="download-link">
+                            <span>📦</span> macOS PKG 安装包
+                            <span class="badge">企业版</span>
+                        </a>
+                        <a href="#" class="download-link">
+                            <span>🐧</span> Linux DEB 包
+                            <span>Debian/Ubuntu</span>
+                        </a>
+                        <a href="#" class="download-link">
+                            <span>🐧</span> Linux RPM 包
+                            <span>RHEL/CentOS</span>
+                        </a>
+                        <a href="#" class="download-link">
+                            <span>📋</span> 查看所有版本
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 安装指南 -->
+        <section class="install-guide">
+            <div class="container">
+                <h2>安装指南</h2>
+                <div class="guide-grid">
+                    <div class="guide-card">
+                        <div class="guide-number">1</div>
+                        <h4>下载安装包</h4>
+                        <p>根据您的操作系统选择对应的安装包进行下载</p>
+                    </div>
+                    <div class="guide-card">
+                        <div class="guide-number">2</div>
+                        <h4>运行安装程序</h4>
+                        <p>双击下载的安装包，按照提示完成安装</p>
+                    </div>
+                    <div class="guide-card">
+                        <div class="guide-number">3</div>
+                        <h4>登录账号</h4>
+                        <p>打开应用，使用您的账号登录即可开始使用</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 系统要求 -->
+        <section class="requirements">
+            <div class="container">
+                <h2>系统要求</h2>
+                <div class="requirements-grid">
+                    <div class="requirement-item">
+                        <h4>Windows</h4>
+                        <ul>
+                            <li>Windows 10 或更高版本</li>
+                            <li>64 位处理器</li>
+                            <li>至少 4GB 内存</li>
+                            <li>至少 500MB 可用磁盘空间</li>
+                        </ul>
+                    </div>
+                    <div class="requirement-item">
+                        <h4>macOS</h4>
+                        <ul>
+                            <li>macOS 10.15 (Catalina) 或更高版本</li>
+                            <li>Intel 或 Apple Silicon 处理器</li>
+                            <li>至少 4GB 内存</li>
+                            <li>至少 500MB 可用磁盘空间</li>
+                        </ul>
+                    </div>
+                    <div class="requirement-item">
+                        <h4>Linux</h4>
+                        <ul>
+                            <li>Ubuntu 18.04+ / Debian 10+ / CentOS 7+</li>
+                            <li>64 位处理器</li>
+                            <li>至少 4GB 内存</li>
+                            <li>至少 500MB 可用磁盘空间</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <span class="logo-icon">💬</span>
+                        <span class="logo-text">XWChat</span>
+                    </div>
+                    <p>让沟通更简单，让连接更紧密</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>产品</h4>
+                        <ul>
+                            <li><a href="download.html">下载</a></li>
+                            <li><a href="about.html">关于</a></li>
+                            <li><a href="index.html#features">功能</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>支持</h4>
+                        <ul>
+                            <li><a href="#">帮助中心</a></li>
+                            <li><a href="#">联系我们</a></li>
+                            <li><a href="#">隐私政策</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 XWChat. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 登录模态框 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content auth-modal">
+            <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
+            <div class="auth-header">
+                <h2>欢迎回来</h2>
+                <p>登录您的 XWChat 账号</p>
+            </div>
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername">用户名</label>
+                    <input type="text" id="loginUsername" name="username" required placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">密码</label>
+                    <input type="password" id="loginPassword" name="password" required placeholder="请输入密码">
+                </div>
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember">
+                        <span>记住我</span>
+                    </label>
+                    <a href="#" class="forgot-link">忘记密码？</a>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">登录</button>
+            </form>
+            <div class="auth-footer">
+                <p>还没有账号？<a href="#" onclick="showRegister()">立即注册</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content auth-modal">
+            <button class="modal-close" onclick="closeModal('registerModal')">&times;</button>
+            <div class="auth-header">
+                <h2>创建账号</h2>
+                <p>加入我们，开始畅聊</p>
+            </div>
+            <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="registerUsername">用户名</label>
+                    <input type="text" id="registerUsername" name="username" required placeholder="3-20 位字母、数字或下划线">
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">密码</label>
+                    <input type="password" id="registerPassword" name="password" required placeholder="至少 6 位字符">
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirm">确认密码</label>
+                    <input type="password" id="registerConfirm" name="confirmPassword" required placeholder="再次输入密码">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">注册</button>
+            </form>
+            <div class="auth-footer">
+                <p>已有账号？<a href="#" onclick="showLogin()">立即登录</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

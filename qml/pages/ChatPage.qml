@@ -11,14 +11,18 @@ ColumnLayout {
     property string currentTitle: ""
     property var messageModel: null  // 初始为空
 
-    // 当会话ID改变时，刷新消息模型
+    // 当会话 ID 改变时，刷新消息模型
     onCurrentConversationIdChanged: {
         messageModel = ChatService.getMessageModel(currentConversationId)
         console.log("[ChatPage] Switched to conversation:", currentConversationId)
-        
+
         // 主动加载消息
         if (currentConversationId !== "") {
             ChatService.refreshMessages(currentConversationId)
+            // 延迟滚动到底部，确保消息已加载
+            Qt.callLater(function() {
+                scrollToBottom()
+            })
         }
     }
 
@@ -39,23 +43,51 @@ ColumnLayout {
         }
     }
 
+    // 监听消息刷新完成信号，滚动到底部
+    Connections {
+        target: ChatService
+        function onMessagesRefreshed(conversationId) {
+            // 如果是当前会话，滚动到底部显示最新消息
+            if (conversationId === root.currentConversationId) {
+                Qt.callLater(function() {
+                    chatView.positionViewAtEnd()
+                })
+            }
+        }
+    }
+
+    // 监听消息模型变化，确保首次加载时滚动到底部
+    onMessageModelChanged: {
+        if (messageModel && currentConversationId !== "") {
+            Qt.callLater(function() {
+                scrollToBottom()
+            })
+        }
+    }
+
+    function scrollToBottom() {
+        if (chatView && chatView.count > 0) {
+            chatView.positionViewAtEnd()
+        }
+    }
+
     // 如果未选择会话，显示占位提示
     Item {
         Layout.fillWidth: true
         Layout.fillHeight: true
         visible: root.currentConversationId === ""
-        
+
         Column {
             anchors.centerIn: parent
             spacing: 16
-            
+
             Text {
                 text: "💬"
                 font.pixelSize: 64
                 color: "#e0e0e0"
                 anchors.horizontalCenter: parent.horizontalCenter
             }
-            
+
             Text {
                 text: "请选择一个会话开始聊天"
                 font.pixelSize: 16
@@ -96,7 +128,7 @@ ColumnLayout {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 2
-                    
+
                     Text {
                         Layout.fillWidth: true
                         text: root.currentTitle || "请选择会话"
@@ -143,14 +175,8 @@ ColumnLayout {
             clip: true
             model: root.messageModel
             spacing: 1
+            highlightRangeMode: ListView.StrictlyEnforceRange
 
-            // 当数据变化时，自动滚动到底部（最新消息）
-            onCountChanged: {
-                if (count > 0) {
-                    positionViewAtEnd()
-                }
-            }
-            
             delegate: Item {
                 width: ListView.view.width
                 height: Math.max(bubble.height + 16, 44)  // 确保最小高度
@@ -281,11 +307,11 @@ ColumnLayout {
         if (inputText.text.trim() === "") return
 
         var content = inputText.text.trim()
-        
+
         // 如果 currentConversationId 是用户 ID（以 user_开头），直接发送
         // 后端会自动创建会话
         ChatService.sendMessage(currentConversationId, content)
-        
+
         console.log("[ChatPage] Sent message:", content)
 
         inputText.text = ""

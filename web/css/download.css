@@ -1,0 +1,274 @@
+/* ===================================
+   下载页面专用样式
+   =================================== */
+
+.download-hero {
+    padding: 160px 0 80px;
+    background: var(--gradient-primary);
+    text-align: center;
+    color: white;
+}
+
+.download-hero h1 {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.download-hero p {
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+.download-section {
+    padding: 80px 0;
+    background: var(--bg-secondary);
+}
+
+.download-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-bottom: 60px;
+}
+
+.download-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-base);
+}
+
+.download-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+}
+
+.platform-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-light);
+    border-radius: var(--radius-lg);
+    color: var(--primary-color);
+}
+
+.platform-icon svg {
+    width: 48px;
+    height: 48px;
+}
+
+.download-card h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.platform-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.version-info {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
+.download-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.file-size {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.download-note {
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+}
+
+/* 其他下载选项 */
+.more-downloads {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow-md);
+}
+
+.more-downloads h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 24px;
+}
+
+.download-links {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.download-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.download-link:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.download-link .badge {
+    margin-left: auto;
+    padding: 4px 12px;
+    background: var(--gradient-primary);
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 20px;
+}
+
+/* 安装指南 */
+.install-guide {
+    padding: 80px 0;
+    background: white;
+}
+
+.install-guide h2 {
+    font-size: 36px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 48px;
+    color: var(--text-primary);
+}
+
+.guide-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+}
+
+.guide-card {
+    text-align: center;
+    padding: 32px;
+}
+
+.guide-number {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-primary);
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    border-radius: 50%;
+}
+
+.guide-card h4 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.guide-card p {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+/* 系统要求 */
+.requirements {
+    padding: 80px 0;
+    background: var(--bg-secondary);
+}
+
+.requirements h2 {
+    font-size: 36px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 48px;
+    color: var(--text-primary);
+}
+
+.requirements-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+.requirement-item {
+    background: white;
+    padding: 32px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.requirement-item h4 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--primary-light);
+}
+
+.requirement-item ul {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.requirement-item li {
+    font-size: 15px;
+    color: var(--text-secondary);
+    padding-left: 24px;
+    position: relative;
+}
+
+.requirement-item li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--success-color);
+    font-weight: 700;
+}
+
+/* 响应式 */
+@media (max-width: 968px) {
+    .download-grid,
+    .guide-grid,
+    .requirements-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .download-links {
+        grid-template-columns: 1fr;
+    }
+}

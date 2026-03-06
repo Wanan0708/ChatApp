@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于 - XWChat</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/about.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <span class="logo-icon">💬</span>
+                <span class="logo-text">XWChat</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="about.html" class="active">关于</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="btn btn-ghost" onclick="showLogin()">登录</button>
+                <button class="btn btn-primary" onclick="showRegister()">注册</button>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main>
+        <!-- 关于头部 -->
+        <section class="about-hero">
+            <div class="container">
+                <h1>关于 XWChat</h1>
+                <p>致力于为用户提供安全、高效、便捷的即时通讯体验</p>
+            </div>
+        </section>
+
+        <!-- 产品介绍 -->
+        <section class="about-section">
+            <div class="container">
+                <div class="about-content">
+                    <div class="about-text">
+                        <h2>我们的产品</h2>
+                        <p>
+                            XWChat 是一款现代化的即时通讯应用，采用先进的技术架构，为用户提供流畅、稳定的通讯服务。
+                            无论是个人聊天还是团队协作，XWChat 都能满足您的需求。
+                        </p>
+                        <p>
+                            我们采用 WebSocket 技术实现实时消息传输，确保消息即时送达。同时，
+                            通过 JWT 认证和加密传输，保障您的通讯数据安全。
+                        </p>
+                        <div class="about-features">
+                            <div class="about-feature-item">
+                                <span class="feature-check">✓</span>
+                                <span>实时消息传输</span>
+                            </div>
+                            <div class="about-feature-item">
+                                <span class="feature-check">✓</span>
+                                <span>端到端加密</span>
+                            </div>
+                            <div class="about-feature-item">
+                                <span class="feature-check">✓</span>
+                                <span>跨平台支持</span>
+                            </div>
+                            <div class="about-feature-item">
+                                <span class="feature-check">✓</span>
+                                <span>群组聊天</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="about-image">
+                        <div class="about-illustration">
+                            <div class="illustration-icon">💬</div>
+                            <div class="illustration-bg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 技术栈 -->
+        <section class="tech-section">
+            <div class="container">
+                <h2>技术架构</h2>
+                <p class="section-subtitle">采用现代化技术栈，打造卓越性能</p>
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <div class="tech-icon">🖥️</div>
+                        <h3>客户端</h3>
+                        <p>基于 Qt/QML 构建，支持 Windows、macOS、Linux 多平台</p>
+                        <ul class="tech-list">
+                            <li>Qt 5.15+</li>
+                            <li>QML 2.12</li>
+                            <li>C++ 17</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <div class="tech-icon">⚙️</div>
+                        <h3>后端服务</h3>
+                        <p>Node.js + Express 构建高性能 API 服务</p>
+                        <ul class="tech-list">
+                            <li>Node.js 18+</li>
+                            <li>Express 5</li>
+                            <li>WebSocket</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <div class="tech-icon">🗄️</div>
+                        <h3>数据库</h3>
+                        <p>PostgreSQL 提供可靠的数据存储</p>
+                        <ul class="tech-list">
+                            <li>PostgreSQL 14+</li>
+                            <li>连接池管理</li>
+                            <li>数据备份</li>
+                        </ul>
+                    </div>
+                    <div class="tech-card">
+                        <div class="tech-icon">🔒</div>
+                        <h3>安全认证</h3>
+                        <p>JWT Token 认证，保障用户安全</p>
+                        <ul class="tech-list">
+                            <li>JWT Token</li>
+                            <li>bcrypt 加密</li>
+                            <li>HTTPS/TLS</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 团队介绍 -->
+        <section class="team-section">
+            <div class="container">
+                <h2>联系我们</h2>
+                <div class="contact-grid">
+                    <div class="contact-card">
+                        <div class="contact-icon">📧</div>
+                        <h3>电子邮件</h3>
+                        <p>support@xwchat.com</p>
+                    </div>
+                    <div class="contact-card">
+                        <div class="contact-icon">📱</div>
+                        <h3>客服热线</h3>
+                        <p>400-XXX-XXXX</p>
+                        <p class="contact-hours">工作日 9:00-18:00</p>
+                    </div>
+                    <div class="contact-card">
+                        <div class="contact-icon">📍</div>
+                        <h3>公司地址</h3>
+                        <p>XX 省 XX 市 XX 区</p>
+                        <p>XX 大厦 XX 层</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 版本信息 -->
+        <section class="version-section">
+            <div class="container">
+                <h2>版本信息</h2>
+                <div class="version-content">
+                    <div class="version-card">
+                        <div class="version-header">
+                            <span class="version-badge current">当前版本</span>
+                            <span class="version-number">v1.0.0</span>
+                        </div>
+                        <div class="version-date">发布日期：2026 年 3 月</div>
+                        <ul class="version-changes">
+                            <li>✨ 初始版本发布</li>
+                            <li>💬 支持实时消息聊天</li>
+                            <li>👥 支持好友管理</li>
+                            <li>🔒 JWT 认证登录</li>
+                            <li>📱 跨平台客户端支持</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <span class="logo-icon">💬</span>
+                        <span class="logo-text">XWChat</span>
+                    </div>
+                    <p>让沟通更简单，让连接更紧密</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>产品</h4>
+                        <ul>
+                            <li><a href="download.html">下载</a></li>
+                            <li><a href="about.html">关于</a></li>
+                            <li><a href="index.html#features">功能</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>支持</h4>
+                        <ul>
+                            <li><a href="#">帮助中心</a></li>
+                            <li><a href="#">联系我们</a></li>
+                            <li><a href="#">隐私政策</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 XWChat. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 登录模态框 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content auth-modal">
+            <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
+            <div class="auth-header">
+                <h2>欢迎回来</h2>
+                <p>登录您的 XWChat 账号</p>
+            </div>
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername">用户名</label>
+                    <input type="text" id="loginUsername" name="username" required placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">密码</label>
+                    <input type="password" id="loginPassword" name="password" required placeholder="请输入密码">
+                </div>
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember">
+                        <span>记住我</span>
+                    </label>
+                    <a href="#" class="forgot-link">忘记密码？</a>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">登录</button>
+            </form>
+            <div class="auth-footer">
+                <p>还没有账号？<a href="#" onclick="showRegister()">立即注册</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content auth-modal">
+            <button class="modal-close" onclick="closeModal('registerModal')">&times;</button>
+            <div class="auth-header">
+                <h2>创建账号</h2>
+                <p>加入我们，开始畅聊</p>
+            </div>
+            <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="registerUsername">用户名</label>
+                    <input type="text" id="registerUsername" name="username" required placeholder="3-20 位字母、数字或下划线">
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">密码</label>
+                    <input type="password" id="registerPassword" name="password" required placeholder="至少 6 位字符">
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirm">确认密码</label>
+                    <input type="password" id="registerConfirm" name="confirmPassword" required placeholder="再次输入密码">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">注册</button>
+            </form>
+            <div class="auth-footer">
+                <p>已有账号？<a href="#" onclick="showLogin()">立即登录</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
