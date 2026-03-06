@@ -7,9 +7,7 @@
 #include "../dao/conversationdao.h"
 #include "../dao/messagedao.h"
 #include "../dao/userdao.h"
-#include "../dao/friendrequestdao.h"
 #include "../database/databaseconfig.h"
-#include "../database/databasemanager.h"
 #include "../utils/timeformatter.h"
 #include <QDateTime>
 #include <QDebug>
@@ -127,9 +125,9 @@ void ChatService::handleMessagesLoaded(const QString &conversationId, const QVec
 {
     qDebug() << "[ChatService] Loaded" << messages.size() << "messages for" << conversationId;
     MessageModel *msgModel = getMessageModel(conversationId);
-    
-    // 清除可能存在的本地假数据（如果需要，此处可简化）
-    // msgModel->clear(); 
+
+    // 先清除旧消息，避免重复
+    msgModel->clearMessages();
 
     for (const Message &msg : messages) {
         QVariantMap msgMap;
@@ -235,6 +233,12 @@ void ChatService::sendMessage(const QString &conversationId, const QString &cont
 void ChatService::markConversationRead(const QString &conversationId)
 {
     m_conversationModel->markRead(conversationId);
+}
+
+void ChatService::refreshMessages(const QString &conversationId)
+{
+    qDebug() << "[ChatService] Refreshing messages for:" << conversationId;
+    m_messageDAO->getConversationMessages(conversationId, 50);
 }
 
 void ChatService::searchUsers(const QString &searchTerm)
@@ -638,7 +642,7 @@ void ChatService::registerNewUser(const QString &username, const QString &passwo
     m_userDAO->registerNewUser(username, password);
 }
 
-void ChatService::handleRegisterResult(bool success, const QString &userId, const QString &error)
+void ChatService::handleRegisterResult(bool success, const QString &/*userId*/, const QString &error)
 {
     emit registerResult(success, error);
 }
@@ -760,7 +764,7 @@ void ChatService::respondToFriendRequest(int requestId, bool accept)
     m_friendRequestDAO->updateRequestStatus(requestId, accept ? "accepted" : "rejected");
 }
 
-void ChatService::handleRequestStatusUpdated(bool success, int requestId, const QString &status)
+void ChatService::handleRequestStatusUpdated(bool success, int /*requestId*/, const QString &status)
 {
     if (success && status == "accepted") {
         // 接受成功后刷新会话和好友列表
@@ -799,8 +803,14 @@ void ChatService::handleFriendListLoaded(const QVector<FriendRequestDAO::FriendI
     QVariantList list;
     for (const auto &friendInfo : friends) {
         QVariantMap map;
-        map["userId"] = friendInfo.userId;
-        map["username"] = friendInfo.username;
+        map["userId"]    = friendInfo.userId;
+        map["username"]  = friendInfo.username;
+        map["avatar"]    = friendInfo.avatar;
+        map["status"]    = friendInfo.status.isEmpty() ? QString("在线") : friendInfo.status;
+        map["signature"] = friendInfo.signature;
+        map["isMale"]    = friendInfo.isMale;
+        map["age"]       = friendInfo.age;
+        map["region"]    = friendInfo.region;
         list.append(map);
     }
     emit friendListLoaded(list);

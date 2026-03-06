@@ -71,6 +71,7 @@ public:
     Q_INVOKABLE void markConversationRead(const QString &conversationId);
     Q_INVOKABLE void setCurrentConversation(const QString &conversationId);
     Q_INVOKABLE void refreshConversations();
+    Q_INVOKABLE void refreshMessages(const QString &conversationId);
 
     Q_INVOKABLE void logout();
     Q_INVOKABLE void changePassword(const QString &newPassword);

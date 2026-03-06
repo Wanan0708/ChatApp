@@ -59,7 +59,6 @@ SOURCES       = main.cpp \
 		src\network\networkclient.cpp \
 		src\services\chatservice.cpp \
 		src\database\databaseconfig.cpp \
-		src\database\databasemanager.cpp \
 		src\dao\userdao.cpp \
 		src\dao\conversationdao.cpp \
 		src\dao\messagedao.cpp \
@@ -72,7 +71,6 @@ SOURCES       = main.cpp \
 		bin\moc\moc_messagemodel.cpp \
 		bin\moc\moc_conversationmodel.cpp \
 		bin\moc\moc_chatservice.cpp \
-		bin\moc\moc_databasemanager.cpp \
 		bin\moc\moc_userdao.cpp \
 		bin\moc\moc_conversationdao.cpp \
 		bin\moc\moc_messagedao.cpp \
@@ -86,7 +84,6 @@ OBJECTS       = bin/obj/main.o \
 		bin/obj/networkclient.o \
 		bin/obj/chatservice.o \
 		bin/obj/databaseconfig.o \
-		bin/obj/databasemanager.o \
 		bin/obj/userdao.o \
 		bin/obj/conversationdao.o \
 		bin/obj/messagedao.o \
@@ -100,7 +97,6 @@ OBJECTS       = bin/obj/main.o \
 		bin/obj/moc_messagemodel.o \
 		bin/obj/moc_conversationmodel.o \
 		bin/obj/moc_chatservice.o \
-		bin/obj/moc_databasemanager.o \
 		bin/obj/moc_userdao.o \
 		bin/obj/moc_conversationdao.o \
 		bin/obj/moc_messagedao.o \
@@ -119,7 +115,6 @@ DIST          =  src\models\conversation.h \
 		src\models\conversationmodel.h \
 		src\services\chatservice.h \
 		src\database\databaseconfig.h \
-		src\database\databasemanager.h \
 		src\dao\userdao.h \
 		src\dao\conversationdao.h \
 		src\dao\messagedao.h \
@@ -133,7 +128,6 @@ DIST          =  src\models\conversation.h \
 		src\network\networkclient.cpp \
 		src\services\chatservice.cpp \
 		src\database\databaseconfig.cpp \
-		src\database\databasemanager.cpp \
 		src\dao\userdao.cpp \
 		src\dao\conversationdao.cpp \
 		src\dao\messagedao.cpp \
@@ -158,10 +152,10 @@ qmake: FORCE
 qmake_all: FORCE
 
 dist:
-	$(ZIP) ChatApp.zip $(SOURCES) $(DIST) ChatApp.pro ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\spec_pre.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\qdevice.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\device_config.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\sanitize.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\gcc-base.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\g++-base.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\angle.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\win32\windows_vulkan_sdk.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\windows-vulkan.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\g++-win32.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\windows-desktop.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\qconfig.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3danimation.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3danimation_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dcore.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dcore_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dextras.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dextras_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dinput.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dinput_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dlogic.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dlogic_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquick.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquick_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickanimation.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickanimation_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickextras.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickextras_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickinput.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickinput_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickrender.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickrender_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickscene2d.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickscene2d_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3drender.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3drender_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_accessibility_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axbase.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axbase_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axcontainer.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axcontainer_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axserver.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axserver_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_bluetooth.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_bluetooth_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_bootstrap_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_charts.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_charts_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_concurrent.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_concurrent_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_core.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_core_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_datavisualization.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_datavisualization_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_dbus.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_dbus_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_designer.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_designer_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_designercomponents_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_devicediscovery_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_edid_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_egl_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_eventdispatcher_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_fb_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_fontdatabase_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_gamepad.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_gamepad_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_gui.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_gui_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_help.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_help_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_location.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_location_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_multimedia.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_multimedia_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_multimediawidgets.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_multimediawidgets_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_network.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_network_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_networkauth.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_networkauth_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_nfc.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_nfc_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_opengl.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_opengl_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_openglextensions.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_openglextensions_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_packetprotocol_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_platformcompositor_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_positioning.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_positioning_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_positioningquick.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_positioningquick_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_printsupport.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_printsupport_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qml.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qml_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmldebug_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmldevtools_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmlmodels.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmlmodels_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmltest.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmltest_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmlworkerscript.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmlworkerscript_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qtmultimediaquicktools_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3d.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3d_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3dassetimport.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3dassetimport_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3drender.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3drender_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3druntimerender.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3druntimerender_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3dutils.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3dutils_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickcontrols2.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickcontrols2_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickparticles_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickshapes_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quicktemplates2.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quicktemplates2_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickwidgets.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickwidgets_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_remoteobjects.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_remoteobjects_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_repparser.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_repparser_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_scxml.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_scxml_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_sensors.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_sensors_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_serialbus.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_serialbus_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_serialport.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_serialport_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_sql.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_sql_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_svg.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_svg_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_testlib.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_testlib_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_texttospeech.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_texttospeech_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_theme_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_uiplugin.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_uitools.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_uitools_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_virtualkeyboard.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_virtualkeyboard_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_vulkan_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_webchannel.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_webchannel_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_websockets.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_websockets_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_widgets.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_widgets_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_windowsuiautomation_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_winextras.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_winextras_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_xml.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_xml_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_xmlpatterns.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_xmlpatterns_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_zlib_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\qt_functions.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\qt_config.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\win32-g++\qmake.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\spec_post.prf .qmake.stash ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\exclusive_builds.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\toolchain.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\default_pre.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\win32\default_pre.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\resolve_config.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\exclusive_builds_post.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\default_post.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\build_pass.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\precompile_header.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\warn_on.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\qt.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\resources_functions.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\resources.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\moc.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\win32\opengl.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\qmake_use.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\file_copies.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\win32\windows.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\testcase_targets.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\exceptions.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\yacc.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\lex.prf ChatApp.pro qml.qrc image.qrc ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5VirtualKeyboard.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Quick.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Gui.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5QmlModels.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Qml.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5WebSockets.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Network.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Sql.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Core.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\qtmain.prl   qml.qrc image.qrc ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\data\dummy.cpp src\models\conversation.h src\models\message.h src\models\user.h src\network\websocketclient.h src\network\networkclient.h src\singleton.h src\core\singletonmanager.h src\core\appsettings.h src\models\basemodel.h src\models\messagemodel.h src\models\conversationmodel.h src\services\chatservice.h src\database\databaseconfig.h src\database\databasemanager.h src\dao\userdao.h src\dao\conversationdao.h src\dao\messagedao.h src\dao\friendrequestdao.h src\utils\timeformatter.h  main.cpp src\core\singletonmanager.cpp src\core\appsettings.cpp src\models\messagemodel.cpp src\models\conversationmodel.cpp src\network\websocketclient.cpp src\network\networkclient.cpp src\services\chatservice.cpp src\database\databaseconfig.cpp src\database\databasemanager.cpp src\dao\userdao.cpp src\dao\conversationdao.cpp src\dao\messagedao.cpp src\dao\friendrequestdao.cpp src\utils\timeformatter.cpp    
+	$(ZIP) ChatApp.zip $(SOURCES) $(DIST) ChatApp.pro ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\spec_pre.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\qdevice.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\device_config.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\sanitize.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\gcc-base.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\g++-base.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\angle.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\win32\windows_vulkan_sdk.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\windows-vulkan.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\g++-win32.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\common\windows-desktop.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\qconfig.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3danimation.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3danimation_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dcore.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dcore_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dextras.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dextras_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dinput.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dinput_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dlogic.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dlogic_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquick.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquick_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickanimation.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickanimation_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickextras.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickextras_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickinput.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickinput_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickrender.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickrender_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickscene2d.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3dquickscene2d_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3drender.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_3drender_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_accessibility_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axbase.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axbase_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axcontainer.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axcontainer_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axserver.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_axserver_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_bluetooth.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_bluetooth_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_bootstrap_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_charts.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_charts_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_concurrent.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_concurrent_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_core.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_core_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_datavisualization.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_datavisualization_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_dbus.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_dbus_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_designer.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_designer_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_designercomponents_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_devicediscovery_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_edid_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_egl_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_eventdispatcher_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_fb_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_fontdatabase_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_gamepad.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_gamepad_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_gui.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_gui_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_help.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_help_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_location.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_location_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_multimedia.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_multimedia_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_multimediawidgets.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_multimediawidgets_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_network.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_network_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_networkauth.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_networkauth_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_nfc.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_nfc_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_opengl.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_opengl_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_openglextensions.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_openglextensions_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_packetprotocol_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_platformcompositor_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_positioning.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_positioning_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_positioningquick.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_positioningquick_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_printsupport.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_printsupport_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qml.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qml_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmldebug_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmldevtools_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmlmodels.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmlmodels_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmltest.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmltest_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmlworkerscript.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qmlworkerscript_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_qtmultimediaquicktools_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3d.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3d_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3dassetimport.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3dassetimport_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3drender.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3drender_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3druntimerender.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3druntimerender_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3dutils.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick3dutils_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quick_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickcontrols2.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickcontrols2_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickparticles_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickshapes_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quicktemplates2.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quicktemplates2_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickwidgets.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_quickwidgets_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_remoteobjects.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_remoteobjects_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_repparser.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_repparser_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_scxml.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_scxml_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_sensors.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_sensors_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_serialbus.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_serialbus_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_serialport.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_serialport_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_sql.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_sql_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_svg.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_svg_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_testlib.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_testlib_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_texttospeech.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_texttospeech_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_theme_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_uiplugin.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_uitools.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_uitools_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_virtualkeyboard.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_virtualkeyboard_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_vulkan_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_webchannel.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_webchannel_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_websockets.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_websockets_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_widgets.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_widgets_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_windowsuiautomation_support_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_winextras.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_winextras_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_xml.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_xml_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_xmlpatterns.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_xmlpatterns_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\modules\qt_lib_zlib_private.pri ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\qt_functions.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\qt_config.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\win32-g++\qmake.conf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\spec_post.prf .qmake.stash ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\exclusive_builds.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\toolchain.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\default_pre.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\win32\default_pre.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\resolve_config.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\exclusive_builds_post.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\default_post.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\build_pass.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\precompile_header.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\warn_on.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\qt.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\resources_functions.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\resources.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\moc.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\win32\opengl.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\qmake_use.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\file_copies.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\win32\windows.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\testcase_targets.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\exceptions.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\yacc.prf ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\lex.prf ChatApp.pro qml.qrc image.qrc ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5VirtualKeyboard.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Quick.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Gui.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5QmlModels.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Qml.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5WebSockets.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Network.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Sql.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\Qt5Core.prl ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\lib\qtmain.prl   qml.qrc image.qrc ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\data\dummy.cpp src\models\conversation.h src\models\message.h src\models\user.h src\network\websocketclient.h src\network\networkclient.h src\singleton.h src\core\singletonmanager.h src\core\appsettings.h src\models\basemodel.h src\models\messagemodel.h src\models\conversationmodel.h src\services\chatservice.h src\database\databaseconfig.h src\dao\userdao.h src\dao\conversationdao.h src\dao\messagedao.h src\dao\friendrequestdao.h src\utils\timeformatter.h  main.cpp src\core\singletonmanager.cpp src\core\appsettings.cpp src\models\messagemodel.cpp src\models\conversationmodel.cpp src\network\websocketclient.cpp src\network\networkclient.cpp src\services\chatservice.cpp src\database\databaseconfig.cpp src\dao\userdao.cpp src\dao\conversationdao.cpp src\dao\messagedao.cpp src\dao\friendrequestdao.cpp src\utils\timeformatter.cpp    
 
 clean: compiler_clean 
-	-$(DEL_FILE) bin\obj\main.o bin\obj\singletonmanager.o bin\obj\appsettings.o bin\obj\messagemodel.o bin\obj\conversationmodel.o bin\obj\websocketclient.o bin\obj\networkclient.o bin\obj\chatservice.o bin\obj\databaseconfig.o bin\obj\databasemanager.o bin\obj\userdao.o bin\obj\conversationdao.o bin\obj\messagedao.o bin\obj\friendrequestdao.o bin\obj\timeformatter.o bin\obj\qrc_qml.o bin\obj\qrc_image.o bin\obj\moc_websocketclient.o bin\obj\moc_networkclient.o bin\obj\moc_basemodel.o bin\obj\moc_messagemodel.o bin\obj\moc_conversationmodel.o bin\obj\moc_chatservice.o bin\obj\moc_databasemanager.o bin\obj\moc_userdao.o bin\obj\moc_conversationdao.o bin\obj\moc_messagedao.o bin\obj\moc_friendrequestdao.o
+	-$(DEL_FILE) bin\obj\main.o bin\obj\singletonmanager.o bin\obj\appsettings.o bin\obj\messagemodel.o bin\obj\conversationmodel.o bin\obj\websocketclient.o bin\obj\networkclient.o bin\obj\chatservice.o bin\obj\databaseconfig.o bin\obj\userdao.o bin\obj\conversationdao.o bin\obj\messagedao.o bin\obj\friendrequestdao.o bin\obj\timeformatter.o bin\obj\qrc_qml.o bin\obj\qrc_image.o bin\obj\moc_websocketclient.o bin\obj\moc_networkclient.o bin\obj\moc_basemodel.o bin\obj\moc_messagemodel.o bin\obj\moc_conversationmodel.o bin\obj\moc_chatservice.o bin\obj\moc_userdao.o bin\obj\moc_conversationdao.o bin\obj\moc_messagedao.o bin\obj\moc_friendrequestdao.o
 
 distclean: clean 
 	-$(DEL_FILE) .qmake.stash
@@ -218,9 +212,9 @@ compiler_moc_predefs_clean:
 bin/moc/moc_predefs.h: ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/data/dummy.cpp
 	g++ -fno-keep-inline-dllexport -O2 -std=gnu++11 -Wall -Wextra -Wextra -dM -E -o bin\moc\moc_predefs.h ..\..\..\Softwore\Qt5.14.2\5.14.2\mingw73_64\mkspecs\features\data\dummy.cpp
 
-compiler_moc_header_make_all: bin/moc/moc_websocketclient.cpp bin/moc/moc_networkclient.cpp bin/moc/moc_basemodel.cpp bin/moc/moc_messagemodel.cpp bin/moc/moc_conversationmodel.cpp bin/moc/moc_chatservice.cpp bin/moc/moc_databasemanager.cpp bin/moc/moc_userdao.cpp bin/moc/moc_conversationdao.cpp bin/moc/moc_messagedao.cpp bin/moc/moc_friendrequestdao.cpp
+compiler_moc_header_make_all: bin/moc/moc_websocketclient.cpp bin/moc/moc_networkclient.cpp bin/moc/moc_basemodel.cpp bin/moc/moc_messagemodel.cpp bin/moc/moc_conversationmodel.cpp bin/moc/moc_chatservice.cpp bin/moc/moc_userdao.cpp bin/moc/moc_conversationdao.cpp bin/moc/moc_messagedao.cpp bin/moc/moc_friendrequestdao.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) bin\moc\moc_websocketclient.cpp bin\moc\moc_networkclient.cpp bin\moc\moc_basemodel.cpp bin\moc\moc_messagemodel.cpp bin\moc\moc_conversationmodel.cpp bin\moc\moc_chatservice.cpp bin\moc\moc_databasemanager.cpp bin\moc\moc_userdao.cpp bin\moc\moc_conversationdao.cpp bin\moc\moc_messagedao.cpp bin\moc\moc_friendrequestdao.cpp
+	-$(DEL_FILE) bin\moc\moc_websocketclient.cpp bin\moc\moc_networkclient.cpp bin\moc\moc_basemodel.cpp bin\moc\moc_messagemodel.cpp bin\moc\moc_conversationmodel.cpp bin\moc\moc_chatservice.cpp bin\moc\moc_userdao.cpp bin\moc\moc_conversationdao.cpp bin\moc\moc_messagedao.cpp bin\moc\moc_friendrequestdao.cpp
 bin/moc/moc_websocketclient.cpp: src/network/websocketclient.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QObject \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qobject.h \
@@ -737,87 +731,6 @@ bin/moc/moc_chatservice.cpp: src/services/chatservice.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/bin/moc.exe
 	E:\Softwore\Qt5.14.2\5.14.2\mingw73_64\bin\moc.exe $(DEFINES) --include E:/Project/QtProject/ChatApp/bin/moc/moc_predefs.h -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/win32-g++ -IE:/Project/QtProject/ChatApp -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtVirtualKeyboard -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQuick -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtANGLE -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQmlModels -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQml -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWebSockets -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++ -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/x86_64-w64-mingw32 -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/backward -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include-fixed -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/x86_64-w64-mingw32/include src\services\chatservice.h -o bin\moc\moc_chatservice.cpp
 
-bin/moc/moc_databasemanager.cpp: src/database/databasemanager.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QObject \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qobject.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qobjectdefs.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qnamespace.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qglobal.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qconfig-bootstrapped.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qconfig.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qtcore-config.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsystemdetection.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qprocessordetection.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcompilerdetection.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qtypeinfo.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsysinfo.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qlogging.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qflags.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qatomic.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qbasicatomic.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qatomic_bootstrap.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qgenericatomic.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qatomic_cxx11.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qatomic_msvc.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qglobalstatic.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmutex.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qnumeric.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qversiontagging.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qobjectdefs_impl.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstring.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qchar.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qbytearray.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qrefcount.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qarraydata.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringliteral.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringalgorithms.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringview.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringbuilder.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qlist.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qalgorithms.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qiterator.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qhashfunctions.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qpair.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qvector.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcontainertools_impl.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qpoint.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qbytearraylist.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringlist.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qregexp.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringmatcher.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcoreevent.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qscopedpointer.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmetatype.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qvarlengtharray.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcontainerfwd.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qobject_impl.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/QSqlDatabase \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qsqldatabase.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qtsqlglobal.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qtsql-config.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/QSqlQuery \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qsqlquery.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/QSqlError \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qsqlerror.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QString \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QVariantMap \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qvariant.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmap.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdebug.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qhash.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qtextstream.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qiodevice.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qlocale.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qshareddata.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qset.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcontiguouscache.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer_impl.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QList \
-		bin/moc/moc_predefs.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/bin/moc.exe
-	E:\Softwore\Qt5.14.2\5.14.2\mingw73_64\bin\moc.exe $(DEFINES) --include E:/Project/QtProject/ChatApp/bin/moc/moc_predefs.h -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/win32-g++ -IE:/Project/QtProject/ChatApp -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtVirtualKeyboard -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQuick -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtANGLE -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQmlModels -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQml -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWebSockets -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++ -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/x86_64-w64-mingw32 -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/backward -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include-fixed -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/x86_64-w64-mingw32/include src\database\databasemanager.h -o bin\moc\moc_databasemanager.cpp
-
 bin/moc/moc_userdao.cpp: src/dao/userdao.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QObject \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qobject.h \
@@ -879,6 +792,19 @@ bin/moc/moc_userdao.cpp: src/dao/userdao.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qjsonvalue.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QJsonArray \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qjsonarray.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QVariantMap \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qvariant.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmap.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdebug.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qhash.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qtextstream.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qiodevice.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qlocale.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qshareddata.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qset.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcontiguouscache.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer_impl.h \
 		bin/moc/moc_predefs.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/bin/moc.exe
 	E:\Softwore\Qt5.14.2\5.14.2\mingw73_64\bin\moc.exe $(DEFINES) --include E:/Project/QtProject/ChatApp/bin/moc/moc_predefs.h -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/win32-g++ -IE:/Project/QtProject/ChatApp -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtVirtualKeyboard -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQuick -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtANGLE -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQmlModels -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQml -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWebSockets -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql -IE:/Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++ -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/x86_64-w64-mingw32 -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/backward -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include-fixed -IE:/Softwore/Qt5.14.2/Tools/mingw730_64/x86_64-w64-mingw32/include src\dao\userdao.h -o bin\moc\moc_userdao.cpp
@@ -1531,7 +1457,9 @@ bin/obj/websocketclient.o: src/network/websocketclient.cpp src/network/websocket
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QJsonArray \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qjsonarray.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDebug \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDateTime
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDateTime \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QRandomGenerator \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qrandom.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bin\obj\websocketclient.o src\network\websocketclient.cpp
 
 bin/obj/networkclient.o: src/network/networkclient.cpp src/network/networkclient.h \
@@ -1777,15 +1705,6 @@ bin/obj/chatservice.o: src/services/chatservice.cpp src/services/chatservice.h \
 		src/dao/conversationdao.h \
 		src/dao/messagedao.h \
 		src/database/databaseconfig.h \
-		src/database/databasemanager.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/QSqlDatabase \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qsqldatabase.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qtsqlglobal.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qtsql-config.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/QSqlQuery \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qsqlquery.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/QSqlError \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qsqlerror.h \
 		src/utils/timeformatter.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDebug \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QCoreApplication \
@@ -1865,95 +1784,11 @@ bin/obj/databaseconfig.o: src/database/databaseconfig.cpp src/database/databasec
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qset.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcontiguouscache.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer_impl.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bin\obj\databaseconfig.o src\database\databaseconfig.cpp
-
-bin/obj/databasemanager.o: src/database/databasemanager.cpp src/database/databasemanager.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QObject \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qobject.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qobjectdefs.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qnamespace.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qglobal.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qconfig-bootstrapped.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qconfig.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qtcore-config.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsystemdetection.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qprocessordetection.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcompilerdetection.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qtypeinfo.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsysinfo.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qlogging.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qflags.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qatomic.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qbasicatomic.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qatomic_bootstrap.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qgenericatomic.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qatomic_cxx11.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qatomic_msvc.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qglobalstatic.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmutex.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qnumeric.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qversiontagging.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qobjectdefs_impl.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstring.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qchar.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qbytearray.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qrefcount.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qarraydata.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringliteral.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringalgorithms.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringview.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringbuilder.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qlist.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qalgorithms.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qiterator.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qhashfunctions.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qpair.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qvector.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcontainertools_impl.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qpoint.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qbytearraylist.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringlist.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qregexp.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstringmatcher.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcoreevent.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qscopedpointer.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmetatype.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qvarlengtharray.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcontainerfwd.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qobject_impl.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/QSqlDatabase \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qsqldatabase.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qtsqlglobal.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qtsql-config.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/QSqlQuery \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qsqlquery.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/QSqlError \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qsqlerror.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QString \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QVariantMap \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qvariant.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmap.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdebug.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qhash.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qtextstream.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qiodevice.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qlocale.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qshareddata.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qset.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcontiguouscache.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer_impl.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QList \
-		src/database/databaseconfig.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/QSqlDriver \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtSql/qsqldriver.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDebug \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDateTime \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdatetime.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QCryptographicHash \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcryptographichash.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bin\obj\databasemanager.o src\database\databasemanager.cpp
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QUrl \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qurl.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qurlquery.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bin\obj\databaseconfig.o src\database\databaseconfig.cpp
 
 bin/obj/userdao.o: src/dao/userdao.cpp src/dao/userdao.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QObject \
@@ -2016,6 +1851,19 @@ bin/obj/userdao.o: src/dao/userdao.cpp src/dao/userdao.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qjsonvalue.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QJsonArray \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qjsonarray.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QVariantMap \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qvariant.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmap.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdebug.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qhash.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qtextstream.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qiodevice.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qlocale.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qshareddata.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qset.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcontiguouscache.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer_impl.h \
 		src/network/networkclient.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/QNetworkAccessManager \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/qnetworkaccessmanager.h \
@@ -2023,22 +1871,10 @@ bin/obj/userdao.o: src/dao/userdao.cpp src/dao/userdao.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/qtnetwork-config.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/qnetworkrequest.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QSharedDataPointer \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qshareddata.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qhash.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QUrl \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qurl.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qurlquery.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QVariant \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qvariant.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmap.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdebug.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qtextstream.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qiodevice.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qlocale.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qset.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcontiguouscache.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsharedpointer_impl.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/QSslConfiguration \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/qsslconfiguration.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/qsslsocket.h \
@@ -2471,9 +2307,6 @@ bin/obj/moc_conversationmodel.o: bin/moc/moc_conversationmodel.cpp
 
 bin/obj/moc_chatservice.o: bin/moc/moc_chatservice.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bin\obj\moc_chatservice.o bin\moc\moc_chatservice.cpp
-
-bin/obj/moc_databasemanager.o: bin/moc/moc_databasemanager.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bin\obj\moc_databasemanager.o bin\moc\moc_databasemanager.cpp
 
 bin/obj/moc_userdao.o: bin/moc/moc_userdao.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bin\obj\moc_userdao.o bin\moc\moc_userdao.cpp

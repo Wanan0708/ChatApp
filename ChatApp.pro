@@ -23,7 +23,6 @@ SOURCES += \
     src/network/networkclient.cpp \
     src/services/chatservice.cpp \
     src/database/databaseconfig.cpp \
-    src/database/databasemanager.cpp \
     src/dao/userdao.cpp \
     src/dao/conversationdao.cpp \
     src/dao/messagedao.cpp \
@@ -44,7 +43,6 @@ HEADERS += \
     src/models/conversationmodel.h \
     src/services/chatservice.h \
     src/database/databaseconfig.h \
-    src/database/databasemanager.h \
     src/dao/userdao.h \
     src/dao/conversationdao.h \
     src/dao/messagedao.h \

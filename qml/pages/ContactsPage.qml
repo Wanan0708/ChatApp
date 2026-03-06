@@ -20,6 +20,7 @@ Rectangle {
     property string searchText: ""
 
     Component.onCompleted: {
+        console.log("[ContactsPage] Component completed, refreshing data...")
         refreshRequests()
         refreshFriends()
     }
@@ -29,18 +30,36 @@ Rectangle {
     }
 
     function refreshFriends() {
+        console.log("[ContactsPage] refreshFriends called")
         ChatService.getFriendList()
     }
     
     function handleFriendsLoaded(friends) {
+        console.log("[ContactsPage] handleFriendsLoaded called, friends count:", friends.length)
         let newContacts = []
         for (let i = 0; i < friends.length; i++) {
             // 从后端获取头像数据，如果没有则使用默认头像
             let avatar = friends[i].avatar || "qrc:/new/prefix1/image/boy.png"
+            let name = friends[i].username || "未知用户"
+            let firstChar = name.charAt(0).toUpperCase()
+            // 简单的首字母逻辑：如果首个字符是英文字母则使用，否则统一归入 "#"
+            let initial = /^[A-Z]$/.test(firstChar) ? firstChar : "#"
+
+            console.log("[ContactsPage] Friend", i, ":", {
+                userId: friends[i].userId,
+                username: friends[i].username,
+                avatar: friends[i].avatar,
+                isMale: friends[i].isMale,
+                age: friends[i].age,
+                region: friends[i].region,
+                status: friends[i].status,
+                signature: friends[i].signature
+            })
 
             newContacts.push({
                                  id: friends[i].userId || "",
-                                 name: friends[i].username || "未知用户",
+                                 name: name,
+                                 initial: initial,
                                  avatar: avatar,
                                  isMale: friends[i].isMale !== undefined ? friends[i].isMale : true,
                                  age: friends[i].age || 25,
@@ -50,7 +69,20 @@ Rectangle {
                                  userId: friends[i].userId || ""
                              })
         }
+
+        // 按照首字母排序 (A-Z, 然后是 #)
+        newContacts.sort(function(a, b) {
+            if (a.initial === b.initial) {
+                return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)
+            }
+            if (a.initial === "#") return 1
+            if (b.initial === "#") return -1
+            return a.initial < b.initial ? -1 : 1
+        })
+
         contacts = newContacts
+        contactsVersion++  // 触发 filteredContacts 更新
+        console.log("[ContactsPage] contacts updated, count:", contacts.length, "version:", contactsVersion)
     }
 
     function addContact(user) {
@@ -69,9 +101,11 @@ Rectangle {
             refreshConversations()  // 刷新会话列表
         }
         onPendingRequestsLoaded: {
+            console.log("[ContactsPage] onPendingRequestsLoaded, count:", requests.length)
             pendingRequests = requests
         }
         onFriendListLoaded: {
+            console.log("[ContactsPage] onFriendListLoaded signal received, count:", friends.length)
             handleFriendsLoaded(friends)
         }
     }
@@ -85,8 +119,10 @@ Rectangle {
     // 当前选中的联系人索引，-1 表示未选中
     property int selectedContactIndex: -1
 
-    // 示例联系人列表数据
+    // 联系人列表数据
     property var contacts: []
+    // 用于触发 filteredContacts 更新的辅助属性
+    property int contactsVersion: 0
 
     // 过滤后的联系人列表
     property var filteredContacts: {
@@ -95,10 +131,11 @@ Rectangle {
         for (var i = 0; i < contacts.length; i++) {
             var contact = contacts[i]
             if (searchText === "" ||
-                contact.name.toLowerCase().indexOf(searchLower) >= 0) {
+                    contact.name.toLowerCase().indexOf(searchLower) >= 0) {
                 result.push(contact)
             }
         }
+        console.log("[ContactsPage] filteredContacts computed, count:", result.length, "searchText:", searchText)
         return result
     }
 
@@ -218,176 +255,193 @@ Rectangle {
                     color: "#e8e8e8"
                 }
 
-                // 联系人列表
-                ScrollView {
+                // 联系人列表（不用 ScrollView 包裹 ColumnLayout，否则 fillHeight 失效）
+                // 好友申请条目（固定高度）
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 56
+                    visible: hasPendingRequests
+                    color: selectedContactIndex === -2 ? "#EFF6FF" : "white"
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        spacing: 10
+
+                        Rectangle {
+                            Layout.preferredWidth: 40; Layout.preferredHeight: 40; radius: 20
+                            color: "#FEF3C7"
+                            Text { anchors.centerIn: parent; text: "🔔"; font.pixelSize: 20 }
+                        }
+
+                        Text {
+                            text: "新好友申请 (" + pendingRequests.length + ")"
+                            font.pixelSize: 14; font.weight: Font.Medium; color: "#D97706"
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: selectedContactIndex = -2
+                    }
+                }
+
+                // 联系人列表容器（填满剩余高度）
+                Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    contentWidth: width
-                    clip: true
 
-                    ColumnLayout {
-                        width: parent.width
+                    ListView {
+                        id: contactsList
+                        anchors.fill: parent
+                        anchors.rightMargin: 16
+                        model: contactsPage.filteredContacts
                         spacing: 0
+                        currentIndex: selectedContactIndex
+                        clip: true
 
-                        // 好友申请条目
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 56
-                            visible: hasPendingRequests
-                            color: selectedContactIndex === -2 ? "#EFF6FF" : "white"
-                            
+                        section.property: "initial"
+                        section.criteria: ViewSection.FullString
+                        section.delegate: Rectangle {
+                            width: contactsList.width
+                            height: 24
+                            color: "#f8fafc"
+                            border.color: "#e2e8f0"
+                            border.width: 1
+
+                            Text {
+                                anchors.left: parent.left
+                                anchors.leftMargin: 12
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: section
+                                font.pixelSize: 12
+                                font.weight: Font.DemiBold
+                                color: "#64748b"
+                            }
+                        }
+
+                        delegate: Rectangle {
+                            width: contactsList.width
+                            height: 56
+                            color: {
+                                if (index === selectedContactIndex) return "#EFF6FF"
+                                if (contactMouseArea.containsMouse) return "#f5f5f5"
+                                return "white"
+                            }
+
+                            Behavior on color { ColorAnimation { duration: 120 } }
+
+                            // 选中指示条
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 3
+                                height: index === selectedContactIndex ? 28 : 0
+                                radius: 2
+                                color: "#3B82F6"
+                                opacity: index === selectedContactIndex ? 1 : 0
+
+                                Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
+                                Behavior on opacity { NumberAnimation { duration: 150 } }
+                            }
+
+                            property var contact: modelData
+
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.leftMargin: 12
                                 anchors.rightMargin: 12
                                 spacing: 10
-                                
+
+                                // 头像
                                 Rectangle {
-                                    Layout.preferredWidth: 40; Layout.preferredHeight: 40; radius: 20
-                                    color: "#FEF3C7"
-                                    Text { anchors.centerIn: parent; text: "🔔"; font.pixelSize: 20 }
+                                    Layout.preferredWidth: 40; Layout.preferredHeight: 40; radius: 20; color: "#e8f1ff"; clip: true
+                                    Image {
+                                        anchors.centerIn: parent
+                                        source: contact.avatar || "qrc:/new/prefix1/image/boy.png"
+                                        width: 36; height: 36; fillMode: Image.PreserveAspectCrop
+                                    }
                                 }
-                                
-                                Text {
-                                    text: "新好友申请 (" + pendingRequests.length + ")"
-                                    font.pixelSize: 14; font.weight: Font.Medium; color: "#D97706"
-                                    Layout.fillWidth: true
+
+                                // 用户信息
+                                ColumnLayout {
+                                    Layout.fillWidth: true; spacing: 4
+                                    Text {
+                                        text: contact.name; font.pixelSize: 14; font.weight: Font.Medium; color: "#333"
+                                        font.family: "Microsoft YaHei, SimSun, sans-serif"; elide: Text.ElideRight; Layout.fillWidth: true
+                                    }
+                                    RowLayout {
+                                        spacing: 4
+                                        Rectangle {
+                                            width: 7; height: 7; radius: 3.5
+                                            color: contact.status === "在线" ? "#4caf50" : (contact.status === "忙碌" ? "#ff9800" : "#bbb")
+                                        }
+                                        Text { text: contact.status; font.pixelSize: 11; color: "#999"; font.family: "Microsoft YaHei, SimSun, sans-serif" }
+                                    }
                                 }
                             }
-                            
+
                             MouseArea {
+                                id: contactMouseArea
                                 anchors.fill: parent
-                                onClicked: selectedContactIndex = -2
+                                hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    console.log("[ContactsPage] Contact clicked:", contact.name, "index:", index)
+                                    selectedContactIndex = index
+                                }
+                            }
+
+                            // 底部分隔线
+                            Rectangle {
+                                anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right
+                                anchors.leftMargin: 62; height: 1; color: "#f0f0f0"
                             }
                         }
+                    }
 
-                        ListView {
-                            id: contactsList
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            model: contactsPage.filteredContacts.length
-                            spacing: 0
-                            currentIndex: selectedContactIndex
+                    // A-Z 侧边快速导航
+                    Column {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
 
-                            delegate: Rectangle {
-                                width: contactsList.width
-                                height: 56
-                                color: {
-                                    if (index === selectedContactIndex) return "#EFF6FF"
-                                    if (contactMouseArea.containsMouse) return "#f5f5f5"
-                                    return "white"
-                                }
-
-                                Behavior on color {
-                                    ColorAnimation { duration: 120 }
-                                }
-
-                                // 选中指示条
-                                Rectangle {
-                                    anchors.left: parent.left
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    width: 3
-                                    height: index === selectedContactIndex ? 28 : 0
-                                    radius: 2
-                                    color: "#3B82F6"
-                                    opacity: index === selectedContactIndex ? 1 : 0
-
-                                    Behavior on height {
-                                        NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
-                                    }
-                                    Behavior on opacity {
-                                        NumberAnimation { duration: 150 }
-                                    }
-                                }
-
-                                property var contact: filteredContacts[index]
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 12
-                                    spacing: 10
-
-                                    // 头像
-                                    Rectangle {
-                                        Layout.preferredWidth: 40
-                                        Layout.preferredHeight: 40
-                                        radius: 20
-                                        color: "#e8f1ff"
-                                        clip: true
-
-                                        Image {
-                                            anchors.centerIn: parent
-                                            source: contact.avatar || "qrc:/new/prefix1/image/boy.png"
-                                            width: 36
-                                            height: 36
-                                            fillMode: Image.PreserveAspectCrop
-                                        }
-                                    }
-
-                                    // 用户信息
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        spacing: 4
-
-                                        Text {
-                                            text: contact.name
-                                            font.pixelSize: 14
-                                            font.weight: Font.Medium
-                                            color: "#333"
-                                            font.family: "Microsoft YaHei, SimSun, sans-serif"
-                                            elide: Text.ElideRight
-                                            Layout.fillWidth: true
-                                        }
-
-                                        RowLayout {
-                                            spacing: 4
-
-                                            Rectangle {
-                                                width: 7
-                                                height: 7
-                                                radius: 3.5
-                                                color: contact.status === "在线" ? "#4caf50" :
-                                                                                 contact.status === "忙碌" ? "#ff9800" : "#bbb"
-                                            }
-
-                                            Text {
-                                                text: contact.status
-                                                font.pixelSize: 11
-                                                color: "#999"
-                                                font.family: "Microsoft YaHei, SimSun, sans-serif"
-                                            }
-                                        }
-                                    }
-                                }
+                        Repeater {
+                            model: ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","#"]
+                            delegate: Text {
+                                text: modelData
+                                font.pixelSize: 10
+                                font.weight: Font.Medium
+                                color: letterMA.containsMouse ? "#3b82f6" : "#94a3b8"
 
                                 MouseArea {
-                                    id: contactMouseArea
+                                    id: letterMA
                                     anchors.fill: parent
+                                    anchors.margins: -4
                                     hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        selectedContactIndex = index
+                                        let targetInitial = modelData
+                                        let targetIndex = -1
+                                        let list = contactsPage.filteredContacts
+                                        for (let i = 0; i < list.length; i++) {
+                                            if (list[i].initial === targetInitial) {
+                                                targetIndex = i
+                                                break
+                                            }
+                                        }
+                                        if (targetIndex >= 0) {
+                                            contactsList.positionViewAtIndex(targetIndex, ListView.Beginning)
+                                        }
                                     }
-                                }
-
-                                // 底部分隔线
-                                Rectangle {
-                                    anchors.bottom: parent.bottom
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.leftMargin: 62
-                                    height: 1
-                                    color: "#f0f0f0"
                                 }
                             }
                         }
                     }
                 }
             }
-
         }
-
         // ========== 中间分割线 ==========
         Rectangle {
             Layout.preferredWidth: 1
@@ -459,6 +513,24 @@ Rectangle {
 
                             property var requestData: modelData
                             property string actionStatus: requestData.status || "pending" // "accepted", "rejected", or "pending"
+                            property bool isHidden: false
+
+                            opacity: isHidden ? 0 : 1
+                            Behavior on opacity { NumberAnimation { duration: 300 } }
+                            Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
+                            visible: height > 0
+
+                            Timer {
+                                id: hideTimer
+                                interval: 800
+                                onTriggered: requestDelegate.isHidden = true
+                            }
+
+                            onActionStatusChanged: {
+                                if (actionStatus !== "pending") {
+                                    hideTimer.start()
+                                }
+                            }
 
                             RowLayout {
                                 anchors.fill: parent
@@ -580,10 +652,47 @@ Rectangle {
 
             // 选中联系人时显示详情
             Item {
+                id: detailItem
                 anchors.fill: parent
                 visible: selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length
 
-                property var selectedContact: (selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length) ? filteredContacts[selectedContactIndex] : null
+                property var selectedContact: null
+
+                // 使用 Connections 监听父级属性变化
+                Connections {
+                    target: contactsPage
+
+                    function onSelectedContactIndexChanged() {
+                        detailItem.updateSelectedContact()
+                    }
+
+                    function onContactsVersionChanged() {
+                        detailItem.updateSelectedContact()
+                    }
+                }
+
+                function updateSelectedContact() {
+                    if (selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length) {
+                        selectedContact = filteredContacts[selectedContactIndex]
+                        console.log("[ContactsPage] selectedContact updated:", {
+                            id: selectedContact.id,
+                            name: selectedContact.name,
+                            avatar: selectedContact.avatar,
+                            isMale: selectedContact.isMale,
+                            age: selectedContact.age,
+                            region: selectedContact.region,
+                            signature: selectedContact.signature,
+                            status: selectedContact.status
+                        })
+                    } else {
+                        selectedContact = null
+                    }
+                }
+
+                // 初始化时更新一次
+                Component.onCompleted: {
+                    detailItem.updateSelectedContact()
+                }
 
                 Flickable {
                     anchors.fill: parent
@@ -619,7 +728,7 @@ Rectangle {
 
                                     Image {
                                         anchors.centerIn: parent
-                                        source: selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length ? (filteredContacts[selectedContactIndex].avatar || "qrc:/new/prefix1/image/boy.png") : ""
+                                        source: detailItem.selectedContact ? (detailItem.selectedContact.avatar || "qrc:/new/prefix1/image/boy.png") : ""
                                         width: 76
                                         height: 76
                                         fillMode: Image.PreserveAspectCrop
@@ -636,7 +745,7 @@ Rectangle {
                                         spacing: 6
 
                                         Text {
-                                            text: selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length ? filteredContacts[selectedContactIndex].name : ""
+                                            text: detailItem.selectedContact ? detailItem.selectedContact.name : ""
                                             font.pixelSize: 18
                                             font.weight: Font.Bold
                                             color: "#222"
@@ -645,16 +754,16 @@ Rectangle {
 
                                         // 性别标识
                                         Text {
-                                            text: (selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length && filteredContacts[selectedContactIndex].isMale) ? "♂" : "♀"
+                                            text: detailItem.selectedContact ? (detailItem.selectedContact.isMale ? "♂" : "♀") : ""
                                             font.pixelSize: 16
                                             font.weight: Font.Bold
-                                            color: (selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length && filteredContacts[selectedContactIndex].isMale) ? "#3B82F6" : "#EC4899"
+                                            color: detailItem.selectedContact ? (detailItem.selectedContact.isMale ? "#3B82F6" : "#EC4899") : "#888"
                                         }
                                     }
 
                                     // ID
                                     Text {
-                                        text: selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length ? "ID: " + filteredContacts[selectedContactIndex].userId : ""
+                                        text: detailItem.selectedContact ? ("ID: " + detailItem.selectedContact.id) : ""
                                         font.pixelSize: 11
                                         color: "#888"
                                         font.family: "Microsoft YaHei, SimSun, sans-serif"
@@ -671,7 +780,7 @@ Rectangle {
                                                 font.pixelSize: 13
                                             }
                                             Text {
-                                                text: (selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length ? filteredContacts[selectedContactIndex].age : "") + "岁"
+                                                text: (detailItem.selectedContact ? detailItem.selectedContact.age : 0) + "岁"
                                                 font.pixelSize: 12
                                                 color: "#666"
                                                 font.family: "Microsoft YaHei, SimSun, sans-serif"
@@ -685,7 +794,7 @@ Rectangle {
                                                 font.pixelSize: 13
                                             }
                                             Text {
-                                                text: selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length ? filteredContacts[selectedContactIndex].region : ""
+                                                text: detailItem.selectedContact ? detailItem.selectedContact.region : ""
                                                 font.pixelSize: 12
                                                 color: "#666"
                                                 font.family: "Microsoft YaHei, SimSun, sans-serif"
@@ -730,13 +839,73 @@ Rectangle {
                                 }
 
                                 Text {
-                                    text: selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length ? filteredContacts[selectedContactIndex].signature : ""
+                                    text: detailItem.selectedContact ? detailItem.selectedContact.signature : ""
                                     font.pixelSize: 13
                                     color: "#555"
                                     font.family: "Microsoft YaHei, SimSun, sans-serif"
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
+                            }
+                        }
+
+                        // 分隔线
+                        Rectangle {
+                            width: parent.width
+                            height: 1
+                            color: "#eee"
+                        }
+
+                        // 丰富的详情展示区域
+                        Rectangle {
+                            width: parent.width
+                            height: 180
+                            color: "white"
+
+                            ColumnLayout {
+                                anchors.fill: parent
+                                anchors.margins: 30
+                                spacing: 16
+
+                                // 在线状态
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+                                    Text { text: "状态"; color: "#999"; font.pixelSize: 13; Layout.preferredWidth: 60 }
+                                    RowLayout {
+                                        spacing: 6
+                                        Rectangle {
+                                            width: 8; height: 8; radius: 4
+                                            color: detailItem.selectedContact && detailItem.selectedContact.status === "在线" ? "#4caf50" : (detailItem.selectedContact && detailItem.selectedContact.status === "忙碌" ? "#ff9800" : "#bbb")
+                                        }
+                                        Text { text: detailItem.selectedContact ? detailItem.selectedContact.status : ""; color: "#333"; font.pixelSize: 13; font.weight: Font.Medium }
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                }
+
+                                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#f5f5f5" }
+
+                                // 年龄信息
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+                                    Text { text: "年龄"; color: "#999"; font.pixelSize: 13; Layout.preferredWidth: 60 }
+                                    Text { text: (detailItem.selectedContact && detailItem.selectedContact.age > 0) ? (detailItem.selectedContact.age + " 岁") : "未设置"; color: "#333"; font.pixelSize: 13 }
+                                    Item { Layout.fillWidth: true }
+                                }
+
+                                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#f5f5f5" }
+
+                                // 地区信息
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+                                    Text { text: "地区"; color: "#999"; font.pixelSize: 13; Layout.preferredWidth: 60 }
+                                    Text { text: (detailItem.selectedContact && detailItem.selectedContact.region) ? detailItem.selectedContact.region : "未设置"; color: "#333"; font.pixelSize: 13 }
+                                    Item { Layout.fillWidth: true }
+                                }
+
+                                Item { Layout.fillHeight: true }
                             }
                         }
 
@@ -757,41 +926,9 @@ Rectangle {
                                 anchors.centerIn: parent
                                 spacing: 20
 
-                                // 编辑资料按钮
-                                Rectangle {
-                                    width: 120
-                                    height: 36
-                                    radius: 6
-                                    color: editArea.containsMouse ? "#e8e8e8" : "#f0f0f0"
-                                    border.color: "#d0d0d0"
-                                    border.width: 1
-
-                                    Behavior on color {
-                                        ColorAnimation { duration: 120 }
-                                    }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "编辑资料"
-                                        font.pixelSize: 13
-                                        color: "#555"
-                                        font.family: "Microsoft YaHei, SimSun, sans-serif"
-                                    }
-
-                                    MouseArea {
-                                        id: editArea
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: {
-                                            console.log("编辑联系人资料:", selectedContactIndex >= 0 ? contacts[selectedContactIndex].name : "")
-                                        }
-                                    }
-                                }
-
                                 // 发消息按钮
                                 Rectangle {
-                                    width: 120
+                                    width: 140
                                     height: 36
                                     radius: 6
                                     color: sendMsgArea.containsMouse ? "#2680EB" : "#3B82F6"
@@ -815,9 +952,8 @@ Rectangle {
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            if (selectedContactIndex >= 0 && selectedContactIndex < contacts.length) {
-                                                var c = contacts[selectedContactIndex]
-                                                contactsPage.contactSelected(c.id, c.name)
+                                            if (detailItem.selectedContact && detailItem.selectedContact.id !== "" && detailItem.selectedContact.name !== "") {
+                                                contactsPage.contactSelected(detailItem.selectedContact.id, detailItem.selectedContact.name)
                                             }
                                         }
                                     }

@@ -7,7 +7,6 @@ bin/obj/websocketclient.o
 bin/obj/networkclient.o
 bin/obj/chatservice.o
 bin/obj/databaseconfig.o
-bin/obj/databasemanager.o
 bin/obj/userdao.o
 bin/obj/conversationdao.o
 bin/obj/messagedao.o
@@ -21,7 +20,6 @@ bin/obj/moc_basemodel.o
 bin/obj/moc_messagemodel.o
 bin/obj/moc_conversationmodel.o
 bin/obj/moc_chatservice.o
-bin/obj/moc_databasemanager.o
 bin/obj/moc_userdao.o
 bin/obj/moc_conversationdao.o
 bin/obj/moc_messagedao.o

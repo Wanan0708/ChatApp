@@ -15,6 +15,11 @@ ColumnLayout {
     onCurrentConversationIdChanged: {
         messageModel = ChatService.getMessageModel(currentConversationId)
         console.log("[ChatPage] Switched to conversation:", currentConversationId)
+        
+        // 主动加载消息
+        if (currentConversationId !== "") {
+            ChatService.refreshMessages(currentConversationId)
+        }
     }
 
     Component.onCompleted: {
@@ -28,12 +33,8 @@ ColumnLayout {
             // 如果是当前会话，自动滚动到底部
             if (conversationId === root.currentConversationId) {
                 Qt.callLater(function() {
-                    Qt.callLater(function() {
-                        if (chatView.contentHeight > chatView.height) {
-                            chatView.contentY = chatView.contentHeight - chatView.height
-                        }
-                    }, 16)
-                }, 16)
+                    chatView.positionViewAtEnd()
+                })
             }
         }
     }
@@ -134,86 +135,59 @@ ColumnLayout {
             }
         }
 
-        // 消息列表（关键：用纯Flickable+Column，无Layout）
-        Flickable {
+        // 消息列表（优化：使用 ListView 获取更好的性能）
+        ListView {
             id: chatView
             Layout.fillWidth: true
             Layout.fillHeight: true
-            contentHeight: messageColumn.height
-            contentWidth: width
             clip: true
-            boundsBehavior: Flickable.StopAtBounds
+            model: root.messageModel
+            spacing: 1
 
-            property bool userIsAtBottom: true
-            property real lastContentHeight: 0
-
-            onContentYChanged: {
-                userIsAtBottom = (contentY >= contentHeight - height - 10)
-            }
-
-            onContentHeightChanged: {
-                // 仅当用户在底部时自动滚动
-                if (userIsAtBottom && contentHeight > lastContentHeight) {
-                    // 双重延迟确保布局完全稳定（Qt 5.14.2必需）
-                    Qt.callLater(function() {
-                        Qt.callLater(function() {
-                            if (contentHeight > height) {
-                                contentY = contentHeight - height
-                                // console.log("Auto-scrolled to bottom:", contentY)
-                            }
-                        }, 16) // 1帧
-                    }, 16) // 1帧
+            // 当数据变化时，自动滚动到底部（最新消息）
+            onCountChanged: {
+                if (count > 0) {
+                    positionViewAtEnd()
                 }
-                lastContentHeight = contentHeight
             }
+            
+            delegate: Item {
+                width: ListView.view.width
+                height: Math.max(bubble.height + 16, 44)  // 确保最小高度
 
-            Column {
-                id: messageColumn
-                width: parent.width
-                spacing: 1
-                padding: 12
+                // 计算是否自己消息
+                readonly property bool isSelfMessage: model.senderId === ChatService.currentUserId
 
-                Repeater {
-                    model: root.messageModel
-                    delegate: Item {
-                        width: parent.width
-                        height: Math.max(bubble.height + 15, 40)  // 确保最小高度
+                // 头像（左侧）- 对方的消息
+                Avatar {
+                    id: leftAvatar
+                    isSelf: false
+                    x: 12  // 左边距
+                    y: 8
+                    visible: !isSelfMessage
+                    avatarSource: "qrc:/new/prefix1/image/boy.png"
+                }
 
-                        // 头像（左侧）
-                        Avatar {
-                            id: leftAvatar
-                            isSelf: false
-                            x: 0
-                            y: (parent.height - height) / 2
-                            visible: !isSelfMessage
-                            avatarSource: "qrc:/new/prefix1/image/boy.png"
-                        }
+                // 头像（右侧）- 自己的消息
+                Avatar {
+                    id: rightAvatar
+                    isSelf: true
+                    x: parent.width - width - 12
+                    y: 8
+                    visible: isSelfMessage
+                    avatarSource: ChatService.currentUserAvatar || "qrc:/new/prefix1/image/boy.png"
+                }
 
-                        // 头像（右侧）
-                        Avatar {
-                            id: rightAvatar
-                            isSelf: true
-                            x: parent.width - width - 24
-                            y: (parent.height - height) / 2
-                            visible: isSelfMessage
-                            avatarSource: ChatService.currentUserAvatar || "qrc:/new/prefix1/image/boy.png"
-                        }
-
-                        // 消息气泡
-                        MessageBubble {
-                            id: bubble
-                            x: isSelfMessage ? (rightAvatar.x - width - 8) : (leftAvatar.x + leftAvatar.width + 8)
-                            y: (parent.height - height) / 2 + 8
-                            width: parent.width - 64
-                            content: model.content
-                            isSelf: model.senderId === ChatService.currentUserId
-                            timestamp: model.timestamp
-                            timeAlignment: isSelfMessage ? "right" : "left"
-                        }
-
-                        // 计算是否自己消息
-                        readonly property bool isSelfMessage: model.senderId === ChatService.currentUserId
-                    }
+                // 消息气泡
+                MessageBubble {
+                    id: bubble
+                    x: isSelfMessage ? (rightAvatar.x - width - 8) : (leftAvatar.x + leftAvatar.width + 8)
+                    y: 8
+                    width: parent.width - 80
+                    content: model.content
+                    isSelf: model.senderId === ChatService.currentUserId
+                    timestamp: model.timestamp
+                    timeAlignment: isSelfMessage ? "right" : "left"
                 }
             }
         }

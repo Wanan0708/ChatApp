@@ -23,8 +23,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_ChatService_t {
-    QByteArrayData data[135];
-    char stringdata0[2378];
+    QByteArrayData data[136];
+    char stringdata0[2394];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -119,55 +119,56 @@ QT_MOC_LITERAL(82, 1509, 7), // "content"
 QT_MOC_LITERAL(83, 1517, 20), // "markConversationRead"
 QT_MOC_LITERAL(84, 1538, 22), // "setCurrentConversation"
 QT_MOC_LITERAL(85, 1561, 20), // "refreshConversations"
-QT_MOC_LITERAL(86, 1582, 6), // "logout"
-QT_MOC_LITERAL(87, 1589, 14), // "changePassword"
-QT_MOC_LITERAL(88, 1604, 11), // "newPassword"
-QT_MOC_LITERAL(89, 1616, 26), // "connectToDefaultChatServer"
-QT_MOC_LITERAL(90, 1643, 19), // "connectToChatServer"
-QT_MOC_LITERAL(91, 1663, 9), // "serverUrl"
-QT_MOC_LITERAL(92, 1673, 24), // "disconnectFromChatServer"
-QT_MOC_LITERAL(93, 1698, 16), // "totalUnreadCount"
-QT_MOC_LITERAL(94, 1715, 17), // "hasUnreadMessages"
-QT_MOC_LITERAL(95, 1733, 11), // "searchUsers"
-QT_MOC_LITERAL(96, 1745, 10), // "searchTerm"
-QT_MOC_LITERAL(97, 1756, 15), // "loadUserProfile"
-QT_MOC_LITERAL(98, 1772, 15), // "saveUserProfile"
-QT_MOC_LITERAL(99, 1788, 17), // "sendFriendRequest"
-QT_MOC_LITERAL(100, 1806, 8), // "toUserId"
-QT_MOC_LITERAL(101, 1815, 22), // "respondToFriendRequest"
-QT_MOC_LITERAL(102, 1838, 6), // "accept"
-QT_MOC_LITERAL(103, 1845, 24), // "getPendingFriendRequests"
-QT_MOC_LITERAL(104, 1870, 13), // "getFriendList"
-QT_MOC_LITERAL(105, 1884, 13), // "checkIsFriend"
-QT_MOC_LITERAL(106, 1898, 17), // "validateUserLogin"
-QT_MOC_LITERAL(107, 1916, 8), // "username"
-QT_MOC_LITERAL(108, 1925, 8), // "password"
-QT_MOC_LITERAL(109, 1934, 15), // "registerNewUser"
-QT_MOC_LITERAL(110, 1950, 20), // "requestPasswordReset"
-QT_MOC_LITERAL(111, 1971, 13), // "resetPassword"
-QT_MOC_LITERAL(112, 1985, 16), // "adminSetPassword"
-QT_MOC_LITERAL(113, 2002, 15), // "setLastUsername"
-QT_MOC_LITERAL(114, 2018, 15), // "setLastPassword"
-QT_MOC_LITERAL(115, 2034, 19), // "isDatabaseConnected"
-QT_MOC_LITERAL(116, 2054, 17), // "conversationModel"
-QT_MOC_LITERAL(117, 2072, 18), // "ConversationModel*"
-QT_MOC_LITERAL(118, 2091, 21), // "currentConversationId"
-QT_MOC_LITERAL(119, 2113, 13), // "currentUserId"
-QT_MOC_LITERAL(120, 2127, 15), // "currentUserName"
-QT_MOC_LITERAL(121, 2143, 17), // "currentUserAvatar"
-QT_MOC_LITERAL(122, 2161, 17), // "currentUserGender"
-QT_MOC_LITERAL(123, 2179, 17), // "currentUserRegion"
-QT_MOC_LITERAL(124, 2197, 16), // "currentUserPhone"
-QT_MOC_LITERAL(125, 2214, 16), // "currentUserEmail"
-QT_MOC_LITERAL(126, 2231, 18), // "currentUserContact"
-QT_MOC_LITERAL(127, 2250, 14), // "currentUserBio"
-QT_MOC_LITERAL(128, 2265, 11), // "isConnected"
-QT_MOC_LITERAL(129, 2277, 20), // "notificationsEnabled"
-QT_MOC_LITERAL(130, 2298, 12), // "soundEnabled"
-QT_MOC_LITERAL(131, 2311, 16), // "autoLoginEnabled"
-QT_MOC_LITERAL(132, 2328, 23), // "rememberPasswordEnabled"
-QT_MOC_LITERAL(133, 2352, 12), // "lastUsername"
-QT_MOC_LITERAL(134, 2365, 12) // "lastPassword"
+QT_MOC_LITERAL(86, 1582, 15), // "refreshMessages"
+QT_MOC_LITERAL(87, 1598, 6), // "logout"
+QT_MOC_LITERAL(88, 1605, 14), // "changePassword"
+QT_MOC_LITERAL(89, 1620, 11), // "newPassword"
+QT_MOC_LITERAL(90, 1632, 26), // "connectToDefaultChatServer"
+QT_MOC_LITERAL(91, 1659, 19), // "connectToChatServer"
+QT_MOC_LITERAL(92, 1679, 9), // "serverUrl"
+QT_MOC_LITERAL(93, 1689, 24), // "disconnectFromChatServer"
+QT_MOC_LITERAL(94, 1714, 16), // "totalUnreadCount"
+QT_MOC_LITERAL(95, 1731, 17), // "hasUnreadMessages"
+QT_MOC_LITERAL(96, 1749, 11), // "searchUsers"
+QT_MOC_LITERAL(97, 1761, 10), // "searchTerm"
+QT_MOC_LITERAL(98, 1772, 15), // "loadUserProfile"
+QT_MOC_LITERAL(99, 1788, 15), // "saveUserProfile"
+QT_MOC_LITERAL(100, 1804, 17), // "sendFriendRequest"
+QT_MOC_LITERAL(101, 1822, 8), // "toUserId"
+QT_MOC_LITERAL(102, 1831, 22), // "respondToFriendRequest"
+QT_MOC_LITERAL(103, 1854, 6), // "accept"
+QT_MOC_LITERAL(104, 1861, 24), // "getPendingFriendRequests"
+QT_MOC_LITERAL(105, 1886, 13), // "getFriendList"
+QT_MOC_LITERAL(106, 1900, 13), // "checkIsFriend"
+QT_MOC_LITERAL(107, 1914, 17), // "validateUserLogin"
+QT_MOC_LITERAL(108, 1932, 8), // "username"
+QT_MOC_LITERAL(109, 1941, 8), // "password"
+QT_MOC_LITERAL(110, 1950, 15), // "registerNewUser"
+QT_MOC_LITERAL(111, 1966, 20), // "requestPasswordReset"
+QT_MOC_LITERAL(112, 1987, 13), // "resetPassword"
+QT_MOC_LITERAL(113, 2001, 16), // "adminSetPassword"
+QT_MOC_LITERAL(114, 2018, 15), // "setLastUsername"
+QT_MOC_LITERAL(115, 2034, 15), // "setLastPassword"
+QT_MOC_LITERAL(116, 2050, 19), // "isDatabaseConnected"
+QT_MOC_LITERAL(117, 2070, 17), // "conversationModel"
+QT_MOC_LITERAL(118, 2088, 18), // "ConversationModel*"
+QT_MOC_LITERAL(119, 2107, 21), // "currentConversationId"
+QT_MOC_LITERAL(120, 2129, 13), // "currentUserId"
+QT_MOC_LITERAL(121, 2143, 15), // "currentUserName"
+QT_MOC_LITERAL(122, 2159, 17), // "currentUserAvatar"
+QT_MOC_LITERAL(123, 2177, 17), // "currentUserGender"
+QT_MOC_LITERAL(124, 2195, 17), // "currentUserRegion"
+QT_MOC_LITERAL(125, 2213, 16), // "currentUserPhone"
+QT_MOC_LITERAL(126, 2230, 16), // "currentUserEmail"
+QT_MOC_LITERAL(127, 2247, 18), // "currentUserContact"
+QT_MOC_LITERAL(128, 2266, 14), // "currentUserBio"
+QT_MOC_LITERAL(129, 2281, 11), // "isConnected"
+QT_MOC_LITERAL(130, 2293, 20), // "notificationsEnabled"
+QT_MOC_LITERAL(131, 2314, 12), // "soundEnabled"
+QT_MOC_LITERAL(132, 2327, 16), // "autoLoginEnabled"
+QT_MOC_LITERAL(133, 2344, 23), // "rememberPasswordEnabled"
+QT_MOC_LITERAL(134, 2368, 12), // "lastUsername"
+QT_MOC_LITERAL(135, 2381, 12) // "lastPassword"
 
     },
     "ChatService\0conversationModelChanged\0"
@@ -215,8 +216,8 @@ QT_MOC_LITERAL(134, 2365, 12) // "lastPassword"
     "userName\0setCurrentUserAvatar\0avatar\0"
     "sendMessage\0content\0markConversationRead\0"
     "setCurrentConversation\0refreshConversations\0"
-    "logout\0changePassword\0newPassword\0"
-    "connectToDefaultChatServer\0"
+    "refreshMessages\0logout\0changePassword\0"
+    "newPassword\0connectToDefaultChatServer\0"
     "connectToChatServer\0serverUrl\0"
     "disconnectFromChatServer\0totalUnreadCount\0"
     "hasUnreadMessages\0searchUsers\0searchTerm\0"
@@ -248,96 +249,97 @@ static const uint qt_meta_data_ChatService[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      78,   14, // methods
-      18,  638, // properties
+      79,   14, // methods
+      18,  646, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
       33,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    0,  404,    2, 0x06 /* Public */,
-       3,    0,  405,    2, 0x06 /* Public */,
-       4,    2,  406,    2, 0x06 /* Public */,
-       7,    1,  411,    2, 0x06 /* Public */,
-       8,    1,  414,    2, 0x06 /* Public */,
-      10,    0,  417,    2, 0x06 /* Public */,
-      11,    0,  418,    2, 0x06 /* Public */,
-      12,    0,  419,    2, 0x06 /* Public */,
-      13,    0,  420,    2, 0x06 /* Public */,
-      14,    0,  421,    2, 0x06 /* Public */,
-      15,    0,  422,    2, 0x06 /* Public */,
-      16,    0,  423,    2, 0x06 /* Public */,
-      17,    0,  424,    2, 0x06 /* Public */,
-      18,    0,  425,    2, 0x06 /* Public */,
-      19,    2,  426,    2, 0x06 /* Public */,
-      21,    0,  431,    2, 0x06 /* Public */,
-      22,    0,  432,    2, 0x06 /* Public */,
-      23,    0,  433,    2, 0x06 /* Public */,
-      24,    0,  434,    2, 0x06 /* Public */,
-      25,    0,  435,    2, 0x06 /* Public */,
-      26,    0,  436,    2, 0x06 /* Public */,
-      27,    1,  437,    2, 0x06 /* Public */,
-      29,    2,  440,    2, 0x06 /* Public */,
-      32,    2,  445,    2, 0x06 /* Public */,
-      34,    1,  450,    2, 0x06 /* Public */,
-      36,    1,  453,    2, 0x06 /* Public */,
-      38,    1,  456,    2, 0x06 /* Public */,
-      40,    2,  459,    2, 0x06 /* Public */,
-      43,    2,  464,    2, 0x06 /* Public */,
-      44,    2,  469,    2, 0x06 /* Public */,
-      45,    3,  474,    2, 0x06 /* Public */,
-      47,    2,  481,    2, 0x06 /* Public */,
-      48,    2,  486,    2, 0x06 /* Public */,
+       1,    0,  409,    2, 0x06 /* Public */,
+       3,    0,  410,    2, 0x06 /* Public */,
+       4,    2,  411,    2, 0x06 /* Public */,
+       7,    1,  416,    2, 0x06 /* Public */,
+       8,    1,  419,    2, 0x06 /* Public */,
+      10,    0,  422,    2, 0x06 /* Public */,
+      11,    0,  423,    2, 0x06 /* Public */,
+      12,    0,  424,    2, 0x06 /* Public */,
+      13,    0,  425,    2, 0x06 /* Public */,
+      14,    0,  426,    2, 0x06 /* Public */,
+      15,    0,  427,    2, 0x06 /* Public */,
+      16,    0,  428,    2, 0x06 /* Public */,
+      17,    0,  429,    2, 0x06 /* Public */,
+      18,    0,  430,    2, 0x06 /* Public */,
+      19,    2,  431,    2, 0x06 /* Public */,
+      21,    0,  436,    2, 0x06 /* Public */,
+      22,    0,  437,    2, 0x06 /* Public */,
+      23,    0,  438,    2, 0x06 /* Public */,
+      24,    0,  439,    2, 0x06 /* Public */,
+      25,    0,  440,    2, 0x06 /* Public */,
+      26,    0,  441,    2, 0x06 /* Public */,
+      27,    1,  442,    2, 0x06 /* Public */,
+      29,    2,  445,    2, 0x06 /* Public */,
+      32,    2,  450,    2, 0x06 /* Public */,
+      34,    1,  455,    2, 0x06 /* Public */,
+      36,    1,  458,    2, 0x06 /* Public */,
+      38,    1,  461,    2, 0x06 /* Public */,
+      40,    2,  464,    2, 0x06 /* Public */,
+      43,    2,  469,    2, 0x06 /* Public */,
+      44,    2,  474,    2, 0x06 /* Public */,
+      45,    3,  479,    2, 0x06 /* Public */,
+      47,    2,  486,    2, 0x06 /* Public */,
+      48,    2,  491,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-      49,    1,  491,    2, 0x08 /* Private */,
-      50,    0,  494,    2, 0x08 /* Private */,
-      51,    0,  495,    2, 0x08 /* Private */,
-      52,    4,  496,    2, 0x08 /* Private */,
-      54,    3,  505,    2, 0x08 /* Private */,
-      55,    1,  512,    2, 0x08 /* Private */,
-      58,    2,  515,    2, 0x08 /* Private */,
-      61,    1,  520,    2, 0x08 /* Private */,
-      63,    3,  523,    2, 0x08 /* Private */,
-      65,    2,  530,    2, 0x08 /* Private */,
-      66,    1,  535,    2, 0x08 /* Private */,
-      68,    1,  538,    2, 0x08 /* Private */,
-      70,    2,  541,    2, 0x08 /* Private */,
-      71,    3,  546,    2, 0x08 /* Private */,
+      49,    1,  496,    2, 0x08 /* Private */,
+      50,    0,  499,    2, 0x08 /* Private */,
+      51,    0,  500,    2, 0x08 /* Private */,
+      52,    4,  501,    2, 0x08 /* Private */,
+      54,    3,  510,    2, 0x08 /* Private */,
+      55,    1,  517,    2, 0x08 /* Private */,
+      58,    2,  520,    2, 0x08 /* Private */,
+      61,    1,  525,    2, 0x08 /* Private */,
+      63,    3,  528,    2, 0x08 /* Private */,
+      65,    2,  535,    2, 0x08 /* Private */,
+      66,    1,  540,    2, 0x08 /* Private */,
+      68,    1,  543,    2, 0x08 /* Private */,
+      70,    2,  546,    2, 0x08 /* Private */,
+      71,    3,  551,    2, 0x08 /* Private */,
 
  // methods: name, argc, parameters, tag, flags
-      74,    1,  553,    2, 0x02 /* Public */,
-      76,    1,  556,    2, 0x02 /* Public */,
-      77,    1,  559,    2, 0x02 /* Public */,
-      79,    1,  562,    2, 0x02 /* Public */,
-      81,    2,  565,    2, 0x02 /* Public */,
-      83,    1,  570,    2, 0x02 /* Public */,
-      84,    1,  573,    2, 0x02 /* Public */,
-      85,    0,  576,    2, 0x02 /* Public */,
-      86,    0,  577,    2, 0x02 /* Public */,
-      87,    1,  578,    2, 0x02 /* Public */,
-      89,    0,  581,    2, 0x02 /* Public */,
-      90,    1,  582,    2, 0x02 /* Public */,
-      92,    0,  585,    2, 0x02 /* Public */,
-      93,    0,  586,    2, 0x02 /* Public */,
-      94,    0,  587,    2, 0x02 /* Public */,
-      95,    1,  588,    2, 0x02 /* Public */,
-      97,    0,  591,    2, 0x02 /* Public */,
-      98,    1,  592,    2, 0x02 /* Public */,
-      99,    1,  595,    2, 0x02 /* Public */,
-     101,    2,  598,    2, 0x02 /* Public */,
-     103,    0,  603,    2, 0x02 /* Public */,
-     104,    0,  604,    2, 0x02 /* Public */,
-     105,    1,  605,    2, 0x02 /* Public */,
-     106,    2,  608,    2, 0x02 /* Public */,
-     109,    2,  613,    2, 0x02 /* Public */,
-     110,    1,  618,    2, 0x02 /* Public */,
-     111,    2,  621,    2, 0x02 /* Public */,
-     112,    2,  626,    2, 0x02 /* Public */,
-     113,    1,  631,    2, 0x02 /* Public */,
-     114,    1,  634,    2, 0x02 /* Public */,
-     115,    0,  637,    2, 0x02 /* Public */,
+      74,    1,  558,    2, 0x02 /* Public */,
+      76,    1,  561,    2, 0x02 /* Public */,
+      77,    1,  564,    2, 0x02 /* Public */,
+      79,    1,  567,    2, 0x02 /* Public */,
+      81,    2,  570,    2, 0x02 /* Public */,
+      83,    1,  575,    2, 0x02 /* Public */,
+      84,    1,  578,    2, 0x02 /* Public */,
+      85,    0,  581,    2, 0x02 /* Public */,
+      86,    1,  582,    2, 0x02 /* Public */,
+      87,    0,  585,    2, 0x02 /* Public */,
+      88,    1,  586,    2, 0x02 /* Public */,
+      90,    0,  589,    2, 0x02 /* Public */,
+      91,    1,  590,    2, 0x02 /* Public */,
+      93,    0,  593,    2, 0x02 /* Public */,
+      94,    0,  594,    2, 0x02 /* Public */,
+      95,    0,  595,    2, 0x02 /* Public */,
+      96,    1,  596,    2, 0x02 /* Public */,
+      98,    0,  599,    2, 0x02 /* Public */,
+      99,    1,  600,    2, 0x02 /* Public */,
+     100,    1,  603,    2, 0x02 /* Public */,
+     102,    2,  606,    2, 0x02 /* Public */,
+     104,    0,  611,    2, 0x02 /* Public */,
+     105,    0,  612,    2, 0x02 /* Public */,
+     106,    1,  613,    2, 0x02 /* Public */,
+     107,    2,  616,    2, 0x02 /* Public */,
+     110,    2,  621,    2, 0x02 /* Public */,
+     111,    1,  626,    2, 0x02 /* Public */,
+     112,    2,  629,    2, 0x02 /* Public */,
+     113,    2,  634,    2, 0x02 /* Public */,
+     114,    1,  639,    2, 0x02 /* Public */,
+     115,    1,  642,    2, 0x02 /* Public */,
+     116,    0,  645,    2, 0x02 /* Public */,
 
  // signals: parameters
     QMetaType::Void,
@@ -399,33 +401,33 @@ static const uint qt_meta_data_ChatService[] = {
     QMetaType::Void, QMetaType::QString,    5,
     QMetaType::Void, QMetaType::QString,    5,
     QMetaType::Void,
+    QMetaType::Void, QMetaType::QString,    5,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QString,   88,
+    QMetaType::Void, QMetaType::QString,   89,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QString,   91,
+    QMetaType::Void, QMetaType::QString,   92,
     QMetaType::Void,
     QMetaType::Int,
     QMetaType::Bool,
-    QMetaType::Void, QMetaType::QString,   96,
+    QMetaType::Void, QMetaType::QString,   97,
     QMetaType::Void,
     QMetaType::Void, QMetaType::QVariantMap,   64,
-    QMetaType::Void, QMetaType::QString,  100,
-    QMetaType::Void, QMetaType::Int, QMetaType::Bool,   72,  102,
+    QMetaType::Void, QMetaType::QString,  101,
+    QMetaType::Void, QMetaType::Int, QMetaType::Bool,   72,  103,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void, QMetaType::QString,   41,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString,  107,  108,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString,  107,  108,
-    QMetaType::Void, QMetaType::QString,  107,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString,   46,   88,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString,   41,   88,
-    QMetaType::Void, QMetaType::QString,  107,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,  108,  109,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,  108,  109,
     QMetaType::Void, QMetaType::QString,  108,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,   46,   89,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,   41,   89,
+    QMetaType::Void, QMetaType::QString,  108,
+    QMetaType::Void, QMetaType::QString,  109,
     QMetaType::Bool,
 
  // properties: name, type, flags
-     116, 0x80000000 | 117, 0x00095409,
-     118, QMetaType::QString, 0x00495103,
+     117, 0x80000000 | 118, 0x00095409,
      119, QMetaType::QString, 0x00495103,
      120, QMetaType::QString, 0x00495103,
      121, QMetaType::QString, 0x00495103,
@@ -435,13 +437,14 @@ static const uint qt_meta_data_ChatService[] = {
      125, QMetaType::QString, 0x00495103,
      126, QMetaType::QString, 0x00495103,
      127, QMetaType::QString, 0x00495103,
-     128, QMetaType::Bool, 0x00495001,
-     129, QMetaType::Bool, 0x00495103,
+     128, QMetaType::QString, 0x00495103,
+     129, QMetaType::Bool, 0x00495001,
      130, QMetaType::Bool, 0x00495103,
      131, QMetaType::Bool, 0x00495103,
      132, QMetaType::Bool, 0x00495103,
-     133, QMetaType::QString, 0x00495103,
+     133, QMetaType::Bool, 0x00495103,
      134, QMetaType::QString, 0x00495103,
+     135, QMetaType::QString, 0x00495103,
 
  // properties: notify_signal_id
        0,
@@ -528,31 +531,32 @@ void ChatService::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id,
         case 52: _t->markConversationRead((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         case 53: _t->setCurrentConversation((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         case 54: _t->refreshConversations(); break;
-        case 55: _t->logout(); break;
-        case 56: _t->changePassword((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 57: _t->connectToDefaultChatServer(); break;
-        case 58: _t->connectToChatServer((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 59: _t->disconnectFromChatServer(); break;
-        case 60: { int _r = _t->totalUnreadCount();
+        case 55: _t->refreshMessages((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 56: _t->logout(); break;
+        case 57: _t->changePassword((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 58: _t->connectToDefaultChatServer(); break;
+        case 59: _t->connectToChatServer((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 60: _t->disconnectFromChatServer(); break;
+        case 61: { int _r = _t->totalUnreadCount();
             if (_a[0]) *reinterpret_cast< int*>(_a[0]) = std::move(_r); }  break;
-        case 61: { bool _r = _t->hasUnreadMessages();
+        case 62: { bool _r = _t->hasUnreadMessages();
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
-        case 62: _t->searchUsers((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 63: _t->loadUserProfile(); break;
-        case 64: _t->saveUserProfile((*reinterpret_cast< const QVariantMap(*)>(_a[1]))); break;
-        case 65: _t->sendFriendRequest((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 66: _t->respondToFriendRequest((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< bool(*)>(_a[2]))); break;
-        case 67: _t->getPendingFriendRequests(); break;
-        case 68: _t->getFriendList(); break;
-        case 69: _t->checkIsFriend((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 70: _t->validateUserLogin((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
-        case 71: _t->registerNewUser((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
-        case 72: _t->requestPasswordReset((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 73: _t->resetPassword((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
-        case 74: _t->adminSetPassword((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
-        case 75: _t->setLastUsername((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 76: _t->setLastPassword((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 77: { bool _r = _t->isDatabaseConnected();
+        case 63: _t->searchUsers((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 64: _t->loadUserProfile(); break;
+        case 65: _t->saveUserProfile((*reinterpret_cast< const QVariantMap(*)>(_a[1]))); break;
+        case 66: _t->sendFriendRequest((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 67: _t->respondToFriendRequest((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< bool(*)>(_a[2]))); break;
+        case 68: _t->getPendingFriendRequests(); break;
+        case 69: _t->getFriendList(); break;
+        case 70: _t->checkIsFriend((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 71: _t->validateUserLogin((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 72: _t->registerNewUser((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 73: _t->requestPasswordReset((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 74: _t->resetPassword((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 75: _t->adminSetPassword((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 76: _t->setLastUsername((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 77: _t->setLastPassword((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 78: { bool _r = _t->isDatabaseConnected();
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
         default: ;
         }
@@ -873,13 +877,13 @@ int ChatService::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 78)
+        if (_id < 79)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 78;
+        _id -= 79;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 78)
+        if (_id < 79)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 78;
+        _id -= 79;
     }
 #ifndef QT_NO_PROPERTIES
     else if (_c == QMetaObject::ReadProperty || _c == QMetaObject::WriteProperty
