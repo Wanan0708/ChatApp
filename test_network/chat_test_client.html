@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💬 聊天测试客户端 - 用户2 (李四)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { text-align: center; padding: 25px; background: linear-gradient(120deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .status-bar { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; font-size: 14px; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .connected { background: #00c853; box-shadow: 0 0 8px #00c853; }
+        .disconnected { background: #ff1744; box-shadow: 0 0 8px #ff1744; }
+        .chat-container { display: flex; flex-direction: column; height: 500px; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; background: #f8f9fa; }
+        .message { max-width: 80%; margin: 12px 0; padding: 12px 16px; border-radius: 18px; position: relative; line-height: 1.5; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message.received { background: white; border: 1px solid #e0e0e0; margin-right: auto; border-bottom-left-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .message.sent { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; margin-left: auto; border-bottom-right-radius: 5px; }
+        .message-header { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; opacity: 0.9; }
+        .message-sender { font-weight: bold; }
+        .message-time { font-size: 11px; opacity: 0.8; }
+        .message-content { word-wrap: break-word; }
+        .system-msg { text-align: center; color: #6c757d; font-style: italic; padding: 8px; margin: 10px 0; background: #e9ecef; border-radius: 10px; font-size: 14px; }
+        .input-area { display: flex; padding: 15px; border-top: 1px solid #e0e0e0; background: white; }
+        .input-area input { flex: 1; padding: 14px 20px; border: 2px solid #ddd; border-radius: 25px; outline: none; font-size: 16px; transition: border-color 0.3s; }
+        .input-area input:focus { border-color: #4facfe; }
+        .input-area button { margin-left: 10px; padding: 14px 28px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 16px; transition: transform 0.2s; }
+        .input-area button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4); }
+        .input-area button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .controls { display: flex; justify-content: center; gap: 15px; padding: 15px; background: #f8f9fa; border-top: 1px solid #e0e0e0; }
+        .btn { padding: 10px 20px; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s; }
+        .btn-connect { background: #00c853; color: white; }
+        .btn-connect:hover { background: #00a832; transform: scale(1.05); }
+        .btn-disconnect { background: #ff1744; color: white; }
+        .btn-clear { background: #6c757d; color: white; }
+        .user-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; margin-top: 8px; font-size: 14px; }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; background: white; color: #4facfe; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }
+        .log-container { max-height: 150px; overflow-y: auto; padding: 10px; background: #2d2d2d; color: #00ff00; font-family: monospace; font-size: 12px; border-radius: 0 0 20px 20px; display: none; }
+        .log-entry { padding: 2px 0; border-bottom: 1px solid #444; }
+        .log-time { color: #ffcc00; margin-right: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💬 聊天测试客户端</h1>
+            <div class="user-badge">
+                <div class="avatar">李</div>
+                <span><strong>李四</strong> (user456)</span>
+            </div>
+            <div class="status-bar">
+                <div class="status-dot disconnected" id="statusDot"></div>
+                <span id="statusText">未连接到服务器</span>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="messages" id="messages">
+                <div class="system-msg">💡 点击下方"连接服务器"开始对话</div>
+                <div class="system-msg">✅ 已修复：与 Qt 客户端双向消息互通</div>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="输入消息... 按回车发送" disabled>
+                <button id="sendBtn" disabled>➤ 发送</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="connectBtn" class="btn btn-connect">🔌 连接服务器</button>
+            <button id="disconnectBtn" class="btn btn-disconnect" disabled>❌ 断开</button>
+            <button id="clearBtn" class="btn btn-clear">🗑️ 清空</button>
+            <button id="toggleLogBtn" class="btn" style="background:#17a2b8;color:white">📄 调试日志</button>
+        </div>
+        
+        <div class="log-container" id="logContainer"></div>
+    </div>
+
+    <script>
+        // ===== 配置 =====
+        const SERVER_URL = 'ws://localhost:8080';
+        const USER_CONFIG = {
+            userId: 'user456',
+            userName: '李四',
+            conversationId: 'conv_001' // ✅ 必须与 Qt 客户端当前会话一致
+        };
+        
+        // ===== 元素 =====
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const messagesEl = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const toggleLogBtn = document.getElementById('toggleLogBtn');
+        const logContainer = document.getElementById('logContainer');
+        
+        let ws = null;
+        let isConnected = false;
+        let logEnabled = false;
+        
+        // ===== 状态管理 =====
+        function updateStatus(connected, msg) {
+            isConnected = connected;
+            statusDot.className = `status-dot ${connected ? 'connected' : 'disconnected'}`;
+            statusText.textContent = msg;
+            connectBtn.disabled = connected;
+            disconnectBtn.disabled = !connected;
+            messageInput.disabled = !connected;
+            sendBtn.disabled = !connected;
+            addLog(`状态更新: ${msg}`);
+        }
+        
+        // ===== 消息处理 =====
+        function addMessage(content, isSent = false, sender = USER_CONFIG.userName, timestamp = Date.now()) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+            
+            const date = new Date(timestamp);
+            const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+            
+            msgDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="message-sender">${sender}</span>
+                    <span class="message-time">${timeStr}</span>
+                </div>
+                <div class="message-content">${escapeHtml(content)}</div>
+            `;
+            
+            messagesEl.appendChild(msgDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            addLog(`${isSent ? '📤' : '📨'} ${sender}: ${content}`);
+        }
+        
+        function addSystemMessage(msg, type = 'info') {
+            const sysDiv = document.createElement('div');
+            sysDiv.className = 'system-msg';
+            sysDiv.innerHTML = `${type === 'error' ? '❌' : '⚙️'} ${msg}`;
+            if (type === 'error') sysDiv.style.color = '#dc3545';
+            messagesEl.appendChild(sysDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            addLog(`系统: ${msg}`);
+        }
+        
+        // ===== WebSocket 操作 =====
+        function connect() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                addSystemMessage('已连接，无需重复连接');
+                return;
+            }
+            
+            updateStatus(false, '🔄 正在连接...');
+            addLog(`尝试连接: ${SERVER_URL}`);
+            
+            ws = new WebSocket(SERVER_URL);
+            
+            ws.onopen = () => {
+                addLog('✅ WebSocket 连接成功');
+                addSystemMessage('正在发送认证信息...');
+                
+                // 发送认证
+                ws.send(JSON.stringify({
+                    type: 'auth',
+                    userId: USER_CONFIG.userId,
+                    userName: USER_CONFIG.userName,
+                    timestamp: Date.now()
+                }));
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    addLog(`📥 收到消息: ${JSON.stringify(data)}`);
+                    
+                    // 认证响应
+                    if (data.type === 'auth') {
+                        if (data.status === 'success') {
+                            updateStatus(true, `🟢 已连接 (${USER_CONFIG.userName})`);
+                            addSystemMessage(`🎉 认证成功！会话ID: ${USER_CONFIG.conversationId}`);
+                        } else {
+                            addSystemMessage(`❌ 认证失败: ${data.message}`, 'error');
+                        }
+                        return;
+                    }
+                    
+                    // 错误处理
+                    if (data.type === 'error') {
+                        addSystemMessage(`⚠️ 服务器错误: ${data.message}`, 'error');
+                        return;
+                    }
+                    
+                    // 消息处理
+                    if (data.type === 'message') {
+                        // ✅ 核心修复：过滤自己发送的消息（服务器已标记 status=sent）
+                        if (data.senderId === USER_CONFIG.userId && data.status === 'sent') {
+                            addLog('ℹ️ 忽略自己发送的消息（已本地显示）');
+                            return;
+                        }
+                        
+                        // 显示消息（来自 Qt 客户端或其他用户）
+                        const senderName = data.senderName || (data.senderId === 'user123' ? '张三 (Qt客户端)' : '未知用户');
+                        addMessage(data.content, false, senderName, data.timestamp);
+                        return;
+                    }
+                    
+                    // 心跳
+                    if (data.type === 'heartbeat') return;
+                    
+                    addLog(`❓ 未知消息类型: ${data.type}`);
+                } catch (e) {
+                    addSystemMessage(`❌ 消息解析错误: ${e.message}`, 'error');
+                    console.error('解析错误:', e, event.data);
+                }
+            };
+            
+            ws.onclose = () => {
+                updateStatus(false, '🔴 连接已断开');
+                addSystemMessage('💔 与服务器的连接已断开');
+                ws = null;
+                addLog('🔌 连接关闭');
+            };
+            
+            ws.onerror = (error) => {
+                addSystemMessage(`⚠️ WebSocket 错误: ${error.message}`, 'error');
+                addLog(`❌ WebSocket 错误: ${error.message}`);
+                console.error('WebSocket error:', error);
+            };
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                addLog('👋 断开连接请求');
+            }
+            updateStatus(false, '⚫ 未连接');
+        }
+        
+        function sendMessage() {
+            const content = messageInput.value.trim();
+            if (!content || !isConnected || !ws) return;
+            
+            // 1. 本地立即显示（乐观更新）
+            addMessage(content, true);
+            messageInput.value = '';
+            messageInput.focus();
+            
+            // 2. 发送消息到服务器
+            const msg = {
+                type: 'message',
+                conversationId: USER_CONFIG.conversationId, // ✅ 关键：指定会话ID
+                content: content,
+                timestamp: Date.now()
+                // 注意：不发送 senderId/senderName，由服务器从认证信息中获取
+            };
+            
+            ws.send(JSON.stringify(msg));
+            addLog(`📤 已发送: ${content}`);
+        }
+        
+        // ===== 工具函数 =====
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function addLog(message) {
+            if (!logEnabled) return;
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const now = new Date();
+            const timeStr = `[${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}]`;
+            entry.innerHTML = `<span class="log-time">${timeStr}</span>${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // ===== 事件绑定 =====
+        connectBtn.addEventListener('click', connect);
+        disconnectBtn.addEventListener('click', disconnect);
+        sendBtn.addEventListener('click', sendMessage);
+        clearBtn.addEventListener('click', () => {
+            messagesEl.innerHTML = '<div class="system-msg">💬 消息已清空</div>';
+            addLog('🧹 消息已清空');
+        });
+        toggleLogBtn.addEventListener('click', () => {
+            logEnabled = !logEnabled;
+            logContainer.style.display = logEnabled ? 'block' : 'none';
+            toggleLogBtn.textContent = logEnabled ? '📄 隐藏日志' : '📄 调试日志';
+            if (logEnabled) addLog('调试日志已启用');
+        });
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        // 禁用页面刷新（防止误操作）
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                e.preventDefault();
+                if (confirm('刷新页面将断开连接，确定要刷新吗？')) {
+                    location.reload();
+                }
+            }
+        });
+        
+        // 初始提示
+        window.onload = () => {
+            addSystemMessage(`📌 服务器: ${SERVER_URL}`);
+            addSystemMessage(`📌 会话ID: ${USER_CONFIG.conversationId} (必须与 Qt 客户端一致)`);
+            addLog('监听页面已加载');
+        };
+    </script>
+</body>
+</html>

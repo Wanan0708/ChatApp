@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/components/Avatar.qml</file>
+        <file>qml/components/MessageBubble.qml</file>
+        <file>qml/pages/ChatPage.qml</file>
+        <file>qml/pages/ConversationsPage.qml</file>
+        <file>qml/main.qml</file>
+        <file>qml/pages/ChatMain.qml</file>
+        <file>qml/pages/LoginPage.qml</file>
+        <file>qml/pages/RegisterPage.qml</file>
+        <file>qml/pages/ResetPasswordPage.qml</file>
+        <file>qml/components/SideBar.qml</file>
+        <file>qml/pages/ContactsPage.qml</file>
+        <file>qml/pages/NotificationsPage.qml</file>
+        <file>qml/pages/SettingsPage.qml</file>
+        <file>qml/components/AddContactDialog.qml</file>
+        <file>qml/components/ModernCheckBox.qml</file>
+        <file>qml/components/ModernTextField.qml</file>
+        <file>qml/components/ProfilePanel.qml</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/new/prefix1">
+        <file>image/contact.png</file>
+        <file>image/message.png</file>
+        <file>image/notification.png</file>
+        <file>image/setting.png</file>
+        <file>image/boy.png</file>
+        <file>image/gril.png</file>
+    </qresource>
+</RCC>
