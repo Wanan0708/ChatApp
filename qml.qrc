@@ -17,5 +17,10 @@
         <file>qml/components/ModernCheckBox.qml</file>
         <file>qml/components/ModernTextField.qml</file>
         <file>qml/components/ProfilePanel.qml</file>
+        <file>qml/components/NetworkStatus.qml</file>
+        <file>qml/components/ErrorBanner.qml</file>
+        <file>qml/components/LoadingOverlay.qml</file>
+        <file>qml/components/LoadingSpinner.qml</file>
+        <file>qml/components/EmojiPicker.qml</file>
     </qresource>
 </RCC>

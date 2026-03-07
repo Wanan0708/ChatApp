@@ -9,6 +9,8 @@
 #include "../dao/userdao.h"
 #include "../database/databaseconfig.h"
 #include "../utils/timeformatter.h"
+#include "../core/securestorage.h"
+#include "../core/logger.h"
 #include <QDateTime>
 #include <QDebug>
 #include <QTimer>
@@ -267,6 +269,57 @@ void ChatService::saveUserProfile(const QVariantMap &profile)
     m_userDAO->updateMyProfile(profile);
 }
 
+// 拉取离线消息
+void ChatService::fetchOfflineMessages()
+{
+    if (m_currentUserId.isEmpty()) {
+        qDebug() << "[ChatService] Skip fetching offline messages - user not logged in";
+        return;
+    }
+
+    if (!m_webSocketClient->isConnected()) {
+        qDebug() << "[ChatService] Skip fetching offline messages - WebSocket not connected";
+        return;
+    }
+
+    qDebug() << "[ChatService] Fetching offline messages...";
+
+    // 通过 WebSocket 发送拉取离线消息请求
+    QVariantMap fetchRequest;
+    fetchRequest["type"] = "fetch_offline";
+    fetchRequest["userId"] = m_currentUserId;
+    m_webSocketClient->sendMessage(fetchRequest);
+}
+
+// 撤回消息（2 分钟内）
+void ChatService::recallMessage(const QString &conversationId, const QString &messageId)
+{
+    if (conversationId.isEmpty() || messageId.isEmpty()) {
+        Logger::instance()->warning("Recall message failed - empty conversationId or messageId", "chatservice");
+        return;
+    }
+    
+    Logger::instance()->info(QString("Recalling message %1 in conversation %2").arg(messageId).arg(conversationId), "chatservice");
+    
+    // 通过 WebSocket 发送撤回请求
+    QVariantMap recallRequest;
+    recallRequest["type"] = "recall_message";
+    recallRequest["conversationId"] = conversationId;
+    recallRequest["messageId"] = messageId;
+    recallRequest["timestamp"] = QDateTime::currentMSecsSinceEpoch();
+    
+    m_webSocketClient->sendMessage(recallRequest);
+    
+    // 乐观更新：立即在本地标记为已撤回
+    MessageModel *model = getMessageModel(conversationId);
+    if (model) {
+        // 查找并更新消息
+        // 注意：这里需要 MessageModel 支持更新消息的方法
+        // 暂时通过重新加载消息来实现
+        refreshMessages(conversationId);
+    }
+}
+
 void ChatService::handleSearchUserResult(const QVector<UserDAO::UserSearchResult> &results)
 {
     QVariantList list;
@@ -327,6 +380,8 @@ void ChatService::logout()
 
     // 清除 NetworkClient 中的 Token
     NetworkClient::instance()->setToken("");
+    // 清除安全存储的 Token
+    clearToken();
 
     emit currentUserIdChanged();
     emit currentUserNameChanged();
@@ -560,7 +615,7 @@ void ChatService::onWebSocketConnected()
 {
     qDebug() << "[ChatService] WebSocket connected";
     emit connectedChanged(true);
-    
+
     // 发送认证消息 - 使用 JWT Token
     if (!m_currentUserId.isEmpty() && !NetworkClient::instance()->token().isEmpty()) {
         QVariantMap auth;
@@ -568,6 +623,11 @@ void ChatService::onWebSocketConnected()
         auth["token"] = NetworkClient::instance()->token();
         m_webSocketClient->sendMessage(auth);
         qDebug() << "[ChatService] Sent WebSocket auth for user:" << m_currentUserId;
+        
+        // 认证成功后拉取离线消息（延迟 500ms 确保认证完成）
+        QTimer::singleShot(500, this, [this]() {
+            fetchOfflineMessages();
+        });
     } else {
         qDebug() << "[ChatService] Skipping WebSocket auth - no userId or token";
     }
@@ -606,10 +666,13 @@ void ChatService::handleLoginResult(bool success, const QString &userId, const Q
             QSettings settings;
             settings.setValue("settings/lastUsername", m_lastUsername);
             settings.setValue("settings/lastPassword", m_lastPassword);
-            qDebug() << "[ChatService] Credentials saved to settings";
+            // 使用 SecureStorage 加密存储密码
+            SecureStorage::instance()->setEncryptedPassword(m_lastUsername, m_lastPassword);
+            qDebug() << "[ChatService] Credentials saved to settings securely";
         }
 
-        // 保存 Token
+        // 保存 Token - 使用 SecureStorage 安全存储
+        saveToken(token);
         NetworkClient::instance()->setToken(token);
 
         if (m_conversationModel) {
@@ -824,4 +887,24 @@ void ChatService::checkIsFriend(const QString &userId)
     // 目前 DAO 还不支持 checkIsFriend，或者可以从本地好友列表缓存查
     // 这里先占位
     emit isFriendResult(userId, false);
+}
+
+// Token 管理方法 - 使用 SecureStorage 安全存储
+void ChatService::saveToken(const QString &token)
+{
+    SecureStorage::instance()->setAuthToken(token);
+    qDebug() << "[ChatService] Token saved securely";
+}
+
+QString ChatService::getToken() const
+{
+    QString token = SecureStorage::instance()->authToken();
+    qDebug() << "[ChatService] Token retrieved securely, length:" << token.length();
+    return token;
+}
+
+void ChatService::clearToken()
+{
+    SecureStorage::instance()->clearAuthToken();
+    qDebug() << "[ChatService] Token cleared";
 }

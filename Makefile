@@ -256,6 +256,7 @@ Makefile: ChatApp.pro ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/win32
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/resources.prf \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/moc.prf \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/win32/opengl.prf \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/uic.prf \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/qmake_use.prf \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/file_copies.prf \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/win32/windows.prf \
@@ -266,12 +267,13 @@ Makefile: ChatApp.pro ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/win32
 		ChatApp.pro \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5VirtualKeyboard.prl \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Quick.prl \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Widgets.prl \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Gui.prl \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5QmlModels.prl \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Qml.prl \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5WebSockets.prl \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Network.prl \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Sql.prl \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Concurrent.prl \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Core.prl \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/qtmain.prl \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/build_pass.prf \
@@ -464,6 +466,7 @@ Makefile: ChatApp.pro ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/win32
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/resources.prf:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/moc.prf:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/win32/opengl.prf:
+../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/uic.prf:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/qmake_use.prf:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/file_copies.prf:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/win32/windows.prf:
@@ -474,12 +477,13 @@ Makefile: ChatApp.pro ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/win32
 ChatApp.pro:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5VirtualKeyboard.prl:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Quick.prl:
+../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Widgets.prl:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Gui.prl:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5QmlModels.prl:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Qml.prl:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5WebSockets.prl:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Network.prl:
-../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Sql.prl:
+../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Concurrent.prl:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/Qt5Core.prl:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/lib/qtmain.prl:
 ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/mkspecs/features/build_pass.prf:

@@ -15,6 +15,7 @@ class MessageModel;
 class WebSocketClient;
 class ConversationDAO;
 class MessageDAO;
+class SecureStorage;
 
 class ChatService : public QObject
 {
@@ -68,6 +69,10 @@ public:
     void setCurrentConversationId(const QString &id);
 
     Q_INVOKABLE void sendMessage(const QString &conversationId, const QString &content);
+    Q_INVOKABLE void sendImageMessage(const QString &conversationId, const QString &filePath);
+    Q_INVOKABLE void sendFileMessage(const QString &conversationId, const QString &filePath);
+    Q_INVOKABLE QString pickLocalFile(bool imageOnly = false) const;
+    Q_INVOKABLE void recallMessage(const QString &conversationId, const QString &messageId);  // 撤回消息
     Q_INVOKABLE void markConversationRead(const QString &conversationId);
     Q_INVOKABLE void setCurrentConversation(const QString &conversationId);
     Q_INVOKABLE void refreshConversations();
@@ -82,6 +87,7 @@ public:
     Q_INVOKABLE void searchUsers(const QString &searchTerm);
     Q_INVOKABLE void loadUserProfile();
     Q_INVOKABLE void saveUserProfile(const QVariantMap &profile);
+    Q_INVOKABLE void fetchOfflineMessages();  // 拉取离线消息
     bool isConnected() const;
 
     // 好友申请相关
@@ -113,6 +119,9 @@ public:
     Q_INVOKABLE void setLastUsername(const QString &username);
     QString lastPassword() const { return m_lastPassword; }
     Q_INVOKABLE void setLastPassword(const QString &password);
+    Q_INVOKABLE void saveToken(const QString &token);
+    Q_INVOKABLE QString getToken() const;
+    Q_INVOKABLE void clearToken();
 
     // 数据库连接状态检查
     Q_INVOKABLE bool isDatabaseConnected() const;
@@ -153,7 +162,7 @@ signals:
     // 认证结果信号
     void loginResult(bool success, const QString &error);
     void registerResult(bool success, const QString &error);
-    
+
     // 密码重置结果信号
     void passwordResetCodeGenerated(bool success, const QString &resetCode, const QString &error);
     void passwordResetResult(bool success, const QString &error);

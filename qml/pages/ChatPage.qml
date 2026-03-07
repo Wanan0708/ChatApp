@@ -9,17 +9,15 @@ ColumnLayout {
     id: root
     property string currentConversationId: ""
     property string currentTitle: ""
-    property var messageModel: null  // 初始为空
+    property var messageModel: null
 
     // 当会话 ID 改变时，刷新消息模型
     onCurrentConversationIdChanged: {
         messageModel = ChatService.getMessageModel(currentConversationId)
         console.log("[ChatPage] Switched to conversation:", currentConversationId)
 
-        // 主动加载消息
         if (currentConversationId !== "") {
             ChatService.refreshMessages(currentConversationId)
-            // 延迟滚动到底部，确保消息已加载
             Qt.callLater(function() {
                 scrollToBottom()
             })
@@ -27,14 +25,12 @@ ColumnLayout {
     }
 
     Component.onCompleted: {
-        // 初始化时也获取一次
         messageModel = ChatService.getMessageModel(currentConversationId)
     }
 
     Connections {
         target: ChatService
         function onMessageReceived(conversationId, message) {
-            // 如果是当前会话，自动滚动到底部
             if (conversationId === root.currentConversationId) {
                 Qt.callLater(function() {
                     chatView.positionViewAtEnd()
@@ -43,11 +39,9 @@ ColumnLayout {
         }
     }
 
-    // 监听消息刷新完成信号，滚动到底部
     Connections {
         target: ChatService
         function onMessagesRefreshed(conversationId) {
-            // 如果是当前会话，滚动到底部显示最新消息
             if (conversationId === root.currentConversationId) {
                 Qt.callLater(function() {
                     chatView.positionViewAtEnd()
@@ -56,7 +50,6 @@ ColumnLayout {
         }
     }
 
-    // 监听消息模型变化，确保首次加载时滚动到底部
     onMessageModelChanged: {
         if (messageModel && currentConversationId !== "") {
             Qt.callLater(function() {
@@ -69,6 +62,14 @@ ColumnLayout {
         if (chatView && chatView.count > 0) {
             chatView.positionViewAtEnd()
         }
+    }
+
+    // 上传并发送文件
+    function uploadAndSendFile(fileUrl) {
+        console.log("上传文件:", fileUrl)
+        
+        // 调用 ChatService 发送文件消息
+        ChatService.sendFileMessage(currentConversationId, fileUrl.toString().replace("file:///", ""))
     }
 
     // 如果未选择会话，显示占位提示
@@ -98,7 +99,7 @@ ColumnLayout {
         }
     }
 
-    // 完整的聊天界面内容，只有选中会话时才显示
+    // 完整的聊天界面内容
     ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -167,7 +168,7 @@ ColumnLayout {
             }
         }
 
-        // 消息列表（优化：使用 ListView 获取更好的性能）
+        // 消息列表
         ListView {
             id: chatView
             Layout.fillWidth: true
@@ -179,22 +180,19 @@ ColumnLayout {
 
             delegate: Item {
                 width: ListView.view.width
-                height: Math.max(bubble.height + 16, 44)  // 确保最小高度
+                height: Math.max(bubble.height + 16, 44)
 
-                // 计算是否自己消息
                 readonly property bool isSelfMessage: model.senderId === ChatService.currentUserId
 
-                // 头像（左侧）- 对方的消息
                 Avatar {
                     id: leftAvatar
                     isSelf: false
-                    x: 12  // 左边距
+                    x: 12
                     y: 8
                     visible: !isSelfMessage
                     avatarSource: "qrc:/new/prefix1/image/boy.png"
                 }
 
-                // 头像（右侧）- 自己的消息
                 Avatar {
                     id: rightAvatar
                     isSelf: true
@@ -204,7 +202,6 @@ ColumnLayout {
                     avatarSource: ChatService.currentUserAvatar || "qrc:/new/prefix1/image/boy.png"
                 }
 
-                // 消息气泡
                 MessageBubble {
                     id: bubble
                     x: isSelfMessage ? (rightAvatar.x - width - 8) : (leftAvatar.x + leftAvatar.width + 8)
@@ -214,11 +211,33 @@ ColumnLayout {
                     isSelf: model.senderId === ChatService.currentUserId
                     timestamp: model.timestamp
                     timeAlignment: isSelfMessage ? "right" : "left"
+                    // 绑定消息类型和状态
+                    messageType: model.type || 0
+                    messageStatus: model.status || 1
+                    fileName: model.fileName || ""
+                    fileSize: model.fileSize || ""
+                    fileUrl: model.fileUrl || ""
+                    thumbnailUrl: model.thumbnailUrl || ""
+                    messageId: model.messageId || ""
+                    // 判断是否可撤回（2 分钟内）
+                    isRecalled: model.recalled || false
+                    canRecall: {
+                        var now = Date.now()
+                        var msgTime = model.timestamp
+                        if (msgTime < 10000000000) msgTime *= 1000  // 秒转毫秒
+                        var diff = now - msgTime
+                        return isSelfMessage && (diff < 2 * 60 * 1000)  // 2 分钟
+                    }
+                    onMessageRecalled: {
+                        if (messageId) {
+                            ChatService.recallMessage(currentConversationId, messageId)
+                        }
+                    }
                 }
             }
         }
 
-        // 输入区域（简化布局）
+        // 输入区域
         Rectangle {
             Layout.preferredHeight: 60
             Layout.fillWidth: true
@@ -231,17 +250,53 @@ ColumnLayout {
                 anchors.margins: 8
                 spacing: 4
 
-                // 附件
+                // 附件按钮
                 Text {
                     width: 40; height: 40
                     text: "📎"; font.pixelSize: 22; color: "#757575"
                     verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignHCenter
-                    MouseArea { anchors.fill: parent; onClicked: console.log("附件") }
+                    ToolTip.visible: mouseArea.containsMouse
+                    ToolTip.text: "发送文件"
+                    
+                    MouseArea {
+                        id: mouseArea
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+                        onClicked: {
+                            var path = ChatService.pickLocalFile(false)
+                            if (path && path.length > 0) {
+                                uploadAndSendFile(path)
+                            }
+                        }
+                    }
+                }
+
+                // 图片按钮
+                Text {
+                    width: 40; height: 40
+                    text: "🖼️"; font.pixelSize: 22; color: "#757575"
+                    verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignHCenter
+                    ToolTip.visible: mouseArea2.containsMouse
+                    ToolTip.text: "发送图片"
+                    
+                    MouseArea {
+                        id: mouseArea2
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+                        onClicked: {
+                            var path = ChatService.pickLocalFile(true)
+                            if (path && path.length > 0) {
+                                uploadAndSendFile(path)
+                            }
+                        }
+                    }
                 }
 
                 // 输入框
                 Item {
-                    width: parent.width - 160;
+                    width: parent.width - 200
                     height: Math.max(40, Math.min(120, inputText.implicitHeight))
 
                     TextArea {
@@ -307,13 +362,8 @@ ColumnLayout {
         if (inputText.text.trim() === "") return
 
         var content = inputText.text.trim()
-
-        // 如果 currentConversationId 是用户 ID（以 user_开头），直接发送
-        // 后端会自动创建会话
         ChatService.sendMessage(currentConversationId, content)
-
         console.log("[ChatPage] Sent message:", content)
-
         inputText.text = ""
     }
 }

@@ -49,6 +49,16 @@ ApplicationWindow {
             visible: isLoggedIn
             color: "#f5f5f5"
             z: 100
+
+            // 网络状态提示条（嵌入标题栏下方）
+            NetworkStatus {
+                anchors.top: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                onReconnectClicked: {
+                    ChatService.connectToDefaultChatServer()
+                }
+            }
             
             // ... (标题栏内容保持不变)
             MouseArea {
@@ -265,18 +275,30 @@ ApplicationWindow {
     // 个人信息面板
     ProfilePanel {
         id: globalProfilePanel
-        
+
         // 连接到 SettingsPage 的方法
         openChangePasswordDialog: function() {
             if (pageLoader.item && pageLoader.item.settingsPage) {
                 pageLoader.item.settingsPage.openChangePasswordDialog()
             }
         }
-        
+
         openLogoutDialog: function() {
             if (pageLoader.item && pageLoader.item.settingsPage) {
                 pageLoader.item.settingsPage.openLogoutDialog()
             }
+        }
+    }
+
+    // 全局错误提示条
+    ErrorBanner {
+        id: globalErrorBanner
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        z: 1001
+        onDismissed: {
+            // 关闭错误提示
         }
     }
 

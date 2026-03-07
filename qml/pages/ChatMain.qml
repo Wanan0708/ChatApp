@@ -10,6 +10,8 @@ Item {
 
     // 当前页面索引：0=消息, 1=联系人, 2=通知, 3=设置
     property int currentPageIndex: 0
+    property bool isLoading: false
+    property string loadingText: "加载中..."
 
     signal addContactRequested()
     function addContact(user) {
@@ -147,5 +149,12 @@ Item {
         function onAddContactRequested() {
             roootItem.addContactRequested()
         }
+    }
+
+    // 全局加载遮罩
+    LoadingOverlay {
+        id: globalLoadingOverlay
+        loading: roootItem.isLoading
+        loadingText: roootItem.loadingText
     }
 }

@@ -1,4 +1,4 @@
-QT += quick virtualkeyboard qml websockets network sql
+QT += quick virtualkeyboard qml websockets network concurrent widgets
 
 CONFIG += c++11
 
@@ -17,17 +17,32 @@ SOURCES += \
     main.cpp \
     src/core/singletonmanager.cpp \
     src/core/appsettings.cpp \
+    src/core/securestorage.cpp \
+    src/core/errorhandler.cpp \
+    src/core/logger.cpp \
+    src/core/servicelocator.cpp \
+    src/core/thememanager.cpp \
+    src/core/translationmanager.cpp \
+    src/core/notificationmanager.cpp \
     src/models/messagemodel.cpp \
     src/models/conversationmodel.cpp \
+    src/models/messagelistproxy.cpp \
     src/network/websocketclient.cpp \
     src/network/networkclient.cpp \
+    src/network/requestbatcher.cpp \
     src/services/chatservice.cpp \
+    src/services/fileupload_methods.cpp \
     src/database/databaseconfig.cpp \
     src/dao/userdao.cpp \
     src/dao/conversationdao.cpp \
     src/dao/messagedao.cpp \
     src/dao/friendrequestdao.cpp \
     src/utils/timeformatter.cpp \
+    src/utils/imagecache.cpp \
+    src/utils/messagecache.cpp \
+    src/utils/inputvalidator.cpp \
+    src/utils/messagesearch.cpp \
+    src/utils/emojiprovider.cpp \
 
 HEADERS += \
     src/models/conversation.h \
@@ -35,12 +50,21 @@ HEADERS += \
     src/models/user.h \
     src/network/websocketclient.h \
     src/network/networkclient.h \
+    src/network/requestbatcher.h \
     src/singleton.h \
     src/core/singletonmanager.h \
     src/core/appsettings.h \
+    src/core/securestorage.h \
+    src/core/errorhandler.h \
+    src/core/logger.h \
+    src/core/servicelocator.h \
+    src/core/thememanager.h \
+    src/core/translationmanager.h \
+    src/core/notificationmanager.h \
     src/models/basemodel.h \
     src/models/messagemodel.h \
     src/models/conversationmodel.h \
+    src/models/messagelistproxy.h \
     src/services/chatservice.h \
     src/database/databaseconfig.h \
     src/dao/userdao.h \
@@ -48,6 +72,11 @@ HEADERS += \
     src/dao/messagedao.h \
     src/dao/friendrequestdao.h \
     src/utils/timeformatter.h \
+    src/utils/imagecache.h \
+    src/utils/messagecache.h \
+    src/utils/inputvalidator.h \
+    src/utils/messagesearch.h \
+    src/utils/emojiprovider.h \
 
 RESOURCES += qml.qrc \
     image.qrc

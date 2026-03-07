@@ -1,0 +1,46 @@
+# Qt Creator
+*.pro.user
+*.qmlc
+*.jsc
+
+# Build directories
+debug/
+release/
+build-*/
+bin/
+
+# Compiled files
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+*.app
+
+# Makefiles
+Makefile
+Makefile.Debug
+Makefile.Release
+
+# QMake stash
+.qmake.stash
+
+# Object files
+object_script.*
+
+# QML cache
+qmlcache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

@@ -23,8 +23,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_ChatService_t {
-    QByteArrayData data[137];
-    char stringdata0[2412];
+    QByteArrayData data[148];
+    char stringdata0[2553];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -117,59 +117,70 @@ QT_MOC_LITERAL(80, 1487, 20), // "setCurrentUserAvatar"
 QT_MOC_LITERAL(81, 1508, 6), // "avatar"
 QT_MOC_LITERAL(82, 1515, 11), // "sendMessage"
 QT_MOC_LITERAL(83, 1527, 7), // "content"
-QT_MOC_LITERAL(84, 1535, 20), // "markConversationRead"
-QT_MOC_LITERAL(85, 1556, 22), // "setCurrentConversation"
-QT_MOC_LITERAL(86, 1579, 20), // "refreshConversations"
-QT_MOC_LITERAL(87, 1600, 15), // "refreshMessages"
-QT_MOC_LITERAL(88, 1616, 6), // "logout"
-QT_MOC_LITERAL(89, 1623, 14), // "changePassword"
-QT_MOC_LITERAL(90, 1638, 11), // "newPassword"
-QT_MOC_LITERAL(91, 1650, 26), // "connectToDefaultChatServer"
-QT_MOC_LITERAL(92, 1677, 19), // "connectToChatServer"
-QT_MOC_LITERAL(93, 1697, 9), // "serverUrl"
-QT_MOC_LITERAL(94, 1707, 24), // "disconnectFromChatServer"
-QT_MOC_LITERAL(95, 1732, 16), // "totalUnreadCount"
-QT_MOC_LITERAL(96, 1749, 17), // "hasUnreadMessages"
-QT_MOC_LITERAL(97, 1767, 11), // "searchUsers"
-QT_MOC_LITERAL(98, 1779, 10), // "searchTerm"
-QT_MOC_LITERAL(99, 1790, 15), // "loadUserProfile"
-QT_MOC_LITERAL(100, 1806, 15), // "saveUserProfile"
-QT_MOC_LITERAL(101, 1822, 17), // "sendFriendRequest"
-QT_MOC_LITERAL(102, 1840, 8), // "toUserId"
-QT_MOC_LITERAL(103, 1849, 22), // "respondToFriendRequest"
-QT_MOC_LITERAL(104, 1872, 6), // "accept"
-QT_MOC_LITERAL(105, 1879, 24), // "getPendingFriendRequests"
-QT_MOC_LITERAL(106, 1904, 13), // "getFriendList"
-QT_MOC_LITERAL(107, 1918, 13), // "checkIsFriend"
-QT_MOC_LITERAL(108, 1932, 17), // "validateUserLogin"
-QT_MOC_LITERAL(109, 1950, 8), // "username"
-QT_MOC_LITERAL(110, 1959, 8), // "password"
-QT_MOC_LITERAL(111, 1968, 15), // "registerNewUser"
-QT_MOC_LITERAL(112, 1984, 20), // "requestPasswordReset"
-QT_MOC_LITERAL(113, 2005, 13), // "resetPassword"
-QT_MOC_LITERAL(114, 2019, 16), // "adminSetPassword"
-QT_MOC_LITERAL(115, 2036, 15), // "setLastUsername"
-QT_MOC_LITERAL(116, 2052, 15), // "setLastPassword"
-QT_MOC_LITERAL(117, 2068, 19), // "isDatabaseConnected"
-QT_MOC_LITERAL(118, 2088, 17), // "conversationModel"
-QT_MOC_LITERAL(119, 2106, 18), // "ConversationModel*"
-QT_MOC_LITERAL(120, 2125, 21), // "currentConversationId"
-QT_MOC_LITERAL(121, 2147, 13), // "currentUserId"
-QT_MOC_LITERAL(122, 2161, 15), // "currentUserName"
-QT_MOC_LITERAL(123, 2177, 17), // "currentUserAvatar"
-QT_MOC_LITERAL(124, 2195, 17), // "currentUserGender"
-QT_MOC_LITERAL(125, 2213, 17), // "currentUserRegion"
-QT_MOC_LITERAL(126, 2231, 16), // "currentUserPhone"
-QT_MOC_LITERAL(127, 2248, 16), // "currentUserEmail"
-QT_MOC_LITERAL(128, 2265, 18), // "currentUserContact"
-QT_MOC_LITERAL(129, 2284, 14), // "currentUserBio"
-QT_MOC_LITERAL(130, 2299, 11), // "isConnected"
-QT_MOC_LITERAL(131, 2311, 20), // "notificationsEnabled"
-QT_MOC_LITERAL(132, 2332, 12), // "soundEnabled"
-QT_MOC_LITERAL(133, 2345, 16), // "autoLoginEnabled"
-QT_MOC_LITERAL(134, 2362, 23), // "rememberPasswordEnabled"
-QT_MOC_LITERAL(135, 2386, 12), // "lastUsername"
-QT_MOC_LITERAL(136, 2399, 12) // "lastPassword"
+QT_MOC_LITERAL(84, 1535, 16), // "sendImageMessage"
+QT_MOC_LITERAL(85, 1552, 8), // "filePath"
+QT_MOC_LITERAL(86, 1561, 15), // "sendFileMessage"
+QT_MOC_LITERAL(87, 1577, 13), // "pickLocalFile"
+QT_MOC_LITERAL(88, 1591, 9), // "imageOnly"
+QT_MOC_LITERAL(89, 1601, 13), // "recallMessage"
+QT_MOC_LITERAL(90, 1615, 9), // "messageId"
+QT_MOC_LITERAL(91, 1625, 20), // "markConversationRead"
+QT_MOC_LITERAL(92, 1646, 22), // "setCurrentConversation"
+QT_MOC_LITERAL(93, 1669, 20), // "refreshConversations"
+QT_MOC_LITERAL(94, 1690, 15), // "refreshMessages"
+QT_MOC_LITERAL(95, 1706, 6), // "logout"
+QT_MOC_LITERAL(96, 1713, 14), // "changePassword"
+QT_MOC_LITERAL(97, 1728, 11), // "newPassword"
+QT_MOC_LITERAL(98, 1740, 26), // "connectToDefaultChatServer"
+QT_MOC_LITERAL(99, 1767, 19), // "connectToChatServer"
+QT_MOC_LITERAL(100, 1787, 9), // "serverUrl"
+QT_MOC_LITERAL(101, 1797, 24), // "disconnectFromChatServer"
+QT_MOC_LITERAL(102, 1822, 16), // "totalUnreadCount"
+QT_MOC_LITERAL(103, 1839, 17), // "hasUnreadMessages"
+QT_MOC_LITERAL(104, 1857, 11), // "searchUsers"
+QT_MOC_LITERAL(105, 1869, 10), // "searchTerm"
+QT_MOC_LITERAL(106, 1880, 15), // "loadUserProfile"
+QT_MOC_LITERAL(107, 1896, 15), // "saveUserProfile"
+QT_MOC_LITERAL(108, 1912, 20), // "fetchOfflineMessages"
+QT_MOC_LITERAL(109, 1933, 17), // "sendFriendRequest"
+QT_MOC_LITERAL(110, 1951, 8), // "toUserId"
+QT_MOC_LITERAL(111, 1960, 22), // "respondToFriendRequest"
+QT_MOC_LITERAL(112, 1983, 6), // "accept"
+QT_MOC_LITERAL(113, 1990, 24), // "getPendingFriendRequests"
+QT_MOC_LITERAL(114, 2015, 13), // "getFriendList"
+QT_MOC_LITERAL(115, 2029, 13), // "checkIsFriend"
+QT_MOC_LITERAL(116, 2043, 17), // "validateUserLogin"
+QT_MOC_LITERAL(117, 2061, 8), // "username"
+QT_MOC_LITERAL(118, 2070, 8), // "password"
+QT_MOC_LITERAL(119, 2079, 15), // "registerNewUser"
+QT_MOC_LITERAL(120, 2095, 20), // "requestPasswordReset"
+QT_MOC_LITERAL(121, 2116, 13), // "resetPassword"
+QT_MOC_LITERAL(122, 2130, 16), // "adminSetPassword"
+QT_MOC_LITERAL(123, 2147, 15), // "setLastUsername"
+QT_MOC_LITERAL(124, 2163, 15), // "setLastPassword"
+QT_MOC_LITERAL(125, 2179, 9), // "saveToken"
+QT_MOC_LITERAL(126, 2189, 8), // "getToken"
+QT_MOC_LITERAL(127, 2198, 10), // "clearToken"
+QT_MOC_LITERAL(128, 2209, 19), // "isDatabaseConnected"
+QT_MOC_LITERAL(129, 2229, 17), // "conversationModel"
+QT_MOC_LITERAL(130, 2247, 18), // "ConversationModel*"
+QT_MOC_LITERAL(131, 2266, 21), // "currentConversationId"
+QT_MOC_LITERAL(132, 2288, 13), // "currentUserId"
+QT_MOC_LITERAL(133, 2302, 15), // "currentUserName"
+QT_MOC_LITERAL(134, 2318, 17), // "currentUserAvatar"
+QT_MOC_LITERAL(135, 2336, 17), // "currentUserGender"
+QT_MOC_LITERAL(136, 2354, 17), // "currentUserRegion"
+QT_MOC_LITERAL(137, 2372, 16), // "currentUserPhone"
+QT_MOC_LITERAL(138, 2389, 16), // "currentUserEmail"
+QT_MOC_LITERAL(139, 2406, 18), // "currentUserContact"
+QT_MOC_LITERAL(140, 2425, 14), // "currentUserBio"
+QT_MOC_LITERAL(141, 2440, 11), // "isConnected"
+QT_MOC_LITERAL(142, 2452, 20), // "notificationsEnabled"
+QT_MOC_LITERAL(143, 2473, 12), // "soundEnabled"
+QT_MOC_LITERAL(144, 2486, 16), // "autoLoginEnabled"
+QT_MOC_LITERAL(145, 2503, 23), // "rememberPasswordEnabled"
+QT_MOC_LITERAL(146, 2527, 12), // "lastUsername"
+QT_MOC_LITERAL(147, 2540, 12) // "lastPassword"
 
     },
     "ChatService\0conversationModelChanged\0"
@@ -216,22 +227,26 @@ QT_MOC_LITERAL(136, 2399, 12) // "lastPassword"
     "status\0getMessageModel\0MessageModel*\0"
     "setCurrentUserId\0setCurrentUserName\0"
     "userName\0setCurrentUserAvatar\0avatar\0"
-    "sendMessage\0content\0markConversationRead\0"
-    "setCurrentConversation\0refreshConversations\0"
-    "refreshMessages\0logout\0changePassword\0"
-    "newPassword\0connectToDefaultChatServer\0"
+    "sendMessage\0content\0sendImageMessage\0"
+    "filePath\0sendFileMessage\0pickLocalFile\0"
+    "imageOnly\0recallMessage\0messageId\0"
+    "markConversationRead\0setCurrentConversation\0"
+    "refreshConversations\0refreshMessages\0"
+    "logout\0changePassword\0newPassword\0"
+    "connectToDefaultChatServer\0"
     "connectToChatServer\0serverUrl\0"
     "disconnectFromChatServer\0totalUnreadCount\0"
     "hasUnreadMessages\0searchUsers\0searchTerm\0"
     "loadUserProfile\0saveUserProfile\0"
-    "sendFriendRequest\0toUserId\0"
-    "respondToFriendRequest\0accept\0"
+    "fetchOfflineMessages\0sendFriendRequest\0"
+    "toUserId\0respondToFriendRequest\0accept\0"
     "getPendingFriendRequests\0getFriendList\0"
     "checkIsFriend\0validateUserLogin\0"
     "username\0password\0registerNewUser\0"
     "requestPasswordReset\0resetPassword\0"
     "adminSetPassword\0setLastUsername\0"
-    "setLastPassword\0isDatabaseConnected\0"
+    "setLastPassword\0saveToken\0getToken\0"
+    "clearToken\0isDatabaseConnected\0"
     "conversationModel\0ConversationModel*\0"
     "currentConversationId\0currentUserId\0"
     "currentUserName\0currentUserAvatar\0"
@@ -251,98 +266,107 @@ static const uint qt_meta_data_ChatService[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      80,   14, // methods
-      18,  654, // properties
+      89,   14, // methods
+      18,  724, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
       34,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    0,  414,    2, 0x06 /* Public */,
-       3,    0,  415,    2, 0x06 /* Public */,
-       4,    2,  416,    2, 0x06 /* Public */,
-       7,    1,  421,    2, 0x06 /* Public */,
-       8,    1,  424,    2, 0x06 /* Public */,
-       9,    1,  427,    2, 0x06 /* Public */,
-      11,    0,  430,    2, 0x06 /* Public */,
-      12,    0,  431,    2, 0x06 /* Public */,
-      13,    0,  432,    2, 0x06 /* Public */,
-      14,    0,  433,    2, 0x06 /* Public */,
-      15,    0,  434,    2, 0x06 /* Public */,
-      16,    0,  435,    2, 0x06 /* Public */,
-      17,    0,  436,    2, 0x06 /* Public */,
-      18,    0,  437,    2, 0x06 /* Public */,
-      19,    0,  438,    2, 0x06 /* Public */,
-      20,    2,  439,    2, 0x06 /* Public */,
-      22,    0,  444,    2, 0x06 /* Public */,
-      23,    0,  445,    2, 0x06 /* Public */,
-      24,    0,  446,    2, 0x06 /* Public */,
-      25,    0,  447,    2, 0x06 /* Public */,
-      26,    0,  448,    2, 0x06 /* Public */,
-      27,    0,  449,    2, 0x06 /* Public */,
-      28,    1,  450,    2, 0x06 /* Public */,
-      30,    2,  453,    2, 0x06 /* Public */,
-      33,    2,  458,    2, 0x06 /* Public */,
-      35,    1,  463,    2, 0x06 /* Public */,
-      37,    1,  466,    2, 0x06 /* Public */,
-      39,    1,  469,    2, 0x06 /* Public */,
-      41,    2,  472,    2, 0x06 /* Public */,
-      44,    2,  477,    2, 0x06 /* Public */,
-      45,    2,  482,    2, 0x06 /* Public */,
-      46,    3,  487,    2, 0x06 /* Public */,
-      48,    2,  494,    2, 0x06 /* Public */,
-      49,    2,  499,    2, 0x06 /* Public */,
+       1,    0,  459,    2, 0x06 /* Public */,
+       3,    0,  460,    2, 0x06 /* Public */,
+       4,    2,  461,    2, 0x06 /* Public */,
+       7,    1,  466,    2, 0x06 /* Public */,
+       8,    1,  469,    2, 0x06 /* Public */,
+       9,    1,  472,    2, 0x06 /* Public */,
+      11,    0,  475,    2, 0x06 /* Public */,
+      12,    0,  476,    2, 0x06 /* Public */,
+      13,    0,  477,    2, 0x06 /* Public */,
+      14,    0,  478,    2, 0x06 /* Public */,
+      15,    0,  479,    2, 0x06 /* Public */,
+      16,    0,  480,    2, 0x06 /* Public */,
+      17,    0,  481,    2, 0x06 /* Public */,
+      18,    0,  482,    2, 0x06 /* Public */,
+      19,    0,  483,    2, 0x06 /* Public */,
+      20,    2,  484,    2, 0x06 /* Public */,
+      22,    0,  489,    2, 0x06 /* Public */,
+      23,    0,  490,    2, 0x06 /* Public */,
+      24,    0,  491,    2, 0x06 /* Public */,
+      25,    0,  492,    2, 0x06 /* Public */,
+      26,    0,  493,    2, 0x06 /* Public */,
+      27,    0,  494,    2, 0x06 /* Public */,
+      28,    1,  495,    2, 0x06 /* Public */,
+      30,    2,  498,    2, 0x06 /* Public */,
+      33,    2,  503,    2, 0x06 /* Public */,
+      35,    1,  508,    2, 0x06 /* Public */,
+      37,    1,  511,    2, 0x06 /* Public */,
+      39,    1,  514,    2, 0x06 /* Public */,
+      41,    2,  517,    2, 0x06 /* Public */,
+      44,    2,  522,    2, 0x06 /* Public */,
+      45,    2,  527,    2, 0x06 /* Public */,
+      46,    3,  532,    2, 0x06 /* Public */,
+      48,    2,  539,    2, 0x06 /* Public */,
+      49,    2,  544,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-      50,    1,  504,    2, 0x08 /* Private */,
-      51,    0,  507,    2, 0x08 /* Private */,
-      52,    0,  508,    2, 0x08 /* Private */,
-      53,    4,  509,    2, 0x08 /* Private */,
-      55,    3,  518,    2, 0x08 /* Private */,
-      56,    1,  525,    2, 0x08 /* Private */,
-      59,    2,  528,    2, 0x08 /* Private */,
-      62,    1,  533,    2, 0x08 /* Private */,
-      64,    3,  536,    2, 0x08 /* Private */,
-      66,    2,  543,    2, 0x08 /* Private */,
-      67,    1,  548,    2, 0x08 /* Private */,
-      69,    1,  551,    2, 0x08 /* Private */,
-      71,    2,  554,    2, 0x08 /* Private */,
-      72,    3,  559,    2, 0x08 /* Private */,
+      50,    1,  549,    2, 0x08 /* Private */,
+      51,    0,  552,    2, 0x08 /* Private */,
+      52,    0,  553,    2, 0x08 /* Private */,
+      53,    4,  554,    2, 0x08 /* Private */,
+      55,    3,  563,    2, 0x08 /* Private */,
+      56,    1,  570,    2, 0x08 /* Private */,
+      59,    2,  573,    2, 0x08 /* Private */,
+      62,    1,  578,    2, 0x08 /* Private */,
+      64,    3,  581,    2, 0x08 /* Private */,
+      66,    2,  588,    2, 0x08 /* Private */,
+      67,    1,  593,    2, 0x08 /* Private */,
+      69,    1,  596,    2, 0x08 /* Private */,
+      71,    2,  599,    2, 0x08 /* Private */,
+      72,    3,  604,    2, 0x08 /* Private */,
 
  // methods: name, argc, parameters, tag, flags
-      75,    1,  566,    2, 0x02 /* Public */,
-      77,    1,  569,    2, 0x02 /* Public */,
-      78,    1,  572,    2, 0x02 /* Public */,
-      80,    1,  575,    2, 0x02 /* Public */,
-      82,    2,  578,    2, 0x02 /* Public */,
-      84,    1,  583,    2, 0x02 /* Public */,
-      85,    1,  586,    2, 0x02 /* Public */,
-      86,    0,  589,    2, 0x02 /* Public */,
-      87,    1,  590,    2, 0x02 /* Public */,
-      88,    0,  593,    2, 0x02 /* Public */,
-      89,    1,  594,    2, 0x02 /* Public */,
-      91,    0,  597,    2, 0x02 /* Public */,
-      92,    1,  598,    2, 0x02 /* Public */,
-      94,    0,  601,    2, 0x02 /* Public */,
-      95,    0,  602,    2, 0x02 /* Public */,
-      96,    0,  603,    2, 0x02 /* Public */,
-      97,    1,  604,    2, 0x02 /* Public */,
-      99,    0,  607,    2, 0x02 /* Public */,
-     100,    1,  608,    2, 0x02 /* Public */,
-     101,    1,  611,    2, 0x02 /* Public */,
-     103,    2,  614,    2, 0x02 /* Public */,
-     105,    0,  619,    2, 0x02 /* Public */,
-     106,    0,  620,    2, 0x02 /* Public */,
-     107,    1,  621,    2, 0x02 /* Public */,
-     108,    2,  624,    2, 0x02 /* Public */,
-     111,    2,  629,    2, 0x02 /* Public */,
-     112,    1,  634,    2, 0x02 /* Public */,
-     113,    2,  637,    2, 0x02 /* Public */,
-     114,    2,  642,    2, 0x02 /* Public */,
-     115,    1,  647,    2, 0x02 /* Public */,
-     116,    1,  650,    2, 0x02 /* Public */,
-     117,    0,  653,    2, 0x02 /* Public */,
+      75,    1,  611,    2, 0x02 /* Public */,
+      77,    1,  614,    2, 0x02 /* Public */,
+      78,    1,  617,    2, 0x02 /* Public */,
+      80,    1,  620,    2, 0x02 /* Public */,
+      82,    2,  623,    2, 0x02 /* Public */,
+      84,    2,  628,    2, 0x02 /* Public */,
+      86,    2,  633,    2, 0x02 /* Public */,
+      87,    1,  638,    2, 0x02 /* Public */,
+      87,    0,  641,    2, 0x22 /* Public | MethodCloned */,
+      89,    2,  642,    2, 0x02 /* Public */,
+      91,    1,  647,    2, 0x02 /* Public */,
+      92,    1,  650,    2, 0x02 /* Public */,
+      93,    0,  653,    2, 0x02 /* Public */,
+      94,    1,  654,    2, 0x02 /* Public */,
+      95,    0,  657,    2, 0x02 /* Public */,
+      96,    1,  658,    2, 0x02 /* Public */,
+      98,    0,  661,    2, 0x02 /* Public */,
+      99,    1,  662,    2, 0x02 /* Public */,
+     101,    0,  665,    2, 0x02 /* Public */,
+     102,    0,  666,    2, 0x02 /* Public */,
+     103,    0,  667,    2, 0x02 /* Public */,
+     104,    1,  668,    2, 0x02 /* Public */,
+     106,    0,  671,    2, 0x02 /* Public */,
+     107,    1,  672,    2, 0x02 /* Public */,
+     108,    0,  675,    2, 0x02 /* Public */,
+     109,    1,  676,    2, 0x02 /* Public */,
+     111,    2,  679,    2, 0x02 /* Public */,
+     113,    0,  684,    2, 0x02 /* Public */,
+     114,    0,  685,    2, 0x02 /* Public */,
+     115,    1,  686,    2, 0x02 /* Public */,
+     116,    2,  689,    2, 0x02 /* Public */,
+     119,    2,  694,    2, 0x02 /* Public */,
+     120,    1,  699,    2, 0x02 /* Public */,
+     121,    2,  702,    2, 0x02 /* Public */,
+     122,    2,  707,    2, 0x02 /* Public */,
+     123,    1,  712,    2, 0x02 /* Public */,
+     124,    1,  715,    2, 0x02 /* Public */,
+     125,    1,  718,    2, 0x02 /* Public */,
+     126,    0,  721,    2, 0x02 /* Public */,
+     127,    0,  722,    2, 0x02 /* Public */,
+     128,    0,  723,    2, 0x02 /* Public */,
 
  // signals: parameters
     QMetaType::Void,
@@ -402,53 +426,62 @@ static const uint qt_meta_data_ChatService[] = {
     QMetaType::Void, QMetaType::QString,   79,
     QMetaType::Void, QMetaType::QString,   81,
     QMetaType::Void, QMetaType::QString, QMetaType::QString,    5,   83,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,    5,   85,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,    5,   85,
+    QMetaType::QString, QMetaType::Bool,   88,
+    QMetaType::QString,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,    5,   90,
     QMetaType::Void, QMetaType::QString,    5,
     QMetaType::Void, QMetaType::QString,    5,
     QMetaType::Void,
     QMetaType::Void, QMetaType::QString,    5,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QString,   90,
+    QMetaType::Void, QMetaType::QString,   97,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QString,   93,
+    QMetaType::Void, QMetaType::QString,  100,
     QMetaType::Void,
     QMetaType::Int,
     QMetaType::Bool,
-    QMetaType::Void, QMetaType::QString,   98,
+    QMetaType::Void, QMetaType::QString,  105,
     QMetaType::Void,
     QMetaType::Void, QMetaType::QVariantMap,   65,
-    QMetaType::Void, QMetaType::QString,  102,
-    QMetaType::Void, QMetaType::Int, QMetaType::Bool,   73,  104,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::QString,  110,
+    QMetaType::Void, QMetaType::Int, QMetaType::Bool,   73,  112,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void, QMetaType::QString,   42,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString,  109,  110,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString,  109,  110,
-    QMetaType::Void, QMetaType::QString,  109,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString,   47,   90,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString,   42,   90,
-    QMetaType::Void, QMetaType::QString,  109,
-    QMetaType::Void, QMetaType::QString,  110,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,  117,  118,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,  117,  118,
+    QMetaType::Void, QMetaType::QString,  117,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,   47,   97,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString,   42,   97,
+    QMetaType::Void, QMetaType::QString,  117,
+    QMetaType::Void, QMetaType::QString,  118,
+    QMetaType::Void, QMetaType::QString,   54,
+    QMetaType::QString,
+    QMetaType::Void,
     QMetaType::Bool,
 
  // properties: name, type, flags
-     118, 0x80000000 | 119, 0x00095409,
-     120, QMetaType::QString, 0x00495103,
-     121, QMetaType::QString, 0x00495103,
-     122, QMetaType::QString, 0x00495103,
-     123, QMetaType::QString, 0x00495103,
-     124, QMetaType::QString, 0x00495103,
-     125, QMetaType::QString, 0x00495103,
-     126, QMetaType::QString, 0x00495103,
-     127, QMetaType::QString, 0x00495103,
-     128, QMetaType::QString, 0x00495103,
-     129, QMetaType::QString, 0x00495103,
-     130, QMetaType::Bool, 0x00495001,
-     131, QMetaType::Bool, 0x00495103,
-     132, QMetaType::Bool, 0x00495103,
-     133, QMetaType::Bool, 0x00495103,
-     134, QMetaType::Bool, 0x00495103,
+     129, 0x80000000 | 130, 0x00095409,
+     131, QMetaType::QString, 0x00495103,
+     132, QMetaType::QString, 0x00495103,
+     133, QMetaType::QString, 0x00495103,
+     134, QMetaType::QString, 0x00495103,
      135, QMetaType::QString, 0x00495103,
      136, QMetaType::QString, 0x00495103,
+     137, QMetaType::QString, 0x00495103,
+     138, QMetaType::QString, 0x00495103,
+     139, QMetaType::QString, 0x00495103,
+     140, QMetaType::QString, 0x00495103,
+     141, QMetaType::Bool, 0x00495001,
+     142, QMetaType::Bool, 0x00495103,
+     143, QMetaType::Bool, 0x00495103,
+     144, QMetaType::Bool, 0x00495103,
+     145, QMetaType::Bool, 0x00495103,
+     146, QMetaType::QString, 0x00495103,
+     147, QMetaType::QString, 0x00495103,
 
  // properties: notify_signal_id
        0,
@@ -533,35 +566,47 @@ void ChatService::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id,
         case 50: _t->setCurrentUserName((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         case 51: _t->setCurrentUserAvatar((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         case 52: _t->sendMessage((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
-        case 53: _t->markConversationRead((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 54: _t->setCurrentConversation((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 55: _t->refreshConversations(); break;
-        case 56: _t->refreshMessages((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 57: _t->logout(); break;
-        case 58: _t->changePassword((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 59: _t->connectToDefaultChatServer(); break;
-        case 60: _t->connectToChatServer((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 61: _t->disconnectFromChatServer(); break;
-        case 62: { int _r = _t->totalUnreadCount();
+        case 53: _t->sendImageMessage((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 54: _t->sendFileMessage((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 55: { QString _r = _t->pickLocalFile((*reinterpret_cast< bool(*)>(_a[1])));
+            if (_a[0]) *reinterpret_cast< QString*>(_a[0]) = std::move(_r); }  break;
+        case 56: { QString _r = _t->pickLocalFile();
+            if (_a[0]) *reinterpret_cast< QString*>(_a[0]) = std::move(_r); }  break;
+        case 57: _t->recallMessage((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 58: _t->markConversationRead((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 59: _t->setCurrentConversation((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 60: _t->refreshConversations(); break;
+        case 61: _t->refreshMessages((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 62: _t->logout(); break;
+        case 63: _t->changePassword((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 64: _t->connectToDefaultChatServer(); break;
+        case 65: _t->connectToChatServer((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 66: _t->disconnectFromChatServer(); break;
+        case 67: { int _r = _t->totalUnreadCount();
             if (_a[0]) *reinterpret_cast< int*>(_a[0]) = std::move(_r); }  break;
-        case 63: { bool _r = _t->hasUnreadMessages();
+        case 68: { bool _r = _t->hasUnreadMessages();
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
-        case 64: _t->searchUsers((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 65: _t->loadUserProfile(); break;
-        case 66: _t->saveUserProfile((*reinterpret_cast< const QVariantMap(*)>(_a[1]))); break;
-        case 67: _t->sendFriendRequest((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 68: _t->respondToFriendRequest((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< bool(*)>(_a[2]))); break;
-        case 69: _t->getPendingFriendRequests(); break;
-        case 70: _t->getFriendList(); break;
-        case 71: _t->checkIsFriend((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 72: _t->validateUserLogin((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
-        case 73: _t->registerNewUser((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
-        case 74: _t->requestPasswordReset((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 75: _t->resetPassword((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
-        case 76: _t->adminSetPassword((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
-        case 77: _t->setLastUsername((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 78: _t->setLastPassword((*reinterpret_cast< const QString(*)>(_a[1]))); break;
-        case 79: { bool _r = _t->isDatabaseConnected();
+        case 69: _t->searchUsers((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 70: _t->loadUserProfile(); break;
+        case 71: _t->saveUserProfile((*reinterpret_cast< const QVariantMap(*)>(_a[1]))); break;
+        case 72: _t->fetchOfflineMessages(); break;
+        case 73: _t->sendFriendRequest((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 74: _t->respondToFriendRequest((*reinterpret_cast< int(*)>(_a[1])),(*reinterpret_cast< bool(*)>(_a[2]))); break;
+        case 75: _t->getPendingFriendRequests(); break;
+        case 76: _t->getFriendList(); break;
+        case 77: _t->checkIsFriend((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 78: _t->validateUserLogin((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 79: _t->registerNewUser((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 80: _t->requestPasswordReset((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 81: _t->resetPassword((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 82: _t->adminSetPassword((*reinterpret_cast< const QString(*)>(_a[1])),(*reinterpret_cast< const QString(*)>(_a[2]))); break;
+        case 83: _t->setLastUsername((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 84: _t->setLastPassword((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 85: _t->saveToken((*reinterpret_cast< const QString(*)>(_a[1]))); break;
+        case 86: { QString _r = _t->getToken();
+            if (_a[0]) *reinterpret_cast< QString*>(_a[0]) = std::move(_r); }  break;
+        case 87: _t->clearToken(); break;
+        case 88: { bool _r = _t->isDatabaseConnected();
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
         default: ;
         }
@@ -889,13 +934,13 @@ int ChatService::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 80)
+        if (_id < 89)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 80;
+        _id -= 89;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 80)
+        if (_id < 89)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 80;
+        _id -= 89;
     }
 #ifndef QT_NO_PROPERTIES
     else if (_c == QMetaObject::ReadProperty || _c == QMetaObject::WriteProperty
