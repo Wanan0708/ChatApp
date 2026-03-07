@@ -213,7 +213,6 @@ ColumnLayout {
                     timeAlignment: isSelfMessage ? "right" : "left"
                     // 绑定消息类型和状态
                     messageType: model.type || 0
-                    messageStatus: model.status || 1
                     fileName: model.fileName || ""
                     fileSize: model.fileSize || ""
                     fileUrl: model.fileUrl || ""

@@ -80,56 +80,6 @@ Item {
             }
         }
 
-        // 消息状态指示器（仅文本消息显示）
-        Row {
-            visible: messageType === 0 && root.isSelf
-            spacing: 4
-            anchors.right: parent.right
-
-            // 发送状态图标
-            Text {
-                visible: messageStatus === 0  // 发送中
-                text: "⏳"
-                font.pixelSize: 12
-                
-                BusyIndicator {
-                    anchors.centerIn: parent
-                    width: 14
-                    height: 14
-                    running: visible
-                }
-            }
-
-            Text {
-                visible: messageStatus === 1  // 已发送
-                text: "✓"
-                font.pixelSize: 12
-                color: "#4CAF50"
-            }
-
-            Text {
-                visible: messageStatus === 2  // 已读
-                text: "✓✓"
-                font.pixelSize: 12
-                color: "#2196F3"
-            }
-
-            Text {
-                visible: messageStatus === 3  // 失败
-                text: "⚠"
-                font.pixelSize: 12
-                color: "#F44336"
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        console.log("重发消息")
-                        // TODO: 触发重发
-                    }
-                }
-            }
-        }
-
         // 图片消息
         Item {
             id: imageContainer
