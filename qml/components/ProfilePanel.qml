@@ -25,6 +25,7 @@ Popup {
     property string draftEmail: ""
     property string draftContact: ""
     property string draftBio: ""
+    property int draftAge: 25
     property string saveHint: ""
     property bool saveSuccess: false
     property bool isEditing: false  // 新增：编辑状态标记
@@ -38,6 +39,7 @@ Popup {
         draftEmail = ChatService.currentUserEmail || ""
         draftContact = ChatService.currentUserContact || ""
         draftBio = ChatService.currentUserBio || ""
+        draftAge = ChatService.currentUserAge || 25
     }
 
     function saveProfile() {
@@ -49,7 +51,8 @@ Popup {
                                         phone: draftPhone,
                                         email: draftEmail,
                                         contact: draftContact,
-                                        bio: draftBio
+                                        bio: draftBio,
+                                        age: draftAge
                                     })
     }
 
@@ -57,7 +60,9 @@ Popup {
         isEditing = false
         syncDraftFromService()
         saveHint = ""
+        // 每次打开时重新加载用户资料，确保显示最新数据
         ChatService.loadUserProfile()
+        console.log("[ProfilePanel] Opened, loading user profile...")
     }
 
     Overlay.modal: Rectangle { color: "#4d000000" }
@@ -259,6 +264,12 @@ Popup {
 
                                     RowLayout {
                                         spacing: 8
+                                        Text { text: "年龄:"; color: "#6b7280"; font.pixelSize: 14; Layout.preferredWidth: 60 }
+                                        Text { text: draftAge > 0 ? (draftAge + " 岁") : "未设置"; color: "#111827"; font.pixelSize: 14; font.weight: Font.Medium; Layout.fillWidth: true }
+                                    }
+
+                                    RowLayout {
+                                        spacing: 8
                                         Text { text: "手机号:"; color: "#6b7280"; font.pixelSize: 14; Layout.preferredWidth: 60 }
                                         Text { text: draftPhone || "未设置"; color: "#111827"; font.pixelSize: 14; font.weight: Font.Medium; Layout.fillWidth: true }
                                     }
@@ -345,11 +356,23 @@ Popup {
                                     RowLayout {
                                         Layout.fillWidth: true
                                         spacing: 8
+                                        SpinBox {
+                                            Layout.preferredWidth: 160
+                                            from: 1
+                                            to: 150
+                                            value: draftAge > 0 ? draftAge : 25
+                                            onValueModified: draftAge = value
+                                            textFromValue: function(value) { return value + " 岁"; }
+                                        }
                                         TextField { Layout.fillWidth: true; placeholderText: "手机号"; text: draftPhone; onTextChanged: draftPhone = text; selectByMouse: true }
-                                        TextField { Layout.fillWidth: true; placeholderText: "邮箱"; text: draftEmail; onTextChanged: draftEmail = text; selectByMouse: true }
                                     }
 
-                                    TextField { Layout.fillWidth: true; placeholderText: "联系方式"; text: draftContact; onTextChanged: draftContact = text; selectByMouse: true }
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 8
+                                        TextField { Layout.fillWidth: true; placeholderText: "邮箱"; text: draftEmail; onTextChanged: draftEmail = text; selectByMouse: true }
+                                        TextField { Layout.fillWidth: true; placeholderText: "联系方式"; text: draftContact; onTextChanged: draftContact = text; selectByMouse: true }
+                                    }
 
                                     TextArea {
                                         Layout.fillWidth: true
@@ -425,6 +448,7 @@ Popup {
             function onCurrentUserEmailChanged() { draftEmail = ChatService.currentUserEmail || "" }
             function onCurrentUserContactChanged() { draftContact = ChatService.currentUserContact || "" }
             function onCurrentUserBioChanged() { draftBio = ChatService.currentUserBio || "" }
+            function onCurrentUserAgeChanged() { draftAge = ChatService.currentUserAge || 25 }
             function onUserProfileSaveResult(success, message) {
                 saveSuccess = success
                 saveHint = message || (success ? "保存成功" : "保存失败")

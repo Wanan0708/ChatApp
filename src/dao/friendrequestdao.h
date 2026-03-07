@@ -46,11 +46,15 @@ public:
     // 获取好友列表 (异步)
     void getFriends();
 
+    // 获取单个好友详情 (异步)
+    void getFriendDetail(const QString &friendId);
+
 signals:
     void requestSent(bool success, const QString &error = "");
     void pendingRequestsLoaded(const QVector<FriendRequest> &requests);
     void requestStatusUpdated(bool success, int requestId, const QString &status);
     void friendsLoaded(const QVector<FriendInfo> &friends);
+    void friendDetailLoaded(const FriendInfo &friendInfo);
 
 private:
 };

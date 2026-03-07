@@ -33,17 +33,83 @@ Rectangle {
         console.log("[ContactsPage] refreshFriends called")
         ChatService.getFriendList()
     }
+
+    // 刷新单个好友详情（点击时调用）
+    function refreshFriendDetail(friendId) {
+        if (!friendId || friendId === "") {
+            return
+        }
+        
+        // 防止重复刷新同一个好友
+        if (friendId === lastRefreshedFriendId) {
+            return
+        }
+        
+        // 防止频繁刷新（定时器运行时跳过）
+        if (refreshTimer.running) {
+            return
+        }
+        
+        // 失败次数过多，停止刷新
+        if (refreshFailCount >= 3) {
+            console.log("[ContactsPage] Too many refresh failures, stopping")
+            lastRefreshedFriendId = ""  // 重置，允许下次重试
+            return
+        }
+        
+        console.log("[ContactsPage] Queue refresh for friend:", friendId)
+        lastRefreshedFriendId = friendId
+        pendingRefreshFriendId = friendId
+        
+        // 启动防抖定时器（300ms 后执行）
+        refreshTimer.restart()
+    }
+
+    // 更新本地联系人数据
+    function updateContactDetail(updatedInfo) {
+        let userId = updatedInfo.userId
+        for (let i = 0; i < contacts.length; i++) {
+            if (contacts[i].userId === userId || contacts[i].id === userId) {
+                contacts[i].username = updatedInfo.username || contacts[i].username
+                contacts[i].name = updatedInfo.username || contacts[i].name
+                contacts[i].avatar = updatedInfo.avatar || contacts[i].avatar
+                contacts[i].signature = updatedInfo.signature !== undefined ? updatedInfo.signature : contacts[i].signature
+                contacts[i].region = updatedInfo.region !== undefined ? updatedInfo.region : contacts[i].region
+                contacts[i].age = updatedInfo.age || contacts[i].age
+                contacts[i].isMale = updatedInfo.isMale !== undefined ? updatedInfo.isMale : contacts[i].isMale
+                
+                // 更新状态（需要转换）
+                if (updatedInfo.status !== undefined) {
+                    let newStatus = updatedInfo.status
+                    if (newStatus === "online") newStatus = "在线"
+                    else if (newStatus === "offline") newStatus = "离线"
+                    else if (newStatus === "busy") newStatus = "忙碌"
+                    contacts[i].status = newStatus
+                }
+                
+                contactsVersion++
+                console.log("[ContactsPage] Contact updated:", userId)
+                break
+            }
+        }
+    }
     
     function handleFriendsLoaded(friends) {
         console.log("[ContactsPage] handleFriendsLoaded called, friends count:", friends.length)
         let newContacts = []
         for (let i = 0; i < friends.length; i++) {
             // 从后端获取头像数据，如果没有则使用默认头像
-            let avatar = friends[i].avatar || "qrc:/new/prefix1/image/boy.png"
+            let avatar = friends[i].avatar || ""
             let name = friends[i].username || "未知用户"
             let firstChar = name.charAt(0).toUpperCase()
             // 简单的首字母逻辑：如果首个字符是英文字母则使用，否则统一归入 "#"
             let initial = /^[A-Z]$/.test(firstChar) ? firstChar : "#"
+
+            // 处理状态显示：将 offline/online/busy 转换为中文
+            let status = friends[i].status || "offline"
+            if (status === "online") status = "在线"
+            else if (status === "offline") status = "离线"
+            else if (status === "busy") status = "忙碌"
 
             console.log("[ContactsPage] Friend", i, ":", {
                 userId: friends[i].userId,
@@ -52,7 +118,7 @@ Rectangle {
                 isMale: friends[i].isMale,
                 age: friends[i].age,
                 region: friends[i].region,
-                status: friends[i].status,
+                status: status,
                 signature: friends[i].signature
             })
 
@@ -63,9 +129,9 @@ Rectangle {
                                  avatar: avatar,
                                  isMale: friends[i].isMale !== undefined ? friends[i].isMale : true,
                                  age: friends[i].age || 25,
-                                 region: friends[i].region || "",
-                                 status: friends[i].status || "在线",
-                                 signature: friends[i].signature || "",
+                                 region: friends[i].region || "未设置",
+                                 status: status,
+                                 signature: friends[i].signature || "这个人很懒，什么都没留下~",
                                  userId: friends[i].userId || ""
                              })
         }
@@ -108,6 +174,42 @@ Rectangle {
             console.log("[ContactsPage] onFriendListLoaded signal received, count:", friends.length)
             handleFriendsLoaded(friends)
         }
+        onFriendDetailLoaded: {
+            // 检查是否是空的好友信息（表示加载失败）
+            if (!friendInfo || !friendInfo.userId || friendInfo.userId === "") {
+                refreshFailCount++
+                console.log("[ContactsPage] Friend detail load failed (count:", refreshFailCount, ")")
+
+                // 失败后重置 lastRefreshedFriendId，允许下次重试
+                if (refreshFailCount >= 3) {
+                    lastRefreshedFriendId = ""
+                }
+                return
+            }
+
+            console.log("[ContactsPage] onFriendDetailLoaded received for:", friendInfo.userId)
+            console.log("[ContactsPage] Friend info updated:", {
+                username: friendInfo.username,
+                signature: friendInfo.signature,
+                region: friendInfo.region,
+                age: friendInfo.age,
+                status: friendInfo.status
+            })
+            updateContactDetail(friendInfo)
+
+            // 重置失败计数
+            refreshFailCount = 0
+
+            // 如果当前选中的是该联系人，立即更新详情显示
+            if (detailItem.selectedContact &&
+                (detailItem.selectedContact.userId === friendInfo.userId ||
+                 detailItem.selectedContact.id === friendInfo.userId)) {
+                detailItem.updateSelectedContact()
+                console.log("[ContactsPage] Detail view updated for:", friendInfo.username)
+            } else {
+                console.log("[ContactsPage] Contact is not currently selected, but cache updated")
+            }
+        }
     }
 
     function refreshConversations() {
@@ -118,6 +220,24 @@ Rectangle {
 
     // 当前选中的联系人索引，-1 表示未选中
     property int selectedContactIndex: -1
+    property string lastRefreshedFriendId: ""  // 记录最后刷新的好友 ID
+    property int refreshFailCount: 0  // 刷新失败计数
+
+    // 刷新防抖定时器
+    Timer {
+        id: refreshTimer
+        interval: 300
+        running: false
+        repeat: false
+        onTriggered: {
+            // 定时器触发时执行刷新
+            if (pendingRefreshFriendId && pendingRefreshFriendId !== "") {
+                ChatService.getFriendDetail(pendingRefreshFriendId)
+            }
+        }
+    }
+    
+    property string pendingRefreshFriendId: ""  // 待刷新的好友 ID
 
     // 联系人列表数据
     property var contacts: []
@@ -376,9 +496,21 @@ Rectangle {
                                         spacing: 4
                                         Rectangle {
                                             width: 7; height: 7; radius: 3.5
-                                            color: contact.status === "在线" ? "#4caf50" : (contact.status === "忙碌" ? "#ff9800" : "#bbb")
+                                            color: {
+                                                if (contact.status === "online" || contact.status === "在线") return "#4caf50"
+                                                if (contact.status === "busy" || contact.status === "忙碌") return "#ff9800"
+                                                return "#bbb"
+                                            }
                                         }
-                                        Text { text: contact.status; font.pixelSize: 11; color: "#999"; font.family: "Microsoft YaHei, SimSun, sans-serif" }
+                                        Text {
+                                            text: {
+                                                if (contact.status === "online") return "在线"
+                                                if (contact.status === "offline") return "离线"
+                                                if (contact.status === "busy") return "忙碌"
+                                                return contact.status || "离线"
+                                            }
+                                            font.pixelSize: 11; color: "#999"; font.family: "Microsoft YaHei, SimSun, sans-serif"
+                                        }
                                     }
                                 }
                             }
@@ -673,17 +805,24 @@ Rectangle {
 
                 function updateSelectedContact() {
                     if (selectedContactIndex >= 0 && selectedContactIndex < filteredContacts.length) {
-                        selectedContact = filteredContacts[selectedContactIndex]
+                        var newContact = filteredContacts[selectedContactIndex]
+
+                        // 总是更新 selectedContact，确保 UI 刷新
+                        selectedContact = newContact
                         console.log("[ContactsPage] selectedContact updated:", {
                             id: selectedContact.id,
                             name: selectedContact.name,
                             avatar: selectedContact.avatar,
-                            isMale: selectedContact.isMale,
-                            age: selectedContact.age,
-                            region: selectedContact.region,
                             signature: selectedContact.signature,
-                            status: selectedContact.status
+                            region: selectedContact.region
                         })
+
+                        // 重置失败计数和最后刷新 ID
+                        refreshFailCount = 0
+                        lastRefreshedFriendId = ""
+
+                        // 每次选中联系人时，刷新最新信息
+                        refreshFriendDetail(selectedContact.userId)
                     } else {
                         selectedContact = null
                     }
@@ -794,7 +933,7 @@ Rectangle {
                                                 font.pixelSize: 13
                                             }
                                             Text {
-                                                text: detailItem.selectedContact ? detailItem.selectedContact.region : ""
+                                                text: detailItem.selectedContact && detailItem.selectedContact.region && detailItem.selectedContact.region !== "未设置" ? detailItem.selectedContact.region : "未设置"
                                                 font.pixelSize: 12
                                                 color: "#666"
                                                 font.family: "Microsoft YaHei, SimSun, sans-serif"
@@ -839,7 +978,7 @@ Rectangle {
                                 }
 
                                 Text {
-                                    text: detailItem.selectedContact ? detailItem.selectedContact.signature : ""
+                                    text: detailItem.selectedContact && detailItem.selectedContact.signature ? detailItem.selectedContact.signature : "这个人很懒，什么都没留下~"
                                     font.pixelSize: 13
                                     color: "#555"
                                     font.family: "Microsoft YaHei, SimSun, sans-serif"
@@ -876,9 +1015,23 @@ Rectangle {
                                         spacing: 6
                                         Rectangle {
                                             width: 8; height: 8; radius: 4
-                                            color: detailItem.selectedContact && detailItem.selectedContact.status === "在线" ? "#4caf50" : (detailItem.selectedContact && detailItem.selectedContact.status === "忙碌" ? "#ff9800" : "#bbb")
+                                            color: {
+                                                if (!detailItem.selectedContact) return "#bbb"
+                                                if (detailItem.selectedContact.status === "online" || detailItem.selectedContact.status === "在线") return "#4caf50"
+                                                if (detailItem.selectedContact.status === "busy" || detailItem.selectedContact.status === "忙碌") return "#ff9800"
+                                                return "#bbb"
+                                            }
                                         }
-                                        Text { text: detailItem.selectedContact ? detailItem.selectedContact.status : ""; color: "#333"; font.pixelSize: 13; font.weight: Font.Medium }
+                                        Text {
+                                            text: {
+                                                if (!detailItem.selectedContact) return ""
+                                                if (detailItem.selectedContact.status === "online") return "在线"
+                                                if (detailItem.selectedContact.status === "offline") return "离线"
+                                                if (detailItem.selectedContact.status === "busy") return "忙碌"
+                                                return detailItem.selectedContact.status || "离线"
+                                            }
+                                            color: "#333"; font.pixelSize: 13; font.weight: Font.Medium
+                                        }
                                     }
                                     Item { Layout.fillWidth: true }
                                 }

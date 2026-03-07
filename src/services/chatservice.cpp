@@ -66,6 +66,7 @@ ChatService::ChatService(QObject *parent)
     connect(m_messageDAO, &MessageDAO::messagesLoaded, this, &ChatService::handleMessagesLoaded);
     connect(m_friendRequestDAO, &FriendRequestDAO::pendingRequestsLoaded, this, &ChatService::handleFriendRequestsLoaded);
     connect(m_friendRequestDAO, &FriendRequestDAO::friendsLoaded, this, &ChatService::handleFriendListLoaded);
+    connect(m_friendRequestDAO, &FriendRequestDAO::friendDetailLoaded, this, &ChatService::handleFriendDetailLoaded);
     connect(m_friendRequestDAO, &FriendRequestDAO::requestSent, this, &ChatService::handleFriendRequestSent);
     connect(m_friendRequestDAO, &FriendRequestDAO::requestStatusUpdated, this, &ChatService::handleRequestStatusUpdated);
 
@@ -291,6 +292,54 @@ void ChatService::fetchOfflineMessages()
     m_webSocketClient->sendMessage(fetchRequest);
 }
 
+// 拉取好友更新（上线后）
+void ChatService::fetchFriendsUpdates()
+{
+    if (m_currentUserId.isEmpty()) {
+        return;
+    }
+
+    if (!m_webSocketClient->isConnected()) {
+        return;
+    }
+
+    // 防止重复认证
+    if (m_wsAuthenticated) {
+        qDebug() << "[ChatService] Already authenticated, skipping friends updates fetch";
+        return;
+    }
+
+    // 构建认证消息，包含最后同步时间和好友版本
+    QVariantMap authRequest;
+    authRequest["type"] = "auth";
+    
+    // 获取 Token
+    QString token = NetworkClient::instance()->token();
+    if (!token.isEmpty()) {
+        authRequest["token"] = token;
+    }
+    
+    // 添加最后同步时间
+    if (m_lastSyncTime.isValid()) {
+        authRequest["lastSyncTime"] = m_lastSyncTime.toString(Qt::ISODate);
+    }
+    
+    // 添加好友版本信息
+    if (!m_friendVersions.isEmpty()) {
+        QJsonObject versionsObj;
+        for (auto it = m_friendVersions.begin(); it != m_friendVersions.end(); ++it) {
+            versionsObj[it.key()] = it.value();
+        }
+        authRequest["friendVersions"] = QJsonDocument(versionsObj).toJson(QJsonDocument::Compact);
+    }
+    
+    qDebug() << "[ChatService] Fetching friends updates, lastSyncTime:" << m_lastSyncTime
+             << "friends count:" << m_friendVersions.size();
+    
+    // 发送认证请求（服务器会返回好友更新）
+    m_webSocketClient->sendMessage(authRequest);
+}
+
 // 撤回消息（2 分钟内）
 void ChatService::recallMessage(const QString &conversationId, const QString &messageId)
 {
@@ -340,6 +389,8 @@ void ChatService::handleUserProfileResult(bool success, const QVariantMap &profi
         return;
     }
 
+    qDebug() << "[ChatService] User profile loaded:" << profile;
+
     setCurrentUserName(profile.value("username").toString());
     setCurrentUserAvatar(profile.value("avatar").toString());
     setCurrentUserGender(profile.value("gender").toString());
@@ -348,14 +399,23 @@ void ChatService::handleUserProfileResult(bool success, const QVariantMap &profi
     setCurrentUserEmail(profile.value("email").toString());
     setCurrentUserContact(profile.value("contact").toString());
     setCurrentUserBio(profile.value("bio").toString());
+    setCurrentUserAge(profile.value("age").toInt());
+
+    qDebug() << "[ChatService] User info updated - Name:" << m_currentUserName
+             << "Gender:" << m_currentUserGender
+             << "Region:" << m_currentUserRegion
+             << "Age:" << m_currentUserAge;
 }
 
 void ChatService::handleUserProfileUpdated(bool success, const QString &message)
 {
     if (success) {
+        // 保存成功后，重新加载用户资料以获取最新数据
+        qDebug() << "[ChatService] Profile saved successfully, reloading...";
         loadUserProfile();
         emit userProfileSaveResult(true, message.isEmpty() ? "资料保存成功" : message);
     } else {
+        qWarning() << "[ChatService] Profile save failed:" << message;
         emit userProfileSaveResult(false, message.isEmpty() ? "资料保存失败" : message);
     }
 }
@@ -363,6 +423,15 @@ void ChatService::handleUserProfileUpdated(bool success, const QString &message)
 void ChatService::logout()
 {
     qDebug() << "[ChatService] Logging out...";
+
+    // 先调用服务器登出 API，更新用户状态为离线
+    if (!m_currentUserId.isEmpty() && !NetworkClient::instance()->token().isEmpty()) {
+        NetworkClient::instance()->post("/auth/logout", QJsonObject{}, [](const QJsonObject &res) {
+            qDebug() << "[ChatService] Logout API response:" << QJsonDocument(res).toJson();
+        }, [](const QString &error) {
+            qWarning() << "[ChatService] Logout API error:" << error;
+        });
+    }
 
     // 断开聊天服务器连接
     disconnectFromChatServer();
@@ -510,6 +579,14 @@ void ChatService::setCurrentUserBio(const QString &bio)
     }
 }
 
+void ChatService::setCurrentUserAge(int age)
+{
+    if (m_currentUserAge != age) {
+        m_currentUserAge = age;
+        emit currentUserAgeChanged();
+    }
+}
+
 bool ChatService::isConnected() const
 {
     return m_webSocketClient->isConnected();
@@ -544,10 +621,79 @@ void ChatService::onWebSocketMessageReceived(const QVariantMap &rawMessage)
             QString friendId = rawMessage.value("fromId").toString();
             QString friendName = rawMessage.value("fromName").toString();
             emit friendshipEstablished(friendId, friendName);
-            
+
             // 刷新数据（会话列表等）
             initializeSampleData();
         }
+    } else if (msgType == "profile_updated") {
+        // 收到好友信息更新通知
+        QString userId = rawMessage.value("userId").toString();
+        qDebug() << "[ChatService] Received profile update from:" << userId;
+        qDebug() << "[ChatService] Profile update data:" << rawMessage;
+
+        // 刷新该好友的信息（通知 QML 更新）
+        QVariantMap updatedProfile;
+        updatedProfile["userId"] = userId;
+        updatedProfile["username"] = rawMessage.value("username").toString();
+        updatedProfile["avatar"] = rawMessage.value("avatar").toString();
+        updatedProfile["gender"] = rawMessage.value("gender").toString();
+        updatedProfile["region"] = rawMessage.value("region").toString();
+        updatedProfile["signature"] = rawMessage.value("signature").toString();
+        updatedProfile["age"] = rawMessage.value("age").toInt();
+        updatedProfile["version"] = rawMessage.value("version").toInt();
+        updatedProfile["status"] = rawMessage.value("status").toString();
+        if (updatedProfile["status"].toString().isEmpty()) {
+            updatedProfile["status"] = "offline";
+        }
+
+        qDebug() << "[ChatService] Emitting friendDetailLoaded with:" << updatedProfile;
+
+        // 更新本地版本缓存
+        int version = updatedProfile["version"].toInt();
+        if (version > 0) {
+            m_friendVersions[userId] = version;
+        }
+
+        // 发出信号通知 QML 更新
+        emit friendDetailLoaded(updatedProfile);
+    } else if (msgType == "friends_updates") {
+        // 收到好友批量更新（上线后拉取）
+        QVariantList updates = rawMessage.value("updates").toList();
+        qDebug() << "[ChatService] Received" << updates.size() << "friend updates";
+        
+        for (const QVariant &update : updates) {
+            QVariantMap updateMap = update.toMap();
+            QString userId = updateMap["user_id"].toString();
+            
+            // 更新本地版本缓存
+            int version = updateMap["version"].toInt();
+            if (version > 0) {
+                m_friendVersions[userId] = version;
+            }
+            
+            // 转换字段名并发送更新
+            QVariantMap friendInfo;
+            friendInfo["userId"] = userId;
+            friendInfo["username"] = updateMap["username"].toString();
+            friendInfo["avatar"] = updateMap["avatar"].toString();
+            friendInfo["gender"] = updateMap["gender"].toString();
+            friendInfo["region"] = updateMap["region"].toString();
+            friendInfo["signature"] = updateMap["signature"].toString();
+            friendInfo["age"] = updateMap["age"].toInt();
+            friendInfo["status"] = updateMap["status"].toString();
+            if (friendInfo["status"].toString().isEmpty()) {
+                friendInfo["status"] = "offline";
+            }
+            friendInfo["version"] = version;
+
+            emit friendDetailLoaded(friendInfo);
+        }
+    } else if (msgType == "auth_success") {
+        // WebSocket 认证成功
+        qDebug() << "[ChatService] WebSocket auth successful";
+        m_wsAuthenticated = true;
+        // 更新同步时间
+        m_lastSyncTime = QDateTime::currentDateTime();
     } else if (msgType == "heartbeat") {
         // 忽略
     } else {
@@ -616,14 +762,14 @@ void ChatService::onWebSocketConnected()
     qDebug() << "[ChatService] WebSocket connected";
     emit connectedChanged(true);
 
-    // 发送认证消息 - 使用 JWT Token
+    // 重置认证状态
+    m_wsAuthenticated = false;
+
+    // 发送认证消息 - 使用 JWT Token 和好友版本信息
     if (!m_currentUserId.isEmpty() && !NetworkClient::instance()->token().isEmpty()) {
-        QVariantMap auth;
-        auth["type"] = "auth";
-        auth["token"] = NetworkClient::instance()->token();
-        m_webSocketClient->sendMessage(auth);
+        fetchFriendsUpdates();
         qDebug() << "[ChatService] Sent WebSocket auth for user:" << m_currentUserId;
-        
+
         // 认证成功后拉取离线消息（延迟 500ms 确保认证完成）
         QTimer::singleShot(500, this, [this]() {
             fetchOfflineMessages();
@@ -636,6 +782,8 @@ void ChatService::onWebSocketConnected()
 void ChatService::onWebSocketDisconnected()
 {
     qDebug() << "[ChatService] WebSocket disconnected";
+    // 重置认证状态
+    m_wsAuthenticated = false;
     emit connectedChanged(false);
 }
 
@@ -864,6 +1012,16 @@ void ChatService::getFriendList()
     m_friendRequestDAO->getFriends();
 }
 
+void ChatService::getFriendDetail(const QString &friendId)
+{
+    if (friendId.isEmpty()) {
+        qWarning() << "[ChatService] getFriendDetail called with empty friendId";
+        return;
+    }
+    qDebug() << "[ChatService] Getting friend detail for:" << friendId;
+    m_friendRequestDAO->getFriendDetail(friendId);
+}
+
 void ChatService::handleFriendListLoaded(const QVector<FriendRequestDAO::FriendInfo> &friends)
 {
     QVariantList list;
@@ -878,8 +1036,34 @@ void ChatService::handleFriendListLoaded(const QVector<FriendRequestDAO::FriendI
         map["age"]       = friendInfo.age;
         map["region"]    = friendInfo.region;
         list.append(map);
+        
+        // 保存好友版本号（初始为 1）
+        if (!m_friendVersions.contains(friendInfo.userId)) {
+            m_friendVersions[friendInfo.userId] = 1;
+        }
     }
     emit friendListLoaded(list);
+}
+
+void ChatService::handleFriendDetailLoaded(const FriendRequestDAO::FriendInfo &friendInfo)
+{
+    if (friendInfo.userId.isEmpty()) {
+        qWarning() << "[ChatService] handleFriendDetailLoaded: empty friend info";
+        return;
+    }
+    
+    QVariantMap map;
+    map["userId"]    = friendInfo.userId;
+    map["username"]  = friendInfo.username;
+    map["avatar"]    = friendInfo.avatar;
+    map["status"]    = friendInfo.status.isEmpty() ? QString("在线") : friendInfo.status;
+    map["signature"] = friendInfo.signature;
+    map["isMale"]    = friendInfo.isMale;
+    map["age"]       = friendInfo.age;
+    map["region"]    = friendInfo.region;
+    
+    qDebug() << "[ChatService] Friend detail loaded:" << friendInfo.username;
+    emit friendDetailLoaded(map);
 }
 
 void ChatService::checkIsFriend(const QString &userId)

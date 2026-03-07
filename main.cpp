@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QIcon>
 
 #include "src/singleton.h"
 #include "src/models/messagemodel.h"
@@ -39,6 +40,9 @@ int main(int argc, char *argv[])
     app.setApplicationName("XWChat");
     app.setOrganizationName("XWChat");
     app.setOrganizationDomain("xwchat.com");
+    
+    // 设置应用图标（OrangeCat）
+    app.setWindowIcon(QIcon(":/new/prefix1/image/OrangeCat.png"));
 
     // 现在使用 NetworkClient 进行后端通信，不再需要本地数据库初始化
     Logger::instance()->info("Application started", "main");

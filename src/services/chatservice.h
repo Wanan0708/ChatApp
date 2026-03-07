@@ -31,6 +31,7 @@ class ChatService : public QObject
     Q_PROPERTY(QString currentUserEmail READ currentUserEmail WRITE setCurrentUserEmail NOTIFY currentUserEmailChanged)
     Q_PROPERTY(QString currentUserContact READ currentUserContact WRITE setCurrentUserContact NOTIFY currentUserContactChanged)
     Q_PROPERTY(QString currentUserBio READ currentUserBio WRITE setCurrentUserBio NOTIFY currentUserBioChanged)
+    Q_PROPERTY(int currentUserAge READ currentUserAge WRITE setCurrentUserAge NOTIFY currentUserAgeChanged)
     Q_PROPERTY(bool isConnected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(bool notificationsEnabled READ notificationsEnabled WRITE setNotificationsEnabled NOTIFY notificationsEnabledChanged)
     Q_PROPERTY(bool soundEnabled READ soundEnabled WRITE setSoundEnabled NOTIFY soundEnabledChanged)
@@ -54,6 +55,7 @@ public:
     QString currentUserEmail() const { return m_currentUserEmail; }
     QString currentUserContact() const { return m_currentUserContact; }
     QString currentUserBio() const { return m_currentUserBio; }
+    int currentUserAge() const { return m_currentUserAge; }
 
     Q_INVOKABLE void setCurrentUserId(const QString &userId);
     Q_INVOKABLE void setCurrentUserName(const QString &userName);
@@ -64,6 +66,7 @@ public:
     void setCurrentUserEmail(const QString &email);
     void setCurrentUserContact(const QString &contact);
     void setCurrentUserBio(const QString &bio);
+    void setCurrentUserAge(int age);
 
     QString currentConversationId() const { return m_currentConversationId; }
     void setCurrentConversationId(const QString &id);
@@ -95,6 +98,7 @@ public:
     Q_INVOKABLE void respondToFriendRequest(int requestId, bool accept);
     Q_INVOKABLE void getPendingFriendRequests();
     Q_INVOKABLE void getFriendList();
+    Q_INVOKABLE void getFriendDetail(const QString &friendId);
     Q_INVOKABLE void checkIsFriend(const QString &userId);
     Q_INVOKABLE void validateUserLogin(const QString &username, const QString &password);
     Q_INVOKABLE void registerNewUser(const QString &username, const QString &password);
@@ -142,6 +146,7 @@ signals:
     void currentUserEmailChanged();
     void currentUserContactChanged();
     void currentUserBioChanged();
+    void currentUserAgeChanged();
     void userProfileSaveResult(bool success, const QString &message);
     void notificationsEnabledChanged();
     void soundEnabledChanged();
@@ -157,6 +162,7 @@ signals:
     void searchResult(const QVariantList &results);
     void pendingRequestsLoaded(const QVariantList &requests);
     void friendListLoaded(const QVariantList &friends);
+    void friendDetailLoaded(const QVariantMap &friendInfo);
     void isFriendResult(const QString &userId, bool isFriend);
 
     // 认证结果信号
@@ -185,6 +191,7 @@ private slots:
     void handleFriendListLoaded(const QVector<FriendRequestDAO::FriendInfo> &friends);
     void handleFriendRequestSent(bool success, const QString &error);
     void handleRequestStatusUpdated(bool success, int requestId, const QString &status);
+    void handleFriendDetailLoaded(const FriendRequestDAO::FriendInfo &friendInfo);
 
 private:
     explicit ChatService(QObject *parent = nullptr);
@@ -212,6 +219,7 @@ private:
     QString m_currentUserEmail;
     QString m_currentUserContact;
     QString m_currentUserBio;
+    int m_currentUserAge = 25;
     QString m_currentConversationId;
 
     bool m_notificationsEnabled;
@@ -221,8 +229,14 @@ private:
     QString m_lastUsername;
     QString m_lastPassword;
 
+    // 好友版本管理
+    QHash<QString, int> m_friendVersions;  // userId -> version
+    QDateTime m_lastSyncTime;
+    bool m_wsAuthenticated = false;  // WebSocket 是否已认证
+
     void initializeSampleData();
     void processIncomingMessage(const QVariantMap &message);
+    void fetchFriendsUpdates();
 
     friend class ConversationModel;
     friend class MessageModel;

@@ -6,5 +6,6 @@
         <file>image/setting.png</file>
         <file>image/boy.png</file>
         <file>image/gril.png</file>
+        <file>image/OrangeCat.png</file>
     </qresource>
 </RCC>

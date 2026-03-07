@@ -78,8 +78,19 @@ ApplicationWindow {
 
             RowLayout {
                 anchors.fill: parent
-                spacing: 0
-                Item { Layout.preferredWidth: 16 }
+                spacing: 8
+                
+                // OrangeCat 图标
+                Image {
+                    Layout.leftMargin: 10
+                    source: "qrc:/new/prefix1/image/OrangeCat.png"
+                    Layout.preferredWidth: 24
+                    Layout.preferredHeight: 24
+                    Layout.alignment: Qt.AlignVCenter
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                }
+
                 Text {
                     text: "XWChat"
                     font.pixelSize: 13; font.weight: Font.Medium; color: "#333333"

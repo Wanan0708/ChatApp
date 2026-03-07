@@ -81,6 +81,11 @@ HEADERS += \
 RESOURCES += qml.qrc \
     image.qrc
 
+# Windows 图标（暂时注释，需要真正的 ICO 文件）
+# win32 {
+#     RC_ICONS = appicon.ico
+# }
+
 # 高DPI支持
 QMAKE_LFLAGS += $$QMAKE_LFLAGS_HIGH_DPI_AWARE
 

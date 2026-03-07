@@ -135,6 +135,13 @@ input {
     font-size: 28px;
 }
 
+.logo-icon-img {
+    width: 32px;
+    height: 32px;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
 .logo-text {
     background: var(--gradient-primary);
     -webkit-background-clip: text;

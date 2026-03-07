@@ -58,7 +58,14 @@ const ensureUserProfileColumns = async () => {
         ADD COLUMN IF NOT EXISTS phone VARCHAR(50),
         ADD COLUMN IF NOT EXISTS email VARCHAR(255),
         ADD COLUMN IF NOT EXISTS contact VARCHAR(255),
-        ADD COLUMN IF NOT EXISTS bio TEXT
+        ADD COLUMN IF NOT EXISTS bio TEXT,
+        ADD COLUMN IF NOT EXISTS age INTEGER DEFAULT 25,
+        ADD COLUMN IF NOT EXISTS profile_version INTEGER DEFAULT 1,
+        ADD COLUMN IF NOT EXISTS profile_updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+        
+        -- 创建索引
+        CREATE INDEX IF NOT EXISTS idx_users_profile_version ON users(profile_version);
+        CREATE INDEX IF NOT EXISTS idx_users_profile_updated_at ON users(profile_updated_at);
     `;
     await pool.query(alterSql);
     console.log('[DB] Ensured user profile columns exist');
@@ -103,13 +110,17 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
     const { username, password } = req.body;
     console.log('[Login] Attempt:', username);
-    
+
     try {
         const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         const user = result.rows[0];
 
         if (user && await bcrypt.compare(password, user.password_hash)) {
             const accessToken = jwt.sign({ userId: user.user_id, username: user.username }, process.env.JWT_SECRET);
+            
+            // 更新用户状态为在线
+            await pool.query('UPDATE users SET status = $1, last_seen = NOW() WHERE user_id = $2', ['online', user.user_id]);
+            
             console.log('[Login] Success:', user.user_id);
             res.json({ accessToken, userId: user.user_id, username: user.username });
         } else {
@@ -128,7 +139,10 @@ app.post('/api/auth/login', async (req, res) => {
 app.get('/api/users/profile', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT user_id, username, avatar, gender, region, phone, email, contact, bio, created_at
+            `SELECT user_id, username, avatar, gender, region, phone, email, contact, bio, age, 
+                    COALESCE(profile_version, 1) as profile_version,
+                    COALESCE(profile_updated_at, created_at) as profile_updated_at,
+                    created_at
              FROM users
              WHERE user_id = $1`,
             [req.user.userId]
@@ -149,10 +163,35 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
         phone = null,
         email = null,
         contact = null,
-        bio = null
+        bio = null,
+        age = null
     } = req.body || {};
 
+    console.log('[Profile] Update request for user:', req.user.userId);
+    console.log('[Profile] Request body:', req.body);
+
     try {
+        // 将空字符串转换为 null，以便 COALESCE 保留原值
+        const safeValue = (val) => (val === '' || val === undefined || val === null) ? null : val;
+        // 年龄特殊处理：如果是数字则使用，否则转换为 null
+        const safeAge = (val) => {
+            if (val === undefined || val === null || val === '') return null;
+            const numAge = parseInt(val);
+            return (numAge > 0 && numAge <= 150) ? numAge : null;
+        };
+
+        console.log('[Profile] Safe values:', {
+            username: safeValue(username),
+            avatar: safeValue(avatar),
+            gender: safeValue(gender),
+            region: safeValue(region),
+            phone: safeValue(phone),
+            email: safeValue(email),
+            contact: safeValue(contact),
+            bio: safeValue(bio),
+            age: safeAge(age)
+        });
+
         const result = await pool.query(
             `UPDATE users
              SET username = COALESCE($1, username),
@@ -163,18 +202,69 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
                  email = COALESCE($6, email),
                  contact = COALESCE($7, contact),
                  bio = COALESCE($8, bio),
+                 age = COALESCE($9, age),
+                 profile_version = profile_version + 1,
+                 profile_updated_at = NOW(),
                  updated_at = NOW()
-             WHERE user_id = $9
-             RETURNING user_id, username, avatar, gender, region, phone, email, contact, bio`,
-            [username, avatar, gender, region, phone, email, contact, bio, req.user.userId]
+             WHERE user_id = $10
+             RETURNING user_id, username, avatar, gender, region, phone, email, contact, bio, age, profile_version, profile_updated_at`,
+            [safeValue(username), safeValue(avatar), safeValue(gender), safeValue(region),
+             safeValue(phone), safeValue(email), safeValue(contact), safeValue(bio), safeAge(age), req.user.userId]
         );
 
         if (result.rows.length === 0) {
+            console.log('[Profile] User not found:', req.user.userId);
             return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json({ message: 'Profile updated', profile: result.rows[0] });
+        console.log('[Profile] Profile updated successfully:', result.rows[0]);
+
+        // 通过 WebSocket 通知所有在线好友：用户信息已更新
+        const profileUpdateNotification = {
+            type: 'profile_updated',
+            userId: req.user.userId,
+            username: req.user.username,
+            avatar: result.rows[0].avatar || '',
+            gender: result.rows[0].gender || '',
+            region: result.rows[0].region || '',
+            signature: result.rows[0].bio || '',
+            age: result.rows[0].age || 25,
+            status: result.rows[0].status || 'offline',
+            version: result.rows[0].profile_version || 1,
+            updatedAt: result.rows[0].profile_updated_at
+        };
+
+        console.log('[Profile] Sending profile update notification:', profileUpdateNotification);
+
+        // 获取所有好友的 ID
+        const friendsResult = await pool.query(
+            'SELECT friend_id FROM friends WHERE user_id = $1',
+            [req.user.userId]
+        );
+
+        let notifiedCount = 0;
+        let onlineCount = 0;
+        friendsResult.rows.forEach(row => {
+            const friendClient = clients.get(row.friend_id);
+            if (friendClient && friendClient.ws.readyState === WebSocket.OPEN) {
+                friendClient.ws.send(JSON.stringify(profileUpdateNotification));
+                notifiedCount++;
+                onlineCount++;
+                console.log('[Profile] Sent update to friend:', row.friend_id);
+            } else {
+                console.log('[Profile] Friend', row.friend_id, 'is offline or not connected');
+            }
+        });
+
+        console.log(`[Profile] Notified ${notifiedCount} online friends about profile update (version ${result.rows[0].profile_version})`);
+        
+        res.json({ 
+            message: 'Profile updated', 
+            profile: result.rows[0],
+            version: result.rows[0].profile_version
+        });
     } catch (err) {
+        console.error('[Profile] Error:', err);
         if (err.code === '23505') {
             return res.status(400).json({ error: 'Username already exists' });
         }
@@ -200,16 +290,219 @@ app.get('/api/users/search', authenticateToken, async (req, res) => {
 app.get('/api/friends', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT f.friend_id as user_id, u.username
+            `SELECT f.friend_id as user_id,
+                    u.username,
+                    u.avatar,
+                    u.gender,
+                    u.region,
+                    u.bio as signature,
+                    u.status,
+                    u.created_at,
+                    COALESCE(u.age, EXTRACT(YEAR FROM AGE(NOW(), u.created_at)) + 18) as age
              FROM friends f
              JOIN users u ON f.friend_id = u.user_id
              WHERE f.user_id = $1`,
             [req.user.userId]
         );
-        console.log('[Friends] Loaded', result.rows.length, 'friends for user', req.user.userId);
-        res.json(result.rows);
+
+        // 格式化返回数据
+        const friends = result.rows.map(row => {
+            // 根据 gender 字段设置 isMale
+            let isMale = true; // 默认值
+            if (row.gender === '女') {
+                isMale = false;
+            } else if (row.gender === '男') {
+                isMale = true;
+            }
+
+            // 使用数据库返回的年龄（已在上游 SQL 中计算）
+            const age = row.age ? parseInt(row.age) : 25;
+
+            return {
+                user_id: row.user_id,
+                username: row.username || '未知用户',
+                avatar: row.avatar || '',
+                status: row.status || 'offline',
+                signature: row.signature || '',
+                isMale: isMale,
+                age: age,
+                region: row.region || ''
+            };
+        });
+
+        console.log('[Friends] Loaded', friends.length, 'friends for user', req.user.userId);
+        res.json(friends);
     } catch (err) {
         console.error('[Friends] Error:', err);
+        res.status(500).json({ error: 'Internal server error: ' + err.message });
+    }
+});
+
+// 获取单个好友详情（用于点击时刷新最新信息）
+app.get('/api/friends/:friendId', authenticateToken, async (req, res) => {
+    try {
+        const friendId = req.params.friendId;
+        
+        // 验证是否为好友关系
+        const friendCheck = await pool.query(
+            'SELECT 1 FROM friends WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)',
+            [req.user.userId, friendId]
+        );
+        
+        if (friendCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Friend not found or not your friend' });
+        }
+        
+        const result = await pool.query(
+            `SELECT u.user_id,
+                    u.username,
+                    u.avatar,
+                    u.gender,
+                    u.region,
+                    u.bio as signature,
+                    u.status,
+                    u.created_at,
+                    COALESCE(u.age, EXTRACT(YEAR FROM AGE(NOW(), u.created_at)) + 18) as age,
+                    COALESCE(u.profile_version, 1) as profile_version,
+                    COALESCE(u.profile_updated_at, u.created_at) as profile_updated_at
+             FROM users u
+             WHERE u.user_id = $1`,
+            [friendId]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        const row = result.rows[0];
+        
+        // 根据 gender 字段设置 isMale
+        let isMale = true;
+        if (row.gender === '女') {
+            isMale = false;
+        } else if (row.gender === '男') {
+            isMale = true;
+        }
+        
+        const age = row.age ? parseInt(row.age) : 25;
+        
+        const friendInfo = {
+            user_id: row.user_id,
+            username: row.username || '未知用户',
+            avatar: row.avatar || '',
+            status: row.status || 'offline',
+            signature: row.signature || '',
+            isMale: isMale,
+            age: age,
+            region: row.region || '',
+            version: row.profile_version,
+            updatedAt: row.profile_updated_at
+        };
+        
+        console.log('[Friend Detail] Loaded detail for:', friendId, 'version:', friendInfo.version);
+        res.json(friendInfo);
+    } catch (err) {
+        console.error('[Friend Detail] Error:', err);
+        res.status(500).json({ error: 'Internal server error: ' + err.message });
+    }
+});
+
+// 获取好友资料更新（用于上线后拉取更新）
+app.get('/api/friends/updates/since', authenticateToken, async (req, res) => {
+    try {
+        const { since, versions } = req.query;
+        
+        // 获取所有好友 ID
+        const friendsResult = await pool.query(
+            'SELECT friend_id FROM friends WHERE user_id = $1',
+            [req.user.userId]
+        );
+        
+        if (friendsResult.rows.length === 0) {
+            return res.json({ updates: [] });
+        }
+        
+        const friendIds = friendsResult.rows.map(r => r.friend_id);
+        
+        // 查询自指定时间以来有更新的好友
+        let updates = [];
+        if (since) {
+            const updatesResult = await pool.query(
+                `SELECT u.user_id, u.username, u.avatar, u.gender, u.region,
+                        u.bio as signature, u.age, u.status, u.profile_version, u.profile_updated_at
+                 FROM users u
+                 WHERE u.user_id = ANY($1)
+                   AND u.profile_updated_at > $2`,
+                [friendIds, new Date(since)]
+            );
+            updates = updatesResult.rows.map(row => ({
+                user_id: row.user_id,
+                username: row.username,
+                avatar: row.avatar,
+                gender: row.gender,
+                region: row.region,
+                signature: row.bio,
+                age: row.age,
+                status: row.status || 'offline',
+                version: row.profile_version,
+                updatedAt: row.profile_updated_at
+            }));
+        }
+        
+        // 或者根据版本号查询（更精确）
+        if (versions) {
+            try {
+                const versionMap = JSON.parse(versions);
+                const outdatedFriends = [];
+                
+                for (const [userId, clientVersion] of Object.entries(versionMap)) {
+                    if (friendIds.includes(userId)) {
+                        const result = await pool.query(
+                            'SELECT profile_version FROM users WHERE user_id = $1 AND profile_version > $2',
+                            [userId, clientVersion]
+                        );
+                        if (result.rows.length > 0) {
+                            outdatedFriends.push(userId);
+                        }
+                    }
+                }
+                
+                if (outdatedFriends.length > 0) {
+                    const detailedUpdates = await pool.query(
+                        `SELECT u.user_id, u.username, u.avatar, u.gender, u.region,
+                                u.bio as signature, u.age, u.status, u.profile_version, u.profile_updated_at
+                         FROM users u
+                         WHERE u.user_id = ANY($1)`,
+                        [outdatedFriends]
+                    );
+
+                    // 合并更新结果
+                    const updateMap = new Map(updates.map(u => [u.user_id, u]));
+                    detailedUpdates.rows.forEach(row => {
+                        updateMap.set(row.user_id, {
+                            user_id: row.user_id,
+                            username: row.username,
+                            avatar: row.avatar,
+                            gender: row.gender,
+                            region: row.region,
+                            signature: row.bio,
+                            age: row.age,
+                            status: row.status || 'offline',
+                            version: row.profile_version,
+                            updatedAt: row.profile_updated_at
+                        });
+                    });
+                    updates = Array.from(updateMap.values());
+                }
+            } catch (e) {
+                console.error('[Friends Updates] Failed to parse versions:', e);
+            }
+        }
+        
+        console.log('[Friends Updates] Found', updates.length, 'updated friends');
+        res.json({ updates });
+    } catch (err) {
+        console.error('[Friends Updates] Error:', err);
         res.status(500).json({ error: 'Internal server error: ' + err.message });
     }
 });
@@ -565,14 +858,27 @@ app.put('/api/users/:userId/password', authenticateToken, async (req, res) => {
 
 // --- 下载 API ---
 
+// 用户登出 API
+app.post('/api/auth/logout', authenticateToken, async (req, res) => {
+    try {
+        // 更新用户状态为离线
+        await pool.query('UPDATE users SET status = $1, last_seen = NOW() WHERE user_id = $2', ['offline', req.user.userId]);
+        console.log('[Logout] User', req.user.userId, 'logged out');
+        res.json({ message: 'Logout successful' });
+    } catch (err) {
+        console.error('[Logout] Error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // 获取可用的下载文件列表
 app.get('/api/downloads', (req, res) => {
     const downloadsDir = path.join(__dirname, '..', 'web', 'downloads');
-    
+
     if (!fs.existsSync(downloadsDir)) {
         return res.json({ files: [], message: 'No downloads available' });
     }
-    
+
     const files = fs.readdirSync(downloadsDir).map(file => {
         const filePath = path.join(downloadsDir, file);
         const stats = fs.statSync(filePath);
@@ -583,7 +889,7 @@ app.get('/api/downloads', (req, res) => {
             downloadUrl: `/downloads/${file}`
         };
     });
-    
+
     res.json({ files });
 });
 
@@ -643,15 +949,106 @@ wss.on('connection', (ws) => {
 
         // 1. 认证
         if (type === 'auth') {
-            const { token } = data;
+            const { token, lastSyncTime, friendVersions } = data;
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
                 currentUserId = decoded.userId;
                 clients.set(currentUserId, { ws, username: decoded.username });
 
-                ws.send(JSON.stringify({ type: 'auth_success', userId: currentUserId }));
+                ws.send(JSON.stringify({ 
+                    type: 'auth_success', 
+                    userId: currentUserId 
+                }));
                 console.log(`[WebSocket] User ${decoded.username} (${decoded.userId}) authenticated`);
                 console.log(`[WebSocket] Total online users: ${clients.size}`);
+                
+                // 认证成功后，推送好友更新（如果有）
+                if (lastSyncTime || friendVersions) {
+                    // 异步查询好友更新
+                    (async () => {
+                        try {
+                            const friendsResult = await pool.query(
+                                'SELECT friend_id FROM friends WHERE user_id = $1',
+                                [currentUserId]
+                            );
+                            
+                            if (friendsResult.rows.length === 0) return;
+                            
+                            const friendIds = friendsResult.rows.map(r => r.friend_id);
+                            let updates = [];
+                            
+                            // 根据时间查询更新
+                            if (lastSyncTime) {
+                                const updatesResult = await pool.query(
+                                    `SELECT u.user_id, u.username, u.avatar, u.gender, u.region,
+                                            u.bio as signature, u.age, u.profile_version, u.profile_updated_at
+                                     FROM users u
+                                     WHERE u.user_id = ANY($1) AND u.profile_updated_at > $2`,
+                                    [friendIds, new Date(lastSyncTime)]
+                                );
+                                
+                                updates = updatesResult.rows.map(row => ({
+                                    user_id: row.user_id,
+                                    username: row.username,
+                                    avatar: row.avatar,
+                                    gender: row.gender,
+                                    region: row.region,
+                                    signature: row.bio,
+                                    age: row.age,
+                                    version: row.profile_version,
+                                    updatedAt: row.profile_updated_at
+                                }));
+                            }
+                            
+                            // 根据版本号查询更新（更精确）
+                            if (friendVersions) {
+                                const versionMap = typeof friendVersions === 'string' ? 
+                                    JSON.parse(friendVersions) : friendVersions;
+                                
+                                for (const [userId, clientVersion] of Object.entries(versionMap)) {
+                                    if (friendIds.includes(userId)) {
+                                        const result = await pool.query(
+                                            'SELECT profile_version FROM users WHERE user_id = $1 AND profile_version > $2',
+                                            [userId, clientVersion]
+                                        );
+                                        if (result.rows.length > 0 && !updates.find(u => u.user_id === userId)) {
+                                            const detail = await pool.query(
+                                                `SELECT u.user_id, u.username, u.avatar, u.gender, u.region,
+                                                        u.bio as signature, u.age, u.profile_version, u.profile_updated_at
+                                                 FROM users u WHERE u.user_id = $1`,
+                                                [userId]
+                                            );
+                                            if (detail.rows.length > 0) {
+                                                const row = detail.rows[0];
+                                                updates.push({
+                                                    user_id: row.user_id,
+                                                    username: row.username,
+                                                    avatar: row.avatar,
+                                                    gender: row.gender,
+                                                    region: row.region,
+                                                    signature: row.bio,
+                                                    age: row.age,
+                                                    version: row.profile_version,
+                                                    updatedAt: row.profile_updated_at
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if (updates.length > 0) {
+                                ws.send(JSON.stringify({
+                                    type: 'friends_updates',
+                                    updates: updates
+                                }));
+                                console.log(`[WebSocket] Sent ${updates.length} friend updates to ${currentUserId}`);
+                            }
+                        } catch (e) {
+                            console.error('[WebSocket] Failed to fetch friend updates:', e);
+                        }
+                    })();
+                }
             } catch (err) {
                 console.error('[WebSocket] Auth error:', err.message);
                 ws.send(JSON.stringify({ type: 'error', message: 'Invalid token' }));
@@ -822,8 +1219,16 @@ wss.on('connection', (ws) => {
         }
     });
 
-    ws.on('close', () => {
+    ws.on('close', async () => {
         if (currentUserId) {
+            // 更新用户状态为离线
+            try {
+                await pool.query('UPDATE users SET status = $1, last_seen = NOW() WHERE user_id = $2', ['offline', currentUserId]);
+                console.log(`[WebSocket] User ${currentUserId} status updated to offline`);
+            } catch (err) {
+                console.error('[WebSocket] Failed to update user status:', err);
+            }
+            
             clients.delete(currentUserId);
             console.log(`User ${currentUserId} disconnected`);
         }

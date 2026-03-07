@@ -79,10 +79,10 @@ void FriendRequestDAO::getFriends()
             info.userId = obj["user_id"].toString();
             info.username = obj["username"].toString();
             info.avatar = obj["avatar"].toString();
-            info.status = obj["status"].toString("在线");
+            info.status = obj["status"].toString("offline");
             info.signature = obj["signature"].toString("");
             info.isMale = obj["isMale"].toBool(true);
-            info.age = obj["age"].toInt(25);
+            info.age = obj["age"].toVariant().toInt();
             info.region = obj["region"].toString("");
             friends.append(info);
         }
@@ -90,5 +90,29 @@ void FriendRequestDAO::getFriends()
     }, [this](const QString &error) {
         qWarning() << "Failed to load friend list:" << error;
         emit friendsLoaded(QVector<FriendInfo>());
+    });
+}
+
+void FriendRequestDAO::getFriendDetail(const QString &friendId)
+{
+    qDebug() << "[FriendRequestDAO] getFriendDetail:" << friendId;
+
+    NetworkClient::instance()->get("/friends/" + friendId, [this](const QJsonObject &res) {
+        FriendInfo info;
+        info.userId = res["user_id"].toString();
+        info.username = res["username"].toString();
+        info.avatar = res["avatar"].toString();
+        info.status = res["status"].toString("offline");
+        info.signature = res["signature"].toString("");
+        info.isMale = res["isMale"].toBool(true);
+        info.age = res["age"].toVariant().toInt();
+        info.region = res["region"].toString("");
+        
+        qDebug() << "[FriendRequestDAO] Friend detail loaded:" << info.username;
+        emit friendDetailLoaded(info);
+    }, [this](const QString &error) {
+        qWarning() << "[FriendRequestDAO] Failed to load friend detail:" << error;
+        // 发送空对象表示失败
+        emit friendDetailLoaded(FriendInfo());
     });
 }

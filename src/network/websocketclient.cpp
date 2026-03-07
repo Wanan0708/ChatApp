@@ -168,8 +168,11 @@ void WebSocketClient::onTextMessageReceived(const QString &message)
             return;
         }
 
+        // 打印所有接收到的消息类型，便于调试
+        qDebug() << "[WebSocketClient] Received message type:" << parsed.value("type").toString()
+                 << "content:" << message.left(200);
+
         emit messageReceived(parsed);
-        qDebug() << "[WebSocketClient] Received message:" << message;
     }
 }
 

@@ -86,11 +86,17 @@ void UserDAO::getMyProfile()
 
 void UserDAO::updateMyProfile(const QVariantMap &profile)
 {
+    qDebug() << "[UserDAO] updateMyProfile called with profile:" << profile;
+    
     const QJsonObject payload = QJsonObject::fromVariantMap(profile);
+    qDebug() << "[UserDAO] Sending payload:" << QJsonDocument(payload).toJson();
+    
     NetworkClient::instance()->put("/users/profile", payload, [this](const QJsonObject &res) {
+        qDebug() << "[UserDAO] Profile update response:" << QJsonDocument(res).toJson();
         const QString message = res.value("message").toString();
-        emit userProfileUpdated(true, message);
+        emit userProfileUpdated(true, message.isEmpty() ? "Profile updated successfully" : message);
     }, [this](const QString &error) {
+        qWarning() << "[UserDAO] Profile update error:" << error;
         emit userProfileUpdated(false, error);
     });
 }
