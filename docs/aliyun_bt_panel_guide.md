@@ -1,4 +1,4 @@
-# XWChat 宝塔面板部署指南（阿里云专用）
+# ESChat 宝塔面板部署指南（阿里云专用）
 
 > 适用对象：使用宝塔面板管理阿里云服务器的用户  
 > 宝塔版本要求：v8.0+  
@@ -124,7 +124,7 @@ SELECT tablename FROM pg_tables WHERE schemaname = 'public';
 
 1. 点击左侧 **「文件」** 菜单
 2. 进入 `/www/wwwroot/` 目录
-3. 新建文件夹 `xwchat`
+3. 新建文件夹 `eschat`
 4. 点击 **「上传」** 按钮，上传以下文件：
    - `index.js`
    - `package.json`
@@ -133,7 +133,7 @@ SELECT tablename FROM pg_tables WHERE schemaname = 'public';
 
 ### 4.2 创建环境变量文件
 
-1. 进入 `/www/wwwroot/xwchat` 目录
+1. 进入 `/www/wwwroot/eschat` 目录
 2. 点击 **「新建」** → **「文件」**
 3. 命名为 `.env`
 4. 编辑内容如下：
@@ -145,7 +145,7 @@ DB_PORT=5432
 DB_NAME=chatapp
 DB_USER=postgres
 DB_PASSWORD=你的数据库密码
-JWT_SECRET=xwchat_secret_随机字符串_2026
+JWT_SECRET=eschat_secret_随机字符串_2026
 ```
 
 > ⚠️ **务必修改**:
@@ -161,9 +161,9 @@ JWT_SECRET=xwchat_secret_随机字符串_2026
 
 | 配置项 | 值 |
 |--------|-----|
-| 项目名称 | `xwchat-server` |
+| 项目名称 | `eschat-server` |
 | Node 版本 | `20.x` |
-| 项目路径 | `/www/wwwroot/xwchat` |
+| 项目路径 | `/www/wwwroot/eschat` |
 | 启动方式 | `app.js` |
 | 项目入口 | `index.js` |
 | 安装依赖 | ✅ 勾选 |
@@ -176,7 +176,7 @@ JWT_SECRET=xwchat_secret_随机字符串_2026
 
 如果自动安装失败，手动操作：
 
-1. 点击项目名称 `xwchat-server`
+1. 点击项目名称 `eschat-server`
 2. 进入项目详情页
 3. 点击 **「模块」** 标签
 4. 点击 **「一键安装」** 按钮
@@ -199,8 +199,8 @@ JWT_SECRET=xwchat_secret_随机字符串_2026
 4. 查看日志确认启动成功：
 
 ```log
-[xwchat-server] Server running on port 8080
-[xwchat-server] Database connected successfully
+[eschat-server] Server running on port 8080
+[eschat-server] Database connected successfully
 ```
 
 ### 4.6 验证后端服务
@@ -227,7 +227,7 @@ curl http://127.0.0.1:8080/api/health
 | 配置项 | 值 |
 |--------|-----|
 | 域名 | `59.110.44.145`（或有域名则填域名） |
-| 根目录 | `/www/wwwroot/xwchat_site`（自动创建） |
+| 根目录 | `/www/wwwroot/eschat_site`（自动创建） |
 | PHP 版本 | `纯静态` |
 | 数据库 | 无需创建 |
 
@@ -435,7 +435,7 @@ start ChatApp.exe
 
 3. 检查 `.env` 文件是否存在且配置正确：
    ```bash
-   cat /www/wwwroot/xwchat/.env
+   cat /www/wwwroot/eschat/.env
    ```
 
 ### 8.2 数据库连接失败
@@ -471,8 +471,8 @@ start ChatApp.exe
 
 4. **手动创建验证目录**:
    ```bash
-   mkdir -p /www/wwwroot/xwchat_site/.well-known/acme-challenge
-   chmod 755 /www/wwwroot/xwchat_site/.well-known
+   mkdir -p /www/wwwroot/eschat_site/.well-known/acme-challenge
+   chmod 755 /www/wwwroot/eschat_site/.well-known
    ```
 
 ### 8.4 WebSocket 连接断开
@@ -493,7 +493,7 @@ start ChatApp.exe
 
 3. 查看 WebSocket 日志：
    ```bash
-   pm2 logs xwchat-server | grep -i websocket
+   pm2 logs eschat-server | grep -i websocket
    ```
 
 ### 8.5 502 Bad Gateway
@@ -560,7 +560,7 @@ netstat -tlnp | grep 8080
 
 1. **应用日志**:
    ```bash
-   pm2 logs xwchat-server --lines 100
+   pm2 logs eschat-server --lines 100
    ```
 
 2. **Nginx 日志**:
@@ -636,9 +636,9 @@ web/
 
 将编译好的客户端安装包放入 `web/downloads/` 目录：
 
-- `XWChat-Setup-Windows.exe` - Windows 安装包
-- `XWChat-Setup-macOS.dmg` - macOS 安装包
-- `XWChat-Setup-Linux.AppImage` - Linux 安装包
+- `ESChat-Setup-Windows.exe` - Windows 安装包
+- `ESChat-Setup-macOS.dmg` - macOS 安装包
+- `ESChat-Setup-Linux.AppImage` - Linux 安装包
 
 ### 9.4 访问网站
 

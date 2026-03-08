@@ -1,5 +1,5 @@
 /**
- * XWChat - 前端 JavaScript 逻辑
+ * ESChat - 前端 JavaScript 逻辑
  */
 
 // API 配置 - 根据实际部署环境修改
@@ -301,9 +301,9 @@ async function downloadClient(platform) {
     // 客户端打包文件配置
     // 将 Qt 打包好的文件夹压缩成 ZIP 文件，放入 web/downloads/ 目录
     const downloads = {
-        'windows': 'XWChat-Windows.zip',
-        'macos': 'XWChat-macOS.zip',
-        'linux': 'XWChat-Linux.zip'
+        'windows': 'ESChat-Windows.zip',
+        'macos': 'ESChat-macOS.zip',
+        'linux': 'ESChat-Linux.zip'
     };
 
     const filename = downloads[platform];

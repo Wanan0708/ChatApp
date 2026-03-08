@@ -1,6 +1,6 @@
-# XWChat 前端网站
+# ESChat 前端网站
 
-XWChat 即时通讯应用的现代化前端网站，提供用户登录注册、客户端下载等功能。
+ESChat 即时通讯应用的现代化前端网站，提供用户登录注册、客户端下载等功能。
 
 ## 📁 目录结构
 
@@ -70,9 +70,9 @@ web/
 3. **放置客户端安装包**
    - 将编译好的客户端安装包放入 `web/downloads/` 目录
    - 推荐文件名：
-     - `XWChat-Setup-Windows.exe`
-     - `XWChat-Setup-macOS.dmg`
-     - `XWChat-Setup-Linux.AppImage`
+     - `ESChat-Setup-Windows.exe`
+     - `ESChat-Setup-macOS.dmg`
+     - `ESChat-Setup-Linux.AppImage`
 
 ### API 配置
 
@@ -117,7 +117,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 ```html
 <div class="logo">
     <span class="logo-icon">💬</span>
-    <span class="logo-text">XWChat</span>
+    <span class="logo-text">ESChat</span>
 </div>
 ```
 
@@ -173,4 +173,4 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 
 ## 📄 许可证
 
-© 2026 XWChat. All rights reserved.
+© 2026 ESChat. All rights reserved.

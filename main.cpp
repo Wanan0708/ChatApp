@@ -37,9 +37,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QApplication app(argc, argv);
-    app.setApplicationName("XWChat");
-    app.setOrganizationName("XWChat");
-    app.setOrganizationDomain("xwchat.com");
+    app.setApplicationName("ESChat");
+    app.setOrganizationName("ESChat");
+    app.setOrganizationDomain("eschat.com");
     
     // 设置应用图标（OrangeCat）
     app.setWindowIcon(QIcon(":/new/prefix1/image/OrangeCat.png"));

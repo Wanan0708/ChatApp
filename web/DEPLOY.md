@@ -1,4 +1,4 @@
-# XWChat 前端网站部署说明
+# ESChat 前端网站部署说明
 
 ## 📋 目录结构
 
@@ -141,20 +141,20 @@ ChatApp-Windows/
 
 **Windows：**
 - 右键文件夹 → 发送到 → 压缩 (zipped) 文件夹
-- 重命名为 `XWChat-Windows.zip`
+- 重命名为 `ESChat-Windows.zip`
 
 **macOS/Linux：**
 ```bash
-zip -r XWChat-Windows.zip ChatApp-Windows/
+zip -r ESChat-Windows.zip ChatApp-Windows/
 ```
 
 ### 步骤 4：上传到服务器
 
 将 ZIP 文件上传到：
 ```
-web/downloads/XWChat-Windows.zip
-web/downloads/XWChat-macOS.zip
-web/downloads/XWChat-Linux.zip
+web/downloads/ESChat-Windows.zip
+web/downloads/ESChat-macOS.zip
+web/downloads/ESChat-Linux.zip
 ```
 
 ---
@@ -201,10 +201,10 @@ fetch('/api/downloads')
 {
   "files": [
     {
-      "name": "XWChat-Windows.zip",
+      "name": "ESChat-Windows.zip",
       "size": 123456789,
       "sizeFormatted": "117.73 MB",
-      "downloadUrl": "/downloads/XWChat-Windows.zip"
+      "downloadUrl": "/downloads/ESChat-Windows.zip"
     }
   ]
 }

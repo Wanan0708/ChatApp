@@ -65,7 +65,7 @@ Item {
                 spacing: 8
                 Layout.fillWidth: true
                 Text {
-                    text: "加入 XWChat"
+                    text: "加入 ESChat"
                     Layout.fillWidth: true
                     font.pixelSize: 28; font.weight: Font.Bold; color: "#1e293b"
                     font.family: "\"Microsoft YaHei\", sans-serif"
@@ -193,7 +193,7 @@ Item {
 
             Text {
                 Layout.fillWidth: true
-                text: "© 2026 XWChat · 安全可靠的聊天体验"
+                text: "© 2026 ESChat · 安全可靠的聊天体验"
                 font.pixelSize: 11; color: "#94a3b8"
                 font.family: "\"Microsoft YaHei\", sans-serif"
                 horizontalAlignment: Text.AlignHCenter

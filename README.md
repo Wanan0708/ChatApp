@@ -1,4 +1,4 @@
-# XWChat - 现代化即时通讯应用
+# ESChat - 现代化即时通讯应用
 
 <div align="center">
 
@@ -15,7 +15,7 @@
 
 ## 📖 项目简介
 
-XWChat 是一款现代化的即时通讯应用，采用 Qt/QML 客户端 + Node.js 后端架构，支持实时消息、好友管理、群组聊天等功能。界面时尚现代，支持跨平台部署。
+ESChat 是一款现代化的即时通讯应用，采用 Qt/QML 客户端 + Node.js 后端架构，支持实时消息、好友管理、群组聊天等功能。界面时尚现代，支持跨平台部署。
 
 ### ✨ 核心功能
 
@@ -103,10 +103,10 @@ ChatApp/
 
 ```bash
 # 创建数据库
-createdb -U postgres xwchat
+createdb -U postgres eschat
 
 # 导入表结构
-psql -U postgres -d xwchat -f database/init_db.sql
+psql -U postgres -d eschat -f database/init_db.sql
 ```
 
 ### 2. 启动后端服务
@@ -204,7 +204,7 @@ PORT=8080
 # 数据库配置
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=xwchat
+DB_NAME=eschat
 DB_USER=postgres
 DB_PASSWORD=your_password
 
@@ -326,13 +326,13 @@ npm install
 
 ## 📞 联系方式
 
-- **项目主页**: [GitHub](https://github.com/yourusername/XWChat)
-- **问题反馈**: [Issues](https://github.com/yourusername/XWChat/issues)
+- **项目主页**: [GitHub](https://github.com/yourusername/ESChat)
+- **问题反馈**: [Issues](https://github.com/yourusername/ESChat/issues)
 
 ---
 
 <div align="center">
 
-**© 2026 XWChat. All rights reserved.**
+**© 2026 ESChat. All rights reserved.**
 
 </div>

@@ -8,9 +8,9 @@
 
 | 平台 | 文件名 | 说明 |
 |------|--------|------|
-| Windows | `XWChat-Windows.zip` | Windows 客户端压缩包 |
-| macOS | `XWChat-macOS.zip` | macOS 客户端压缩包 |
-| Linux | `XWChat-Linux.zip` | Linux 客户端压缩包 |
+| Windows | `ESChat-Windows.zip` | Windows 客户端压缩包 |
+| macOS | `ESChat-macOS.zip` | macOS 客户端压缩包 |
+| Linux | `ESChat-Linux.zip` | Linux 客户端压缩包 |
 
 ---
 
@@ -39,7 +39,7 @@
    - 或使用 7-Zip、WinRAR 等工具
 
 4. **上传到服务器**
-   - 将 `XWChat-Windows.zip` 上传到 `web/downloads/` 目录
+   - 将 `ESChat-Windows.zip` 上传到 `web/downloads/` 目录
 
 ### macOS 平台
 
@@ -51,7 +51,7 @@
 
 2. **压缩成 ZIP**
    ```bash
-   zip -r XWChat-macOS.zip ChatApp.app
+   zip -r ESChat-macOS.zip ChatApp.app
    ```
 
 3. **上传到服务器**
@@ -64,7 +64,7 @@
 
 2. **压缩成 ZIP**
    ```bash
-   zip -r XWChat-Linux.zip ChatApp/
+   zip -r ESChat-Linux.zip ChatApp/
    ```
 
 3. **上传到服务器**
@@ -74,17 +74,17 @@
 ## 📥 用户下载后的使用方式
 
 ### Windows 用户
-1. 下载 `XWChat-Windows.zip`
+1. 下载 `ESChat-Windows.zip`
 2. 解压到任意目录
 3. 双击 `ChatApp.exe` 运行
 
 ### macOS 用户
-1. 下载 `XWChat-macOS.zip`
+1. 下载 `ESChat-macOS.zip`
 2. 解压得到 `ChatApp.app`
 3. 双击运行（可能需要允许来自"身份不明的开发者"）
 
 ### Linux 用户
-1. 下载 `XWChat-Linux.zip`
+1. 下载 `ESChat-Linux.zip`
 2. 解压到任意目录
 3. 赋予执行权限并运行
    ```bash

@@ -15,7 +15,7 @@ ApplicationWindow {
     height: isLoggedIn ? 650 : 670
     minimumWidth: isLoggedIn ? 900 : 460
     minimumHeight: isLoggedIn ? 650 : 670
-    title: "XWChat v1.0"
+    title: "ESChat v1.0"
 
     flags: Qt.FramelessWindowHint | Qt.Window
     color: isLoggedIn ? "white" : "transparent"
@@ -92,7 +92,7 @@ ApplicationWindow {
                 }
 
                 Text {
-                    text: "XWChat"
+                    text: "ESChat"
                     font.pixelSize: 13; font.weight: Font.Medium; color: "#333333"
                     font.family: "Microsoft YaHei, SimSun, sans-serif"
                     Layout.alignment: Qt.AlignVCenter

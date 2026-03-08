@@ -23,7 +23,7 @@ Logger::Logger(QObject *parent)
     QString logDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/logs";
     QDir().mkpath(logDir);
     
-    QString logPath = logDir + "/xwchat.log";
+    QString logPath = logDir + "/eschat.log";
     
     // 检查是否需要轮转
     QFileInfo fileInfo(logPath);
@@ -180,15 +180,15 @@ void Logger::rotateLogFile()
     QString logDir = QFileInfo(logPath).absolutePath();
     
     // 删除最旧的日志文件
-    QString oldestLog = logDir + "/xwchat.log." + QString::number(MAX_LOG_FILES);
+    QString oldestLog = logDir + "/eschat.log." + QString::number(MAX_LOG_FILES);
     if (QFile::exists(oldestLog)) {
         QFile::remove(oldestLog);
     }
     
     // 轮转现有日志文件
     for (int i = MAX_LOG_FILES - 1; i >= 1; --i) {
-        QString oldPath = logDir + "/xwchat.log." + QString::number(i);
-        QString newPath = logDir + "/xwchat.log." + QString::number(i + 1);
+        QString oldPath = logDir + "/eschat.log." + QString::number(i);
+        QString newPath = logDir + "/eschat.log." + QString::number(i + 1);
         if (QFile::exists(oldPath)) {
             QFile::rename(oldPath, newPath);
         }

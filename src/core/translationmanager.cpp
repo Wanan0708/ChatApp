@@ -26,9 +26,9 @@ void TranslationManager::initializeTranslations()
 {
     // 中文（简体）
     QHash<QString, QString> zhCN;
-    zhCN["app.name"] = "XWChat";
+    zhCN["app.name"] = "ESChat";
     zhCN["app.slogan"] = "安全、极速、私密的交流体验";
-    zhCN["app.copyright"] = "© 2026 XWChat · 让沟通更简单";
+    zhCN["app.copyright"] = "© 2026 ESChat · 让沟通更简单";
     
     zhCN["login.title"] = "登录";
     zhCN["login.username"] = "请输入用户名";
@@ -84,9 +84,9 @@ void TranslationManager::initializeTranslations()
     
     // 英文
     QHash<QString, QString> enUS;
-    enUS["app.name"] = "XWChat";
+    enUS["app.name"] = "ESChat";
     enUS["app.slogan"] = "Secure, Fast, Private Messaging";
-    enUS["app.copyright"] = "© 2026 XWChat · Making Communication Simpler";
+    enUS["app.copyright"] = "© 2026 ESChat · Making Communication Simpler";
     
     enUS["login.title"] = "Login";
     enUS["login.username"] = "Username";
