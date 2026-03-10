@@ -9,6 +9,7 @@
 #include "../dao/userdao.h"
 #include "../database/databaseconfig.h"
 #include "../utils/timeformatter.h"
+#include "../utils/messagepreview.h"
 #include "../utils/messagecache.h"
 #include "../core/securestorage.h"
 #include "../core/logger.h"
@@ -115,6 +116,7 @@ ChatService::ChatService(QObject *parent)
     connect(m_userDAO, &UserDAO::passwordUpdateResult, this, &ChatService::passwordUpdateResult);
     connect(m_conversationDAO, &ConversationDAO::conversationsLoaded, this, &ChatService::handleConversationsLoaded);
     connect(m_messageDAO, &MessageDAO::messagesLoaded, this, &ChatService::handleMessagesLoaded);
+    connect(m_messageDAO, &MessageDAO::messagesMarkedRead, this, &ChatService::handleMessagesMarkedRead);
     connect(m_friendRequestDAO, &FriendRequestDAO::pendingRequestsLoaded, this, &ChatService::handleFriendRequestsLoaded);
     connect(m_friendRequestDAO, &FriendRequestDAO::friendsLoaded, this, &ChatService::handleFriendListLoaded);
     connect(m_friendRequestDAO, &FriendRequestDAO::friendProfileLoaded, this, &ChatService::handleFriendProfileLoaded);
@@ -216,6 +218,10 @@ void ChatService::handleMessagesLoaded(const QString &conversationId, const QVec
         MessageCache::instance()->cacheMessages(conversationId, cachedMessages);
     }
 
+    if (conversationId == m_currentConversationId) {
+        syncConversationReadState(conversationId);
+    }
+
     m_messageOffsets[conversationId] = offset + messages.size();
     m_hasMoreMessages[conversationId] = (messages.size() >= limit);
     m_loadingMessages[conversationId] = false;
@@ -248,6 +254,7 @@ void ChatService::setCurrentConversationId(const QString &id)
     if (m_currentConversationId != id) {
         m_currentConversationId = id;
         m_conversationModel->setCurrentConversation(id);
+        syncConversationReadState(id);
         emit currentConversationIdChanged();
     }
 }
@@ -310,9 +317,7 @@ void ChatService::sendTextMessageInternal(const QString &conversationId,
         qDebug() << "[ChatService] Message added to local model optimistically";
     }
 
-    QString displayContent = trimmedContent.length() > 30
-        ? trimmedContent.left(27) + "..."
-        : trimmedContent;
+    const QString displayContent = MessagePreview::normalizeConversationPreview(trimmedContent, 0);
     QString displayTime = TimeFormatter::formatChatTime(message["timestamp"].toLongLong());
 
     m_conversationModel->updateConversation(conversationId, {
@@ -345,7 +350,32 @@ void ChatService::sendTextMessageInternal(const QString &conversationId,
 
 void ChatService::markConversationRead(const QString &conversationId)
 {
+    syncConversationReadState(conversationId);
+}
+
+void ChatService::syncConversationReadState(const QString &conversationId, bool notifyServer)
+{
+    if (conversationId.isEmpty()) {
+        return;
+    }
+
     m_conversationModel->markRead(conversationId);
+
+    if (notifyServer) {
+        m_messageDAO->markMessagesAsRead(conversationId);
+    }
+}
+
+void ChatService::handleMessagesMarkedRead(const QString &conversationId, bool success)
+{
+    if (!success) {
+        qWarning() << "[ChatService] Failed to sync read state for conversation:" << conversationId;
+        return;
+    }
+
+    if (!conversationId.isEmpty()) {
+        m_conversationModel->markRead(conversationId);
+    }
 }
 
 void ChatService::refreshMessages(const QString &conversationId)
@@ -1122,13 +1152,13 @@ void ChatService::processIncomingMessage(const QVariantMap &message)
     // 2. 更新会话元数据
     bool isCurrent = (conversationId == m_currentConversationId);
 
-    QString displayContent = content.length() > 30
-        ? content.left(27) + "..."
-        : content;
+    const int messageType = normalizedMessage.value("type", normalizedMessage.value("messageType", 0)).toInt();
+    const QString displayContent = MessagePreview::normalizeConversationPreview(content, messageType);
     // 使用 TimeFormatter 统一时间格式
     QString displayTime = TimeFormatter::formatChatTime(timestamp);
 
     if (isCurrent) {
+        syncConversationReadState(conversationId);
         // ✅ 如果是当前会话，消息已自动读取，未读数复位为 0
         m_conversationModel->updateConversation(conversationId, {
             {"lastMessage", displayContent},

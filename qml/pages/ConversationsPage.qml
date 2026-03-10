@@ -427,11 +427,10 @@ ColumnLayout {
                         id: mouseArea
                         anchors.fill: parent
                         onClicked: {
-                            if (convUnreadCount > 0) {
-                                ChatService.markConversationRead(convId)
-                            }
-                            ChatService.setCurrentConversation(convId)
                             root.conversationSelected(convId, convTitle, convAvatar)
+                            Qt.callLater(function() {
+                                ChatService.setCurrentConversation(convId)
+                            })
                         }
                     }
                 }

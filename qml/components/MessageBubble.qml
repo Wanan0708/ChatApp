@@ -33,7 +33,7 @@ Item {
         if (messageStatus === 3) return "发送失败"
         if (messageStatus === 2) return "已读"
         if (messageStatus === 0) return root.isOffline ? "待发送" : "发送中"
-        return "已发送"
+        return ""
     }
 
     // 气泡颜色

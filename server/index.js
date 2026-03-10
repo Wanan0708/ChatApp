@@ -133,7 +133,8 @@ const REQUIRED_MESSAGE_COLUMNS = [
     'file_size',
     'file_url',
     'thumbnail_url',
-    'recalled'
+    'recalled',
+    'is_read'
 ];
 
 const normalizeMessageType = (value) => {
@@ -290,11 +291,11 @@ const assertDatabaseSchemaReady = async () => {
     const versionResult = await pool.query(
         `SELECT version
          FROM schema_migrations
-            WHERE version IN ('001', '002', '003', '004')`
+            WHERE version IN ('001', '002', '003', '004', '005')`
     );
 
     const appliedVersions = new Set(versionResult.rows.map(row => row.version));
-    const missingVersions = ['001', '002', '003', '004'].filter(version => !appliedVersions.has(version));
+    const missingVersions = ['001', '002', '003', '004', '005'].filter(version => !appliedVersions.has(version));
     if (missingVersions.length > 0) {
         throw new Error(
             `Required migrations are missing: ${missingVersions.join(', ')}. ` +
@@ -1126,12 +1127,19 @@ app.get('/api/conversations', authenticateToken, async (req, res) => {
         const result = await pool.query(
             `SELECT c.conversation_id, c.name, c.type, c.creator_id, c.last_message,
                     c.last_message_time, c.created_at, c.updated_at,
-                    u.user_id as other_user_id, u.username as other_username, u.avatar as other_avatar
+                    u.user_id as other_user_id, u.username as other_username, u.avatar as other_avatar,
+                    COALESCE(mu.unread_count, 0) AS unread_count
              FROM conversations c
              JOIN conversation_members cm ON c.conversation_id = cm.conversation_id
              LEFT JOIN conversation_members cm_other ON c.conversation_id = cm_other.conversation_id
                  AND cm_other.user_id != $1
              LEFT JOIN users u ON cm_other.user_id = u.user_id
+             LEFT JOIN (
+                 SELECT conversation_id, COUNT(*)::int AS unread_count
+                 FROM messages
+                 WHERE sender_id != $1 AND COALESCE(is_read, FALSE) = FALSE
+                 GROUP BY conversation_id
+             ) mu ON c.conversation_id = mu.conversation_id
              WHERE cm.user_id = $1
              ORDER BY c.last_message_time DESC NULLS LAST`,
             [req.user.userId]
@@ -1188,7 +1196,7 @@ app.put('/api/messages/read', authenticateToken, async (req, res) => {
     const { conversationId } = req.body;
     try {
         await pool.query(
-            'UPDATE messages SET is_read = TRUE WHERE conversation_id = $1 AND sender_id != $2',
+            'UPDATE messages SET is_read = TRUE WHERE conversation_id = $1 AND sender_id != $2 AND COALESCE(is_read, FALSE) = FALSE',
             [conversationId, req.user.userId]
         );
         res.json({ message: 'Messages marked as read' });

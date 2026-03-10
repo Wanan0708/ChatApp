@@ -15,6 +15,7 @@ Rectangle {
     property string selectedEmoji: ""
 
     signal emojiSelected(string emoji)
+    signal closeRequested()
 
     // 表情数据
     property var categories: EmojiProvider.getCategories()
@@ -135,7 +136,7 @@ Rectangle {
             Button {
                 Layout.fillWidth: true
                 text: "关闭"
-                onClicked: root.visible = false
+                onClicked: root.closeRequested()
             }
         }
     }

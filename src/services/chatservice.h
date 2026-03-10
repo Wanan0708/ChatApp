@@ -194,6 +194,7 @@ private slots:
     void onWebSocketConnected();
     void onWebSocketDisconnected();
     void onWebSocketReconnectFailed();
+    void handleMessagesMarkedRead(const QString &conversationId, bool success);
 
     // DAO 异步回调
     void handleLoginResult(bool success, const QString &userId, const QString &token, const QString &error);
@@ -288,6 +289,7 @@ private:
                                  bool overwriteErrorText = false);
     void rememberRetryableMessage(const QString &messageId, const QVariantMap &retryInfo);
     void clearRetryableMessage(const QString &messageId);
+    void syncConversationReadState(const QString &conversationId, bool notifyServer = true);
 
     friend class ConversationModel;
     friend class MessageModel;

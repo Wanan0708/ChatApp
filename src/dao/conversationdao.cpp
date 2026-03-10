@@ -1,6 +1,7 @@
 #include "conversationdao.h"
 #include "../database/databaseconfig.h"
 #include "../network/networkclient.h"
+#include "../utils/messagepreview.h"
 #include "../utils/timeformatter.h"
 #include <QDebug>
 #include <QJsonObject>
@@ -27,7 +28,7 @@ void ConversationDAO::getUserConversations()
             conv.type = obj["type"].toVariant().toString();
             
             // 使用 toVariant().toString() 确保正确获取字符串
-            conv.lastMessage = obj["last_message"].toVariant().toString();
+            conv.lastMessage = MessagePreview::normalizeConversationPreview(obj["last_message"].toVariant().toString());
             qDebug() << "[ConversationDAO] lastMessage:" << conv.lastMessage;
 
             // 格式化时间戳
@@ -54,7 +55,7 @@ void ConversationDAO::getUserConversations()
                 conv.time = "";
             }
 
-            conv.unreadCount = 0;
+            conv.unreadCount = obj["unread_count"].toVariant().toInt();
             conversations.append(conv);
         }
         emit conversationsLoaded(conversations);

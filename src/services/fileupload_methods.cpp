@@ -2,15 +2,26 @@
 // 文件上传方法实现
 
 #include "chatservice.h"
+#include "../models/conversationmodel.h"
 #include "../models/messagemodel.h"
 #include "../network/networkclient.h"
 #include "../network/websocketclient.h"
 #include "../utils/messagecache.h"
+#include "../utils/messagepreview.h"
+#include "../utils/timeformatter.h"
 #include <QDateTime>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QJsonObject>
 #include <QRandomGenerator>
+#include <QUrl>
+
+namespace {
+QString toLocalPreviewUrl(const QString &filePath)
+{
+    return QUrl::fromLocalFile(QFileInfo(filePath).absoluteFilePath()).toString();
+}
+}
 
 QString ChatService::pickLocalFile(bool imageOnly) const
 {
@@ -39,6 +50,7 @@ void ChatService::sendImageMessageInternal(const QString &conversationId,
     if (filePath.isEmpty()) return;
 
     qDebug() << "[ChatService] Sending image message:" << filePath;
+    const QString localPreviewUrl = toLocalPreviewUrl(filePath);
     const QString localMessageId = messageId.isEmpty()
         ? QString("local-image-%1-%2")
               .arg(QDateTime::currentMSecsSinceEpoch())
@@ -55,11 +67,18 @@ void ChatService::sendImageMessageInternal(const QString &conversationId,
     tempMessage["timestamp"] = currentTimestamp;
     tempMessage["status"] = 0;  // 发送中
     tempMessage["fileName"] = QFileInfo(filePath).fileName();
+    tempMessage["fileUrl"] = localPreviewUrl;
+    tempMessage["thumbnailUrl"] = localPreviewUrl;
     tempMessage["isOffline"] = false;
     tempMessage["serverMessageId"] = QString();
 
     getMessageModel(conversationId)->upsertMessage(tempMessage);
     MessageCache::instance()->cacheMessage(conversationId, tempMessage);
+    m_conversationModel->updateConversation(conversationId, {
+        {"lastMessage", MessagePreview::normalizeConversationPreview(tempMessage["content"].toString(), 1)},
+        {"time", TimeFormatter::formatChatTime(currentTimestamp)},
+        {"unreadCount", 0}
+    });
 
     QVariantMap retryInfo;
     retryInfo["conversationId"] = conversationId;
@@ -68,6 +87,8 @@ void ChatService::sendImageMessageInternal(const QString &conversationId,
     retryInfo["timestamp"] = currentTimestamp;
     retryInfo["content"] = QStringLiteral("[图片]");
     retryInfo["fileName"] = QFileInfo(filePath).fileName();
+    retryInfo["fileUrl"] = localPreviewUrl;
+    retryInfo["thumbnailUrl"] = localPreviewUrl;
     rememberRetryableMessage(localMessageId, retryInfo);
 
     NetworkClient::UploadProgressHandler progressHandler = [](const QJsonObject &, qint64, qint64) {
@@ -125,7 +146,7 @@ void ChatService::sendImageMessageInternal(const QString &conversationId,
         emit messageReceived(conversationId, message);
     };
 
-    NetworkClient::ErrorHandler errorHandler = [this, conversationId, fp, localMessageId, currentTimestamp](const QString &error) {
+    NetworkClient::ErrorHandler errorHandler = [this, conversationId, fp, localMessageId, currentTimestamp, localPreviewUrl](const QString &error) {
         qWarning() << "[ChatService] Image upload failed:" << error;
 
         QVariantMap failedMessage;
@@ -137,6 +158,8 @@ void ChatService::sendImageMessageInternal(const QString &conversationId,
         failedMessage["timestamp"] = currentTimestamp;
         failedMessage["status"] = 3;  // 失败
         failedMessage["fileName"] = QFileInfo(fp).fileName();
+        failedMessage["fileUrl"] = localPreviewUrl;
+        failedMessage["thumbnailUrl"] = localPreviewUrl;
         failedMessage["isOffline"] = true;
         failedMessage["errorText"] = error.isEmpty() ? QStringLiteral("图片上传失败，点击重试") : error;
         failedMessage["serverMessageId"] = QString();
@@ -193,6 +216,11 @@ void ChatService::sendFileMessageInternal(const QString &conversationId,
 
     getMessageModel(conversationId)->upsertMessage(tempMessage);
     MessageCache::instance()->cacheMessage(conversationId, tempMessage);
+    m_conversationModel->updateConversation(conversationId, {
+        {"lastMessage", MessagePreview::normalizeConversationPreview(tempMessage["content"].toString(), 2)},
+        {"time", TimeFormatter::formatChatTime(currentTimestamp)},
+        {"unreadCount", 0}
+    });
 
     QVariantMap retryInfo;
     retryInfo["conversationId"] = conversationId;

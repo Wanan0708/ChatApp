@@ -13,6 +13,18 @@ ColumnLayout {
     property var messageModel: null
     property bool pendingOlderMessagesLoad: false
     property real historyContentHeightBeforeLoad: 0
+    property bool stickToBottom: true
+
+    function insertEmojiAtCursor(emoji) {
+        if (!emoji || emoji.length === 0) {
+            return
+        }
+
+        var cursor = inputText.cursorPosition
+        inputText.insert(cursor, emoji)
+        inputText.cursorPosition = cursor + emoji.length
+        inputText.forceActiveFocus()
+    }
 
     function syncConversationMeta() {
         if (currentConversationId === "") {
@@ -33,6 +45,7 @@ ColumnLayout {
         messageModel = ChatService.getMessageModel(currentConversationId)
         pendingOlderMessagesLoad = false
         historyContentHeightBeforeLoad = 0
+        stickToBottom = true
         syncConversationMeta()
         console.log("[ChatPage] Switched to conversation:", currentConversationId)
 
@@ -117,10 +130,19 @@ ColumnLayout {
 
     onMessageModelChanged: {
         if (messageModel && currentConversationId !== "") {
+            stickToBottom = true
             Qt.callLater(function() {
                 scrollToBottom()
             })
         }
+    }
+
+    function isNearBottom() {
+        if (!chatView) {
+            return true
+        }
+
+        return (chatView.contentY + chatView.height) >= (chatView.contentHeight - 48)
     }
 
     function scrollToBottom() {
@@ -276,6 +298,20 @@ ColumnLayout {
                 if (contentY <= 0 && movingVertically) {
                     root.loadOlderMessagesIfNeeded()
                 }
+
+                if (movingVertically && !root.pendingOlderMessagesLoad) {
+                    root.stickToBottom = root.isNearBottom()
+                }
+            }
+
+            onContentHeightChanged: {
+                if (root.currentConversationId !== "" && root.stickToBottom && !root.pendingOlderMessagesLoad) {
+                    Qt.callLater(function() {
+                        if (root.stickToBottom) {
+                            chatView.positionViewAtEnd()
+                        }
+                    })
+                }
             }
 
             header: Item {
@@ -380,6 +416,7 @@ ColumnLayout {
 
         // 输入区域
         Rectangle {
+            id: composerBar
             Layout.preferredHeight: 60
             Layout.fillWidth: true
             color: "#f0f0f0"
@@ -481,19 +518,80 @@ ColumnLayout {
 
                 // 表情
                 Text {
+                    id: emojiButton
                     width: 40; height: 40
                     text: "😊"; font.pixelSize: 22; color: "#757575"
                     verticalAlignment: Text.AlignVCenter; horizontalAlignment: Text.AlignHCenter
-                    MouseArea { anchors.fill: parent; onClicked: console.log("表情") }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            emojiPopup.open()
+                        }
+                    }
                 }
 
                 // 发送
                 Button {
+                    id: sendButton
                     width: 60; height: 40
                     text: "发送"
+                    hoverEnabled: true
                     font.pixelSize: 14
                     font.family: "Microsoft YaHei, SimSun, sans-serif"
+                    background: Rectangle {
+                        radius: 10
+                        color: sendButton.down ? "#1d4ed8" : (sendButton.hovered ? "#3b82f6" : "#2563eb")
+                        border.color: sendButton.hovered ? "#1e40af" : "#1d4ed8"
+                        border.width: 1
+                        scale: sendButton.down ? 0.96 : 1.0
+                        Behavior on color {
+                            ColorAnimation { duration: 140 }
+                        }
+                        Behavior on border.color {
+                            ColorAnimation { duration: 140 }
+                        }
+                        Behavior on scale {
+                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                        }
+                    }
+                    contentItem: Text {
+                        text: sendButton.text
+                        color: "white"
+                        font.pixelSize: sendButton.font.pixelSize
+                        font.family: sendButton.font.family
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
                     onClicked: sendMessage()
+                }
+            }
+
+            Popup {
+                id: emojiPopup
+                parent: root
+                width: 360
+                height: 420
+                modal: false
+                focus: true
+                padding: 0
+                closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+                x: Math.max(8, root.width - width - 24)
+                y: Math.max(8, composerBar.y - height - 8)
+                background: Rectangle {
+                    radius: 10
+                    color: "white"
+                    border.color: "#d9d9d9"
+                    border.width: 1
+                }
+
+                EmojiPicker {
+                    anchors.fill: parent
+                    onEmojiSelected: {
+                        root.insertEmojiAtCursor(emoji)
+                        emojiPopup.close()
+                    }
+                    onCloseRequested: emojiPopup.close()
                 }
             }
         }

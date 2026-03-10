@@ -201,6 +201,10 @@ void ConversationModel::setCurrentConversation(const QString &id)
         }
     }
 
+    if (changed) {
+        emit modelDataChanged();
+    }
+
     if (changed && !id.isEmpty()) {
         markRead(id);
     }
@@ -212,6 +216,7 @@ void ConversationModel::markRead(const QString &id)
     if (idx != -1 && m_conversations[idx].value("unreadCount", 0).toInt() > 0) {
         m_conversations[idx]["unreadCount"] = 0;
         emit dataChanged(this->index(idx, 0), this->index(idx, 0));
+        emit modelDataChanged();
     }
 }
 
@@ -226,6 +231,7 @@ void ConversationModel::clearAllUnread()
     }
     if (changed) {
         emit dataChanged(this->index(0, 0), this->index(m_conversations.count() - 1, 0));
+        emit modelDataChanged();
     }
 }
 

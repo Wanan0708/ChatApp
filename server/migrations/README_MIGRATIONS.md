@@ -115,6 +115,15 @@ cd server
 
 用于支持消息撤回状态同步、历史记录回放以及客户端本地缓存中的服务端撤回映射。
 
+### 005_add_message_read_flag.sql
+
+为 messages 表补充：
+
+- is_read
+- conversation_id, is_read 复合索引
+
+用于支持离线未读计数、进入会话后的已读回写，以及会话列表未读徽标统计。
+
 ## 常用检查命令
 
 ```bash

@@ -38,6 +38,11 @@ int normalizeMessageStatusValue(const QVariantMap &message)
     }
     return 1;
 }
+
+bool hasMessageTypeField(const QVariantMap &message)
+{
+    return message.contains("messageType") || message.contains("type");
+}
 }
 
 MessageModel::MessageModel(const QString &conversationId, QObject *parent)
@@ -114,9 +119,19 @@ void MessageModel::addMessage(const QVariantMap &message)
 void MessageModel::upsertMessage(const QVariantMap &message)
 {
     QVariantMap normalizedMessage = message;
-    normalizedMessage["timestamp"] = normalizedTimestamp(normalizedMessage);
-    normalizedMessage["type"] = normalizeMessageTypeValue(normalizedMessage);
-    normalizedMessage["status"] = normalizeMessageStatusValue(normalizedMessage);
+    const bool hasTimestamp = normalizedMessage.contains("timestamp");
+    const bool hasType = hasMessageTypeField(normalizedMessage);
+    const bool hasStatus = normalizedMessage.contains("status");
+
+    if (hasTimestamp) {
+        normalizedMessage["timestamp"] = normalizedTimestamp(normalizedMessage);
+    }
+    if (hasType) {
+        normalizedMessage["type"] = normalizeMessageTypeValue(normalizedMessage);
+    }
+    if (hasStatus) {
+        normalizedMessage["status"] = normalizeMessageStatusValue(normalizedMessage);
+    }
     normalizedMessage.remove("messageType");
 
     const int existingIndex = findMessageIndex(normalizedMessage);
@@ -135,6 +150,16 @@ void MessageModel::upsertMessage(const QVariantMap &message)
             emit dataChanged(index(existingIndex, 0), index(existingIndex, 0));
         }
         return;
+    }
+
+    if (!hasTimestamp) {
+        normalizedMessage["timestamp"] = 0;
+    }
+    if (!hasType) {
+        normalizedMessage["type"] = 0;
+    }
+    if (!hasStatus) {
+        normalizedMessage["status"] = 1;
     }
 
     const int insertIndex = findInsertIndex(normalizedMessage.value("timestamp").toLongLong());
