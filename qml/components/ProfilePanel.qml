@@ -29,6 +29,10 @@ Popup {
     property string saveHint: ""
     property bool saveSuccess: false
     property bool isEditing: false  // 新增：编辑状态标记
+    property bool isUploadingAvatar: false
+    property int avatarUploadProgress: 0
+    property string avatarHint: ""
+    property bool avatarUploadSuccess: false
 
     function syncDraftFromService() {
         draftAvatar = ChatService.currentUserAvatar || ""
@@ -43,6 +47,18 @@ Popup {
     }
 
     function saveProfile() {
+        if (isUploadingAvatar) {
+            saveSuccess = false
+            saveHint = "头像上传中，请稍候"
+            return
+        }
+
+        if (draftAvatar.indexOf("file:///") === 0) {
+            saveSuccess = false
+            saveHint = "请等待头像上传成功后再保存"
+            return
+        }
+
         ChatService.saveUserProfile({
                                         avatar: draftAvatar,
                                         username: draftName,
@@ -56,8 +72,37 @@ Popup {
                                     })
     }
 
+    function localFileUrl(filePath) {
+        if (!filePath || filePath === "") {
+            return ""
+        }
+
+        if (filePath.indexOf("file:///") === 0 || filePath.indexOf("qrc:") === 0 || filePath.indexOf("http://") === 0 || filePath.indexOf("https://") === 0) {
+            return filePath
+        }
+
+        return "file:///" + filePath.replace(/\\/g, "/")
+    }
+
+    function selectLocalAvatar() {
+        var avatarPath = ChatService.pickLocalFile(true)
+        if (!avatarPath || avatarPath.length === 0) {
+            return
+        }
+
+        draftAvatar = localFileUrl(avatarPath)
+        isUploadingAvatar = true
+        avatarUploadProgress = 0
+        avatarUploadSuccess = false
+        avatarHint = "头像上传中..."
+        ChatService.uploadAvatar(avatarPath)
+    }
+
     onOpened: {
         isEditing = false
+        isUploadingAvatar = false
+        avatarUploadProgress = 0
+        avatarHint = ""
         syncDraftFromService()
         saveHint = ""
         // 每次打开时重新加载用户资料，确保显示最新数据
@@ -135,25 +180,61 @@ Popup {
                             height: 88
                             radius: 44
                             color: "#ffffff"
-                            border.color: "#d1d5db"
+                            border.color: isEditing ? "#60a5fa" : "#d1d5db"
+                            border.width: isEditing ? 2 : 1
 
-                            Image {
-                                id: avatarImage
+                            Avatar {
+                                id: profileAvatar
                                 anchors.centerIn: parent
                                 width: 80
                                 height: 80
-                                fillMode: Image.PreserveAspectCrop
-                                source: draftAvatar || "qrc:/new/prefix1/image/boy.png"
-                                clip: true
-                                layer.enabled: true
-                                layer.effect: OpacityMask {
-                                    maskSource: Rectangle {
-                                        width: avatarImage.width
-                                        height: avatarImage.height
-                                        radius: avatarImage.width / 2
+                                isSelf: true
+                                avatarSource: draftAvatar || "qrc:/new/prefix1/image/boy.png"
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: parent.radius
+                                color: isUploadingAvatar ? "#66000000" : (avatarMouseArea.containsMouse && isEditing ? "#55000000" : "transparent")
+                                visible: isUploadingAvatar || (avatarMouseArea.containsMouse && isEditing)
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 4
+
+                                    BusyIndicator {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        running: isUploadingAvatar
+                                        visible: running
+                                        width: 24
+                                        height: 24
+                                    }
+
+                                    Text {
+                                        text: isUploadingAvatar ? "上传中" : "点击更换"
+                                        color: "white"
+                                        font.pixelSize: 11
+                                        anchors.horizontalCenter: parent.horizontalCenter
                                     }
                                 }
                             }
+
+                            MouseArea {
+                                id: avatarMouseArea
+                                anchors.fill: parent
+                                enabled: isEditing && !isUploadingAvatar
+                                hoverEnabled: true
+                                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onClicked: selectLocalAvatar()
+                            }
+                        }
+
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            visible: isEditing
+                            text: isUploadingAvatar ? "正在处理头像..." : "点击头像可直接更换"
+                            color: "#6b7280"
+                            font.pixelSize: 11
                         }
 
                         Text {
@@ -319,12 +400,39 @@ Popup {
                                     RowLayout {
                                         Layout.fillWidth: true
                                         spacing: 8
-                                        TextField { Layout.fillWidth: true; placeholderText: "头像 URL"; text: draftAvatar; onTextChanged: draftAvatar = text; selectByMouse: true }
+                                        TextField {
+                                            Layout.fillWidth: true
+                                            placeholderText: "头像 URL"
+                                            text: draftAvatar
+                                            onTextChanged: draftAvatar = text
+                                            selectByMouse: true
+                                        }
                                         Button {
                                             text: "选择本地图片"
-                                            onClicked: {
-                                                console.log("由于 Qt 环境限制无法打开本地选择对话框，请手动在下方输入图片 URL。")
-                                            }
+                                            enabled: !isUploadingAvatar
+                                            onClicked: selectLocalAvatar()
+                                        }
+                                    }
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 8
+                                        visible: isUploadingAvatar || avatarHint !== ""
+
+                                        ProgressBar {
+                                            Layout.fillWidth: true
+                                            from: 0
+                                            to: 100
+                                            value: avatarUploadProgress
+                                            visible: isUploadingAvatar
+                                        }
+
+                                        Text {
+                                            Layout.fillWidth: true
+                                            text: avatarHint
+                                            color: avatarUploadSuccess ? "#166534" : (isUploadingAvatar ? "#1d4ed8" : "#991b1b")
+                                            font.pixelSize: 12
+                                            elide: Text.ElideRight
                                         }
                                     }
                                     
@@ -411,6 +519,7 @@ Popup {
                                 text: isEditing ? "保存" : "编辑资料"
                                 Layout.preferredWidth: 86
                                 Layout.preferredHeight: 36
+                                enabled: !isUploadingAvatar
                                 onClicked: {
                                     if (isEditing) {
                                         saveProfile()
@@ -449,6 +558,20 @@ Popup {
             function onCurrentUserContactChanged() { draftContact = ChatService.currentUserContact || "" }
             function onCurrentUserBioChanged() { draftBio = ChatService.currentUserBio || "" }
             function onCurrentUserAgeChanged() { draftAge = ChatService.currentUserAge || 25 }
+            function onAvatarUploadProgressChanged(progress) {
+                avatarUploadProgress = progress
+                isUploadingAvatar = progress < 100
+                avatarHint = progress < 100 ? ("头像上传中 " + progress + "%") : "头像上传完成"
+            }
+            function onAvatarUploadResult(success, avatarUrl, message) {
+                avatarUploadSuccess = success
+                isUploadingAvatar = false
+                avatarUploadProgress = success ? 100 : 0
+                avatarHint = message || (success ? "头像上传成功" : "头像上传失败")
+                if (success && avatarUrl) {
+                    draftAvatar = avatarUrl
+                }
+            }
             function onUserProfileSaveResult(success, message) {
                 saveSuccess = success
                 saveHint = message || (success ? "保存成功" : "保存失败")

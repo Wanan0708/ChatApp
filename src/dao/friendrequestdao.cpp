@@ -1,4 +1,5 @@
 #include "friendrequestdao.h"
+#include "../database/databaseconfig.h"
 #include "../network/networkclient.h"
 #include <QDebug>
 #include <QJsonObject>
@@ -78,7 +79,7 @@ void FriendRequestDAO::getFriends()
             FriendInfo info;
             info.userId = obj["user_id"].toString();
             info.username = obj["username"].toString();
-            info.avatar = obj["avatar"].toString();
+            info.avatar = DatabaseConfig::resolveServerUrl(obj["avatar"].toString());
             info.status = obj["status"].toString("offline");
             info.signature = obj["signature"].toString("");
             info.isMale = obj["isMale"].toBool(true);
@@ -93,26 +94,26 @@ void FriendRequestDAO::getFriends()
     });
 }
 
-void FriendRequestDAO::getFriendDetail(const QString &friendId)
+void FriendRequestDAO::getFriendProfile(const QString &friendId)
 {
-    qDebug() << "[FriendRequestDAO] getFriendDetail:" << friendId;
+    qDebug() << "[FriendRequestDAO] getFriendProfile:" << friendId;
 
     NetworkClient::instance()->get("/friends/" + friendId, [this](const QJsonObject &res) {
         FriendInfo info;
         info.userId = res["user_id"].toString();
         info.username = res["username"].toString();
-        info.avatar = res["avatar"].toString();
+        info.avatar = DatabaseConfig::resolveServerUrl(res["avatar"].toString());
         info.status = res["status"].toString("offline");
         info.signature = res["signature"].toString("");
         info.isMale = res["isMale"].toBool(true);
         info.age = res["age"].toVariant().toInt();
         info.region = res["region"].toString("");
         
-        qDebug() << "[FriendRequestDAO] Friend detail loaded:" << info.username;
-        emit friendDetailLoaded(info);
+        qDebug() << "[FriendRequestDAO] Friend profile loaded:" << info.username;
+        emit friendProfileLoaded(info);
     }, [this](const QString &error) {
-        qWarning() << "[FriendRequestDAO] Failed to load friend detail:" << error;
+        qWarning() << "[FriendRequestDAO] Failed to load friend profile:" << error;
         // 发送空对象表示失败
-        emit friendDetailLoaded(FriendInfo());
+        emit friendProfileLoaded(FriendInfo());
     });
 }

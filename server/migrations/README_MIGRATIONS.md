@@ -1,201 +1,165 @@
 # 数据库迁移指南
 
-## 📁 目录结构
+当前迁移目录只负责 server/init_db.sql 之后的增量变更，不替代基础建表脚本。
 
-```
+## 当前目录
+
+```text
 server/migrations/
-├── 000_create_schema_migrations_table.sql   # 创建迁移历史表（首次执行）
-├── 001_add_profile_version_fields.sql       # 添加个人资料版本字段
-└── rollback_001_add_profile_version_fields.sql  # 回滚脚本
+├── 000_create_schema_migrations_table.sql
+├── 001_add_profile_version_fields.sql
+├── 002_add_extended_user_profile_fields.sql
+├── rollback_001_add_profile_version_fields.sql
+├── rollback_002_add_extended_user_profile_fields.sql
+├── run_migrations.bat
+└── run_migrations.sh
 ```
 
-## 🚀 快速开始
+## 使用顺序
 
-### 1. 首次设置（新数据库）
+### 新数据库
+
+先执行基础建表：
 
 ```bash
-# 进入服务器目录
+psql -U postgres -d chatapp -f server/init_db.sql
+```
+
+再执行迁移：
+
+```bat
+server\migrations\run_migrations.bat
+```
+
+### 已有数据库升级
+
+先备份，再执行迁移脚本：
+
+```bash
+pg_dump -U postgres -d chatapp > backup.sql
+```
+
+```bat
+server\migrations\run_migrations.bat
+```
+
+## 推荐方式
+
+### Windows
+
+```bat
+server\migrations\run_migrations.bat
+```
+
+### Linux/macOS
+
+```bash
 cd server
-
-# 执行迁移历史表创建
-psql -U postgres -h localhost -d chatapp -f migrations/000_create_schema_migrations_table.sql
-
-# 执行所有迁移（按顺序）
-psql -U postgres -h localhost -d chatapp -f migrations/001_add_profile_version_fields.sql
+./migrations/run_migrations.sh
 ```
 
-### 2. 已有数据库升级
+脚本会：
+
+- 检查 psql 是否存在
+- 检查数据库连接
+- 自动创建 schema_migrations 表
+- 按序执行未应用的迁移文件
+
+## 当前迁移说明
+
+### 000_create_schema_migrations_table.sql
+
+创建 schema_migrations 表，用于记录迁移版本。
+
+### 001_add_profile_version_fields.sql
+
+为 users 表补充：
+
+- profile_version
+- profile_updated_at
+- 相关索引
+
+### 002_add_extended_user_profile_fields.sql
+
+为 users 表补充：
+
+- gender
+- region
+- phone
+- email
+- contact
+- bio
+- age
+- status
+- last_seen
+- 在线状态相关索引
+
+### 003_add_message_media_fields.sql
+
+为 messages 表补充：
+
+- status
+- file_id
+- file_name
+- file_size
+- file_url
+- thumbnail_url
+
+用于支持图片/文件消息上传、转发和历史记录回放。
+
+### 004_add_message_recalled_flag.sql
+
+为 messages 表补充：
+
+- recalled
+
+用于支持消息撤回状态同步、历史记录回放以及客户端本地缓存中的服务端撤回映射。
+
+## 常用检查命令
 
 ```bash
-# 1. 备份数据库（重要！）
-pg_dump -U postgres -h localhost chatapp > backup_$(date +%Y%m%d_%H%M%S).sql
-
-# 2. 执行迁移
-psql -U postgres -h localhost -d chatapp -f migrations/001_add_profile_version_fields.sql
-
-# 3. 验证
-psql -U postgres -h localhost -d chatapp -c "\d users"
+psql -U postgres -d chatapp -c "SELECT * FROM schema_migrations ORDER BY applied_at;"
+psql -U postgres -d chatapp -c "\d users"
 ```
 
-### 3. Windows PowerShell 脚本
+## 命名约定
 
-```powershell
-# 设置变量
-$env:PGUSER = "postgres"
-$env:PGHOST = "localhost"
-$env:PGDATABASE = "chatapp"
+迁移文件使用：
 
-# 执行迁移
-psql -f migrations/000_create_schema_migrations_table.sql
-psql -f migrations/001_add_profile_version_fields.sql
-
-# 验证
-psql -c "\d users"
-```
-
-## 📋 迁移命令参考
-
-### 查看当前数据库结构
-
-```bash
-# 查看 users 表结构
-psql -U postgres -h localhost -d chatapp -c "\d users"
-
-# 查看所有字段
-psql -U postgres -h localhost -d chatapp -c "
-    SELECT column_name, data_type, column_default, is_nullable
-    FROM information_schema.columns
-    WHERE table_name = 'users'
-    ORDER BY ordinal_position;
-"
-
-# 查看迁移历史
-psql -U postgres -h localhost -d chatapp -c "SELECT * FROM schema_migrations ORDER BY applied_at;"
-```
-
-### 应用迁移
-
-```bash
-# 应用单个迁移
-psql -U postgres -h localhost -d chatapp -f migrations/001_add_profile_version_fields.sql
-
-# 应用所有未执行的迁移（脚本）
-./run_migrations.sh  # Linux/macOS
-```
-
-### 回滚迁移
-
-```bash
-# 回滚单个迁移
-psql -U postgres -h localhost -d chatapp -f migrations/rollback_001_add_profile_version_fields.sql
-```
-
-## 🔍 验证迁移结果
-
-### 1. 检查字段是否存在
-
-```sql
-SELECT column_name, data_type, column_default
-FROM information_schema.columns
-WHERE table_name = 'users'
-  AND column_name IN ('profile_version', 'profile_updated_at');
-```
-
-### 2. 检查索引是否创建
-
-```sql
-SELECT indexname, indexdef
-FROM pg_indexes
-WHERE tablename = 'users'
-  AND indexname LIKE 'idx_users_profile%';
-```
-
-### 3. 检查数据是否正确
-
-```sql
-SELECT 
-    user_id,
-    username,
-    profile_version,
-    profile_updated_at,
-    created_at
-FROM users
-LIMIT 10;
-```
-
-## ⚠️ 注意事项
-
-### 生产环境部署
-
-1. **必须先备份**
-   ```bash
-   pg_dump -U postgres -h localhost chatapp | gzip > backup_$(date +%Y%m%d).sql.gz
-   ```
-
-2. **在测试环境验证**
-   - 先在测试环境执行迁移
-   - 验证应用功能正常
-   - 再部署到生产环境
-
-3. **维护窗口**
-   - 选择低峰期执行
-   - 大表迁移可能需要较长时间
-
-4. **回滚计划**
-   - 准备好回滚脚本
-   - 测试回滚流程
-
-### 开发环境
-
-```bash
-# 快速重置数据库
-dropdb -U postgres chatapp
-createdb -U postgres chatapp
-psql -U postgres -h localhost -d chatapp -f ../server/init_db.sql
-psql -U postgres -h localhost -d chatapp -f migrations/000_create_schema_migrations_table.sql
-psql -U postgres -h localhost -d chatapp -f migrations/001_add_profile_version_fields.sql
-```
-
-## 📝 迁移文件命名规范
-
-```
+```text
 NNN_description.sql
 ```
 
-- `NNN`: 三位数字序号（001, 002, 003...）
-- `description`: 小写字母和下划线，描述迁移内容
+回滚文件使用：
 
-示例：
-- `001_add_profile_version_fields.sql`
-- `002_add_user_avatar_index.sql`
-- `003_create_groups_table.sql`
-
-## 🔧 故障排除
-
-### 问题：权限错误
-
-```bash
-# 确保用户有足够权限
-psql -U postgres -d chatapp -c "GRANT ALL ON ALL TABLES IN SCHEMA public TO your_user;"
+```text
+rollback_NNN_description.sql
 ```
 
-### 问题：列已存在
+## 注意事项
 
-迁移脚本使用 `ADD COLUMN IF NOT EXISTS`，会安全跳过已存在的列。
+- 迁移不是建库入口，建库仍以 server/init_db.sql 为准
+- 新增迁移前先确认基础脚本是否已经覆盖该字段或表
+- 生产环境执行迁移前必须先备份
 
-### 问题：连接失败
+## 故障排除
 
-```bash
-# 检查 PostgreSQL 服务
-# Windows: 服务管理器中查看 PostgreSQL 服务
-# Linux: systemctl status postgresql
+### 连接失败
 
-# 检查连接
-psql -U postgres -h localhost -c "SELECT version();"
-```
+检查以下环境变量：
 
-## 📚 相关文档
+- CHATAPP_DB_HOST
+- CHATAPP_DB_PORT
+- CHATAPP_DB_NAME
+- CHATAPP_DB_USER
+- CHATAPP_DB_PASSWORD
 
-- [PostgreSQL ALTER TABLE 文档](https://www.postgresql.org/docs/current/sql-altertable.html)
-- [PostgreSQL 索引文档](https://www.postgresql.org/docs/current/sql-createindex.html)
-- 项目数据库文档：`database/README_DATABASE.md`
+### 迁移重复执行
+
+如果版本已记录在 schema_migrations 中，脚本会跳过对应迁移。
+
+## 相关文档
+
+- database/README_DATABASE.md
+- docs/运行部署指南.md
+- README.md

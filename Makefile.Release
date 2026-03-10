@@ -294,6 +294,7 @@ bin/rcc/qrc_image.cpp: image.qrc \
 		image/contact.png \
 		image/gril.png \
 		image/message.png \
+		image/OrangeCat.png \
 		image/setting.png \
 		image/notification.png
 	E:\Softwore\Qt5.14.2\5.14.2\mingw73_64\bin\rcc.exe -name image image.qrc -o bin\rcc\qrc_image.cpp
@@ -2367,6 +2368,8 @@ bin/obj/main.o: main.cpp ../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/Qt
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQml/qqmlerror.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQml/QQmlContext \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtQml/qqmlcontext.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/QIcon \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qicon.h \
 		src/singleton.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QObject \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QMutex \
@@ -3534,7 +3537,11 @@ bin/obj/networkclient.o: src/network/networkclient.cpp src/network/networkclient
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstandardpaths.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDebug \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QFileInfo \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qfileinfo.h
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qfileinfo.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QMimeDatabase \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmimedatabase.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmimetype.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QMimeType
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bin\obj\networkclient.o src\network\networkclient.cpp
 
 bin/obj/requestbatcher.o: src/network/requestbatcher.cpp src/network/requestbatcher.h \
@@ -3803,22 +3810,52 @@ bin/obj/chatservice.o: src/services/chatservice.cpp src/services/chatservice.h \
 		src/dao/messagedao.h \
 		src/database/databaseconfig.h \
 		src/utils/timeformatter.h \
+		src/utils/messagecache.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QMutex \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDir \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdir.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qfileinfo.h \
 		src/core/securestorage.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QSettings \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsettings.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QCryptographicHash \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QStandardPaths \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qstandardpaths.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDir \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdir.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qfileinfo.h \
 		src/core/logger.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QTextStream \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QMutex \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDebug \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QCoreApplication \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QFileInfo \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/QImage \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qimage.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtguiglobal.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtgui-config.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qcolor.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qrgb.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qrgba64.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qpaintdevice.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qwindowdefs.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qwindowdefs_win.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qrect.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qmargins.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qsize.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qpixelformat.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtransform.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qmatrix.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qpolygon.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qregion.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdatastream.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qline.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qpainterpath.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/QImageReader \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qimagereader.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qcoreapplication.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qeventloop.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qimageiohandler.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qplugin.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qfactoryinterface.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/QImageWriter \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qimagewriter.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QCoreApplication \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QRandomGenerator \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qrandom.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bin\obj\chatservice.o src\services\chatservice.cpp
@@ -3959,14 +3996,17 @@ bin/obj/fileupload_methods.o: src/services/fileupload_methods.cpp src/services/c
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/QSslError \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWebSockets/qwebsockets_global.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWebSockets/qwebsocketprotocol.h \
+		src/utils/messagecache.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QMutex \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QDir \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdir.h \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qfileinfo.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/QFileDialog \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qfiledialog.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qtwidgetsglobal.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtguiglobal.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtgui-config.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qtwidgets-config.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qdir.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qfileinfo.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qdialog.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtWidgets/qwidget.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qwindowdefs.h \
@@ -3999,7 +4039,9 @@ bin/obj/fileupload_methods.o: src/services/fileupload_methods.cpp src/services/c
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qevent.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qvector2d.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtGui/qtouchdevice.h \
-		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QFileInfo
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QFileInfo \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QRandomGenerator \
+		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qrandom.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o bin\obj\fileupload_methods.o src\services\fileupload_methods.cpp
 
 bin/obj/databaseconfig.o: src/database/databaseconfig.cpp src/database/databaseconfig.h \
@@ -4255,6 +4297,7 @@ bin/obj/conversationdao.o: src/dao/conversationdao.cpp src/dao/conversationdao.h
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qjsonarray.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qjsonvalue.h \
 		src/models/conversation.h \
+		src/database/databaseconfig.h \
 		src/network/networkclient.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/QNetworkAccessManager \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/qnetworkaccessmanager.h \
@@ -4498,6 +4541,7 @@ bin/obj/friendrequestdao.o: src/dao/friendrequestdao.cpp src/dao/friendrequestda
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qjsonvalue.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/QJsonObject \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtCore/qjsonobject.h \
+		src/database/databaseconfig.h \
 		src/network/networkclient.h \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/QNetworkAccessManager \
 		../../../Softwore/Qt5.14.2/5.14.2/mingw73_64/include/QtNetwork/qnetworkaccessmanager.h \

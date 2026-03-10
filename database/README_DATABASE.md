@@ -1,186 +1,102 @@
-# PostgreSQL 数据库配置指南
+# PostgreSQL 数据库说明
 
-## 🔧 前置要求
+当前项目以后端服务为数据库入口，客户端不再直接初始化或操作 PostgreSQL。数据库相关文档以 server/init_db.sql 和 server/migrations 为准。
 
-1. **安装 PostgreSQL**（版本 10+）
-   - Windows: https://www.postgresql.org/download/windows/
-   - Linux: `sudo apt-get install postgresql postgresql-contrib`
-   - macOS: `brew install postgresql`
+## 当前分工
 
-2. **Qt PostgreSQL 驱动**
-   - Windows: 通常包含在 Qt 安装中
-   - Linux: `sudo apt-get install libpq-dev`
-   - macOS: `brew install libpq`
+- database/init.sql: 可选的数据库和用户初始化示例
+- server/init_db.sql: 当前项目的基础建表脚本
+- server/migrations: 增量迁移脚本
+- server/.env: 后端连接数据库的运行配置
 
-## 📋 初始化数据库
+## 推荐初始化流程
 
-### 方法 1：使用 SQL 脚本（推荐）
+### 方式一：直接使用本地脚本
 
-```bash
-# 1. 连接到 PostgreSQL
-psql -U postgres
-
-# 2. 执行初始化脚本
-\i database/init.sql
-
-# 3. 验证
-\c chatapp
-\dt  # 列出所有表
-```
-
-### 方法 2：手动操作
-
-```bash
-# 创建数据库和用户
-createdb -U postgres chatapp
-psql -U postgres -d chatapp -c "CREATE USER chatapp_user WITH PASSWORD 'chatapp_password';"
-psql -U postgres -d chatapp -c "GRANT ALL PRIVILEGES ON DATABASE chatapp TO chatapp_user;"
-```
-
-## 🔐 环境变量配置
-
-### Windows（使用系统环境变量）
+Windows 推荐运行：
 
 ```powershell
-setx CHATAPP_DB_HOST localhost
-setx CHATAPP_DB_NAME chatapp
-setx CHATAPP_DB_USER chatapp_user
-setx CHATAPP_DB_PASSWORD your_password
-setx CHATAPP_DB_PORT 5432
+./scripts/init-local-db.ps1
 ```
 
-### Linux/macOS（添加到 ~/.bashrc 或 ~/.zshrc）
+### 方式二：手动执行
 
 ```bash
-export CHATAPP_DB_HOST=localhost
-export CHATAPP_DB_NAME=chatapp
-export CHATAPP_DB_USER=chatapp_user
-export CHATAPP_DB_PASSWORD=your_password
-export CHATAPP_DB_PORT=5432
-```
-
-## 🚀 在代码中使用
-
-### 初始化数据库连接
-
-```cpp
-#include "src/database/databasemanager.h"
-#include "src/database/databaseconfig.h"
-
-// 在 main() 中
-DatabaseConfig config = DatabaseConfig::loadFromEnvironment();
-DatabaseManager* dbManager = DatabaseManager::instance();
-
-if (!dbManager->connectToDatabase(config.host, config.database, 
-                                 config.username, config.password, 
-                                 config.port)) {
-    qCritical() << "Database connection failed:" << dbManager->lastError();
-    return -1;
-}
-
-qDebug() << "Database ready!";
-```
-
-### 执行查询
-
-```cpp
-// 执行 INSERT/UPDATE/DELETE
-dbManager->executeQuery("INSERT INTO users (id, name, created_at) VALUES ('user1', 'Alice', 1707213600000)");
-
-// 执行 SELECT
-QSqlQuery result = dbManager->executeSelectQuery("SELECT * FROM users WHERE id = 'user1'");
-while (result.next()) {
-    QString name = result.value("name").toString();
-    qDebug() << name;
-}
-```
-
-## 📊 数据库架构
-
-### 表结构
-
-#### users（用户表）
-```
-id (PK)          - 用户ID
-name             - 用户名
-avatar           - 头像URL
-status           - 状态 (online/offline/busy)
-created_at       - 创建时间（时间戳）
-updated_at       - 更新时间（时间戳）
-```
-
-#### conversations（会话表）
-```
-id (PK)          - 会话ID
-title            - 会话标题
-type             - 类型 (user/group)
-owner_id (FK)    - 创建者ID
-last_message     - 最后一条消息
-last_message_time - 最后消息时间
-created_at       - 创建时间
-updated_at       - 更新时间
-```
-
-#### conversation_members（会话成员表）
-```
-conversation_id (FK, PK) - 会话ID
-user_id (FK, PK)         - 用户ID
-unread_count             - 未读消息数
-joined_at                - 加入时间
-```
-
-#### messages（消息表）
-```
-id (PK)              - 消息ID
-conversation_id (FK) - 会话ID
-sender_id (FK)       - 发送者ID
-content              - 消息内容
-type                 - 类型 (text/image/file)
-is_offline           - 是否离线消息
-created_at           - 创建时间
-```
-
-## 🔍 常用命令
-
-```bash
-# 连接到数据库
-psql -U chatapp_user -d chatapp -h localhost
-
-# 查看表结构
-\d users
-\d conversations
-
-# 查看所有表
-\dt
-
-# 导出数据
-pg_dump -U chatapp_user -d chatapp > backup.sql
-
-# 导入数据
-psql -U chatapp_user -d chatapp < backup.sql
-
-# 重置数据库
-dropdb -U postgres chatapp
 createdb -U postgres chatapp
+psql -U postgres -d chatapp -f server/init_db.sql
 ```
 
-## ⚠️ 常见问题
+如果还需要创建专用数据库用户，可参考 database/init.sql 的写法手动执行。
 
-### 连接失败：连接被拒绝
-- 检查 PostgreSQL 服务是否运行
-- 验证主机名、用户名、密码
-- 检查防火墙设置
+## 当前主要表
 
-### 找不到 QPSQL 驱动
-- 确保已安装 Qt PostgreSQL 插件
-- 检查 Qt 的 plugins/sqldrivers 目录
+基础表由 server/init_db.sql 创建，当前主要包括：
 
-### 权限错误
-- 确保用户已授予相应权限（见 init.sql）
-- 尝试使用 postgres 超级用户执行初始化
+- users
+- conversations
+- conversation_members
+- messages
+- friend_requests
+- friends
 
-## 📝 下一步
+## 后端配置
 
-- 集成 DAOs（Data Access Objects）处理数据库操作
-- 修改 ChatService 使用数据库而非硬编码数据
-- 添加数据迁移和备份机制
+server/.env 最少应包含：
+
+```env
+PORT=8080
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=chatapp
+DB_USER=postgres
+DB_PASSWORD=123456
+JWT_SECRET=replace_me
+```
+
+## 常用命令
+
+```bash
+# 查看表
+psql -U postgres -d chatapp -c "\dt"
+
+# 查看 users 表结构
+psql -U postgres -d chatapp -c "\d users"
+
+# 备份数据库
+pg_dump -U postgres -d chatapp > backup.sql
+
+# 恢复数据库
+psql -U postgres -d chatapp < backup.sql
+```
+
+## 与旧文档的区别
+
+- 不再推荐从客户端侧做数据库自动初始化
+- 不再把 Qt PostgreSQL 驱动配置当作主流程文档内容
+- 不再以 database/init.sql 作为主建表入口
+
+## 常见问题
+
+### 数据库连接失败
+
+优先检查：
+
+1. PostgreSQL 服务是否启动。
+2. chatapp 数据库是否已创建。
+3. server/.env 中的 DB_HOST、DB_PORT、DB_NAME、DB_USER、DB_PASSWORD 是否正确。
+
+### 表缺失
+
+先执行：
+
+```bash
+psql -U postgres -d chatapp -f server/init_db.sql
+```
+
+然后再执行迁移脚本。
+
+## 相关文档
+
+- README.md
+- docs/运行部署指南.md
+- server/migrations/README_MIGRATIONS.md

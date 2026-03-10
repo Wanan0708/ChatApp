@@ -11,10 +11,23 @@ class MessageModel : public QAbstractListModel
 
 public:
     enum Roles {
-        ContentRole = Qt::UserRole + 1,
+        MessageIdRole = Qt::UserRole + 1,
+        InternalMessageIdRole,
+        ServerMessageIdRole,
+        ContentRole,
         SenderIdRole,
         TimestampRole,
         IsSelfRole,
+        TypeRole,
+        StatusRole,
+        FileIdRole,
+        FileNameRole,
+        FileSizeRole,
+        FileUrlRole,
+        ThumbnailUrlRole,
+        RecalledRole,
+        OfflineRole,
+        ErrorTextRole,
     };
     Q_ENUM(Roles)
 
@@ -28,11 +41,18 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     void addMessage(const QVariantMap &message);
+    void upsertMessage(const QVariantMap &message);
     void clearMessages();
+    QList<QVariantMap> messages() const;
+    void setConversationId(const QString &conversationId) { m_conversationId = conversationId; }
 
 //    void updateMessage(int index, const QVariantMap &updates);
 
 private:
+    qint64 normalizedTimestamp(const QVariantMap &message) const;
+    int findMessageIndex(const QVariantMap &message) const;
+    int findInsertIndex(qint64 timestamp) const;
+
     QList<QVariantMap> m_messages;
     QString m_conversationId;
     QString m_currentUserId;

@@ -33,6 +33,8 @@ class ChatService : public QObject
     Q_PROPERTY(QString currentUserBio READ currentUserBio WRITE setCurrentUserBio NOTIFY currentUserBioChanged)
     Q_PROPERTY(int currentUserAge READ currentUserAge WRITE setCurrentUserAge NOTIFY currentUserAgeChanged)
     Q_PROPERTY(bool isConnected READ isConnected NOTIFY connectedChanged)
+    Q_PROPERTY(QString connectionState READ connectionState NOTIFY connectionStateChanged)
+    Q_PROPERTY(bool isReconnecting READ isReconnecting NOTIFY connectionStateChanged)
     Q_PROPERTY(bool notificationsEnabled READ notificationsEnabled WRITE setNotificationsEnabled NOTIFY notificationsEnabledChanged)
     Q_PROPERTY(bool soundEnabled READ soundEnabled WRITE setSoundEnabled NOTIFY soundEnabledChanged)
     Q_PROPERTY(bool autoLoginEnabled READ autoLoginEnabled WRITE setAutoLoginEnabled NOTIFY autoLoginEnabledChanged)
@@ -74,12 +76,16 @@ public:
     Q_INVOKABLE void sendMessage(const QString &conversationId, const QString &content);
     Q_INVOKABLE void sendImageMessage(const QString &conversationId, const QString &filePath);
     Q_INVOKABLE void sendFileMessage(const QString &conversationId, const QString &filePath);
+    Q_INVOKABLE void retryMessage(const QString &conversationId, const QString &messageId);
     Q_INVOKABLE QString pickLocalFile(bool imageOnly = false) const;
     Q_INVOKABLE void recallMessage(const QString &conversationId, const QString &messageId);  // 撤回消息
     Q_INVOKABLE void markConversationRead(const QString &conversationId);
     Q_INVOKABLE void setCurrentConversation(const QString &conversationId);
     Q_INVOKABLE void refreshConversations();
     Q_INVOKABLE void refreshMessages(const QString &conversationId);
+    Q_INVOKABLE bool loadOlderMessages(const QString &conversationId);
+    Q_INVOKABLE bool hasMoreMessages(const QString &conversationId) const;
+    Q_INVOKABLE bool isLoadingMessages(const QString &conversationId) const;
     Q_INVOKABLE void logout();
     Q_INVOKABLE void changePassword(const QString &newPassword);
     Q_INVOKABLE void connectToDefaultChatServer();
@@ -90,15 +96,18 @@ public:
     Q_INVOKABLE void searchUsers(const QString &searchTerm);
     Q_INVOKABLE void loadUserProfile();
     Q_INVOKABLE void saveUserProfile(const QVariantMap &profile);
+    Q_INVOKABLE void uploadAvatar(const QString &filePath);
     Q_INVOKABLE void fetchOfflineMessages();  // 拉取离线消息
     bool isConnected() const;
+    QString connectionState() const;
+    bool isReconnecting() const;
 
     // 好友申请相关
     Q_INVOKABLE void sendFriendRequest(const QString &toUserId);
     Q_INVOKABLE void respondToFriendRequest(int requestId, bool accept);
     Q_INVOKABLE void getPendingFriendRequests();
     Q_INVOKABLE void getFriendList();
-    Q_INVOKABLE void getFriendDetail(const QString &friendId);
+    Q_INVOKABLE void getFriendProfile(const QString &friendId);
     Q_INVOKABLE void checkIsFriend(const QString &userId);
     Q_INVOKABLE void validateUserLogin(const QString &username, const QString &password);
     Q_INVOKABLE void registerNewUser(const QString &username, const QString &password);
@@ -133,10 +142,13 @@ public:
 signals:
     void conversationModelChanged();
     void currentConversationIdChanged();
+    void conversationIdResolved(const QString &fromConversationId, const QString &toConversationId);
     void messageReceived(const QString &conversationId, const QVariantMap &message);
     void conversationUpdated(const QString &conversationId);
     void messagesRefreshed(const QString &conversationId);  // 消息刷新完成信号
+    void olderMessagesLoaded(const QString &conversationId, int addedCount, bool hasMore);
     void connectedChanged(bool connected);
+    void connectionStateChanged();
     void currentUserIdChanged();
     void currentUserNameChanged();
     void currentUserAvatarChanged();
@@ -148,6 +160,8 @@ signals:
     void currentUserBioChanged();
     void currentUserAgeChanged();
     void userProfileSaveResult(bool success, const QString &message);
+    void avatarUploadProgressChanged(int progress);
+    void avatarUploadResult(bool success, const QString &avatarUrl, const QString &message);
     void notificationsEnabledChanged();
     void soundEnabledChanged();
     void autoLoginEnabledChanged();
@@ -162,7 +176,8 @@ signals:
     void searchResult(const QVariantList &results);
     void pendingRequestsLoaded(const QVariantList &requests);
     void friendListLoaded(const QVariantList &friends);
-    void friendDetailLoaded(const QVariantMap &friendInfo);
+    void friendProfileUpdated(const QVariantMap &friendInfo);
+    void friendPresenceUpdated(const QVariantMap &presenceInfo);
     void isFriendResult(const QString &userId, bool isFriend);
 
     // 认证结果信号
@@ -178,12 +193,13 @@ private slots:
     void onWebSocketMessageReceived(const QVariantMap &message);
     void onWebSocketConnected();
     void onWebSocketDisconnected();
+    void onWebSocketReconnectFailed();
 
     // DAO 异步回调
     void handleLoginResult(bool success, const QString &userId, const QString &token, const QString &error);
     void handleRegisterResult(bool success, const QString &userId, const QString &error);
     void handleConversationsLoaded(const QVector<Conversation> &conversations);
-    void handleMessagesLoaded(const QString &conversationId, const QVector<Message> &messages);
+    void handleMessagesLoaded(const QString &conversationId, const QVector<Message> &messages, int offset, int limit);
     void handleSearchUserResult(const QVector<UserDAO::UserSearchResult> &results);
     void handleUserProfileResult(bool success, const QVariantMap &profile, const QString &error);
     void handleUserProfileUpdated(bool success, const QString &message);
@@ -191,7 +207,7 @@ private slots:
     void handleFriendListLoaded(const QVector<FriendRequestDAO::FriendInfo> &friends);
     void handleFriendRequestSent(bool success, const QString &error);
     void handleRequestStatusUpdated(bool success, int requestId, const QString &status);
-    void handleFriendDetailLoaded(const FriendRequestDAO::FriendInfo &friendInfo);
+    void handleFriendProfileLoaded(const FriendRequestDAO::FriendInfo &friendInfo);
 
 private:
     explicit ChatService(QObject *parent = nullptr);
@@ -231,13 +247,51 @@ private:
 
     // 好友版本管理
     QHash<QString, int> m_friendVersions;  // userId -> version
+    QHash<QString, int> m_messageOffsets;
+    QHash<QString, bool> m_hasMoreMessages;
+    QHash<QString, bool> m_loadingMessages;
     QDateTime m_lastSyncTime;
     bool m_wsAuthenticated = false;  // WebSocket 是否已认证
 
     void initializeSampleData();
     void processIncomingMessage(const QVariantMap &message);
     void fetchFriendsUpdates();
+    void sendTextMessageInternal(const QString &conversationId,
+                                 const QString &content,
+                                 const QString &messageId = QString(),
+                                 qint64 timestamp = 0,
+                                 bool updateExisting = false);
+    void sendImageMessageInternal(const QString &conversationId,
+                                  const QString &filePath,
+                                  const QString &messageId = QString(),
+                                  qint64 timestamp = 0,
+                                  bool updateExisting = false);
+    void sendFileMessageInternal(const QString &conversationId,
+                                 const QString &filePath,
+                                 const QString &messageId = QString(),
+                                 qint64 timestamp = 0,
+                                 bool updateExisting = false);
+    void resendUploadedAttachmentMessage(const QString &conversationId,
+                                         const QString &messageId,
+                                         const QVariantMap &retryInfo,
+                                         qint64 timestamp);
+    void migrateConversationContext(const QString &oldConversationId, const QString &newConversationId);
+    void dispatchOutgoingMessage(const QString &conversationId,
+                                 const QString &localMessageId,
+                                 QVariantMap messagePayload,
+                                 bool queuedBeforeDispatch);
+    void updateLocalMessageState(const QString &conversationId,
+                                 const QString &messageId,
+                                 MessageStatus status,
+                                 bool isOffline,
+                                 const QString &errorText = QString(),
+                                 bool overwriteErrorText = false);
+    void rememberRetryableMessage(const QString &messageId, const QVariantMap &retryInfo);
+    void clearRetryableMessage(const QString &messageId);
 
     friend class ConversationModel;
     friend class MessageModel;
+
+    QHash<QString, QString> m_pendingOutgoingMessages;
+    QHash<QString, QVariantMap> m_retryableMessages;
 };

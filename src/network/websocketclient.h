@@ -21,6 +21,7 @@ class WebSocketClient : public QObject
     Q_OBJECT
     Q_PROPERTY(bool isConnected READ isConnected NOTIFY connectedChanged)
     Q_PROPERTY(QString connectionState READ connectionState NOTIFY connectionStateChanged)
+    Q_PROPERTY(bool isReconnecting READ isReconnecting NOTIFY connectionStateChanged)
 
 public:
     explicit WebSocketClient(QObject *parent = nullptr);
@@ -34,6 +35,7 @@ public:
     // 状态查询
     bool isConnected() const { return m_isConnected; }
     QString connectionState() const { return m_connectionState; }
+    bool isReconnecting() const;
 
     // 重连配置
     void setHeartbeatInterval(int ms);
@@ -43,6 +45,7 @@ public:
 signals:
     void connected();
     void disconnected();
+    void reconnectFailed();
     void connectedChanged(bool connected);
     void connectionStateChanged(const QString &state);
     void messageReceived(const QVariantMap &message);
@@ -74,7 +77,7 @@ private:
 
     // 重连状态
     int m_reconnectAttempts = 0;
-    int m_maxReconnectAttempts = 10;
+    int m_maxReconnectAttempts = 0;
     int m_initialReconnectDelay = 1000; // 1秒
     int m_currentReconnectDelay = 1000;
 

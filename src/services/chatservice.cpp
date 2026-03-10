@@ -9,14 +9,65 @@
 #include "../dao/userdao.h"
 #include "../database/databaseconfig.h"
 #include "../utils/timeformatter.h"
+#include "../utils/messagecache.h"
 #include "../core/securestorage.h"
 #include "../core/logger.h"
 #include <QDateTime>
+#include <QDir>
 #include <QDebug>
+#include <QFile>
+#include <QFileInfo>
+#include <QImage>
+#include <QImageReader>
+#include <QImageWriter>
 #include <QTimer>
 #include <QCoreApplication>
 #include <QRandomGenerator>
 #include <QSettings>
+#include <QStandardPaths>
+
+namespace {
+
+QString buildLocalMessageId(const QString &prefix)
+{
+    return QString("local-%1-%2-%3")
+        .arg(prefix)
+        .arg(QDateTime::currentMSecsSinceEpoch())
+        .arg(QRandomGenerator::global()->generate());
+}
+
+void syncSingleConversationProfile(ConversationModel *conversationModel,
+                                   const QString &userId,
+                                   const QString &userName,
+                                   const QString &avatar)
+{
+    if (!conversationModel || userId.isEmpty()) {
+        return;
+    }
+
+    const int total = conversationModel->count();
+    for (int index = 0; index < total; ++index) {
+        const QVariantMap conversation = conversationModel->get(index);
+        const QString conversationId = conversation.value("id").toString();
+        const QString conversationType = conversation.value("type").toString();
+        const bool isDirectConversation = (conversationId == userId)
+            || ((conversationType == "single" || conversationType == "user") && conversationId.contains(userId));
+
+        if (!isDirectConversation) {
+            continue;
+        }
+
+        QVariantMap updates;
+        if (!userName.isEmpty()) {
+            updates.insert("title", userName);
+        }
+        updates.insert("avatar", avatar);
+
+        conversationModel->updateConversation(conversationId, updates);
+    }
+}
+
+}
 
 ChatService* ChatService::instance()
 {
@@ -66,14 +117,18 @@ ChatService::ChatService(QObject *parent)
     connect(m_messageDAO, &MessageDAO::messagesLoaded, this, &ChatService::handleMessagesLoaded);
     connect(m_friendRequestDAO, &FriendRequestDAO::pendingRequestsLoaded, this, &ChatService::handleFriendRequestsLoaded);
     connect(m_friendRequestDAO, &FriendRequestDAO::friendsLoaded, this, &ChatService::handleFriendListLoaded);
-    connect(m_friendRequestDAO, &FriendRequestDAO::friendDetailLoaded, this, &ChatService::handleFriendDetailLoaded);
+    connect(m_friendRequestDAO, &FriendRequestDAO::friendProfileLoaded, this, &ChatService::handleFriendProfileLoaded);
     connect(m_friendRequestDAO, &FriendRequestDAO::requestSent, this, &ChatService::handleFriendRequestSent);
     connect(m_friendRequestDAO, &FriendRequestDAO::requestStatusUpdated, this, &ChatService::handleRequestStatusUpdated);
 
     // 连接 WebSocket 信号
     connect(m_webSocketClient, &WebSocketClient::connected, this, &ChatService::onWebSocketConnected);
     connect(m_webSocketClient, &WebSocketClient::disconnected, this, &ChatService::onWebSocketDisconnected);
+    connect(m_webSocketClient, &WebSocketClient::reconnectFailed, this, &ChatService::onWebSocketReconnectFailed);
     connect(m_webSocketClient, &WebSocketClient::messageReceived, this, &ChatService::onWebSocketMessageReceived);
+    connect(m_webSocketClient, &WebSocketClient::connectionStateChanged, this, [this]() {
+        emit connectionStateChanged();
+    });
     connect(m_webSocketClient, &WebSocketClient::errorOccurred, this, [](const QString &error) {
         qWarning() << "[ChatService] WebSocket error:" << error;
     });
@@ -113,6 +168,7 @@ void ChatService::handleConversationsLoaded(const QVector<Conversation> &convers
         // 1. 更新对话列表模型
         m_conversationModel->updateConversation(conv.id, {
             {"title", conv.title},
+            {"avatar", conv.avatar},
             {"lastMessage", conv.lastMessage},
             {"time", conv.time},
             {"type", conv.type},
@@ -124,26 +180,52 @@ void ChatService::handleConversationsLoaded(const QVector<Conversation> &convers
     }
 }
 
-void ChatService::handleMessagesLoaded(const QString &conversationId, const QVector<Message> &messages)
+void ChatService::handleMessagesLoaded(const QString &conversationId, const QVector<Message> &messages, int offset, int limit)
 {
-    qDebug() << "[ChatService] Loaded" << messages.size() << "messages for" << conversationId;
+    qDebug() << "[ChatService] Loaded" << messages.size() << "messages for" << conversationId << "offset:" << offset;
     MessageModel *msgModel = getMessageModel(conversationId);
+    const bool isRefresh = (offset == 0);
+    const int previousCount = msgModel->rowCount();
 
-    // 先清除旧消息，避免重复
-    msgModel->clearMessages();
+    if (isRefresh) {
+        msgModel->clearMessages();
+    }
 
+    QList<QVariantMap> cachedMessages;
     for (const Message &msg : messages) {
         QVariantMap msgMap;
         msgMap["messageId"] = msg.messageId;
+        msgMap["serverMessageId"] = msg.messageId;
         msgMap["conversationId"] = msg.conversationId;
         msgMap["content"] = msg.content;
         msgMap["senderId"] = msg.senderId;
         msgMap["timestamp"] = msg.timestamp;
-        msgModel->addMessage(msgMap);
+        msgMap["type"] = static_cast<int>(msg.type);
+        msgMap["status"] = static_cast<int>(msg.status);
+        msgMap["fileId"] = msg.fileId;
+        msgMap["fileName"] = msg.fileName;
+        msgMap["fileSize"] = msg.fileSize;
+        msgMap["fileUrl"] = msg.fileUrl;
+        msgMap["thumbnailUrl"] = msg.thumbnailUrl;
+        msgMap["recalled"] = msg.recalled;
+        msgModel->upsertMessage(msgMap);
+        cachedMessages.append(msgMap);
     }
+
+    if (!cachedMessages.isEmpty()) {
+        MessageCache::instance()->cacheMessages(conversationId, cachedMessages);
+    }
+
+    m_messageOffsets[conversationId] = offset + messages.size();
+    m_hasMoreMessages[conversationId] = (messages.size() >= limit);
+    m_loadingMessages[conversationId] = false;
     
-    // 发出消息刷新完成信号，通知 QML 滚动到底部
-    emit messagesRefreshed(conversationId);
+    if (isRefresh) {
+        emit messagesRefreshed(conversationId);
+    } else {
+        const int addedCount = qMax(0, msgModel->rowCount() - previousCount);
+        emit olderMessagesLoaded(conversationId, addedCount, m_hasMoreMessages.value(conversationId, false));
+    }
 }
 
 MessageModel* ChatService::getMessageModel(const QString &conversationId)
@@ -152,6 +234,11 @@ MessageModel* ChatService::getMessageModel(const QString &conversationId)
             MessageModel *model = new MessageModel(conversationId, this);
             model->setCurrentUserId(m_currentUserId);
             m_messageModels[conversationId] = model;
+
+            const QList<QVariantMap> cachedMessages = MessageCache::instance()->getMessages(conversationId, 100);
+            for (const QVariantMap &cachedMessage : cachedMessages) {
+                model->upsertMessage(cachedMessage);
+            }
         }
     return m_messageModels.value(conversationId);
 }
@@ -192,28 +279,40 @@ bool ChatService::hasUnreadMessages() const
 
 void ChatService::sendMessage(const QString &conversationId, const QString &content)
 {
+    sendTextMessageInternal(conversationId, content);
+}
+
+void ChatService::sendTextMessageInternal(const QString &conversationId,
+                                         const QString &content,
+                                         const QString &messageId,
+                                         qint64 timestamp,
+                                         bool updateExisting)
+{
     if (content.trimmed().isEmpty()) return;
 
-    QString trimmedContent = content.trimmed();
+    const QString trimmedContent = content.trimmed();
+    const QString localMessageId = messageId.isEmpty() ? buildLocalMessageId("text") : messageId;
+    const qint64 currentTimestamp = timestamp > 0 ? timestamp : QDateTime::currentMSecsSinceEpoch();
+    const bool queuedBeforeDispatch = !m_webSocketClient->isConnected();
 
-    // 1. 创建消息对象
     QVariantMap message;
-    message["type"] = "message";
+    message["messageId"] = localMessageId;
+    message["type"] = 0;
     message["conversationId"] = conversationId;
     message["content"] = trimmedContent;
     message["senderId"] = m_currentUserId;
-    message["timestamp"] = QDateTime::currentMSecsSinceEpoch();
+    message["timestamp"] = currentTimestamp;
+    message["status"] = static_cast<int>(MessageStatus::Sending);
+    message["isOffline"] = queuedBeforeDispatch;
 
-    // 1.5 乐观更新：立即添加到本地 MessageModel（无论连接状态）
-    // 这样 QML 界面立即显示消息
-    getMessageModel(conversationId)->addMessage(message);
-    qDebug() << "[ChatService] Message added to local model optimistically";
+    getMessageModel(conversationId)->upsertMessage(message);
+    if (!updateExisting) {
+        qDebug() << "[ChatService] Message added to local model optimistically";
+    }
 
-    // 2. 更新会话列表元数据
     QString displayContent = trimmedContent.length() > 30
         ? trimmedContent.left(27) + "..."
         : trimmedContent;
-    // 使用 TimeFormatter 统一时间格式
     QString displayTime = TimeFormatter::formatChatTime(message["timestamp"].toLongLong());
 
     m_conversationModel->updateConversation(conversationId, {
@@ -222,17 +321,25 @@ void ChatService::sendMessage(const QString &conversationId, const QString &cont
         {"unreadCount", 0}
     });
 
-    // 3. 通过 WebSocket 发送（如果已连接）
-    if (m_webSocketClient->isConnected()) {
-        m_webSocketClient->sendMessage(message);
-        qDebug() << "[ChatService] Message sent via WebSocket";
-    } else {
-        // 标记为离线（供服务器或后续处理识别）
-        message["isOffline"] = true;
-        qDebug() << "[ChatService] WebSocket not connected, message will be sent when reconnected";
-    }
+    QVariantMap wsMessage;
+    wsMessage["type"] = "message";
+    wsMessage["messageType"] = 0;
+    wsMessage["conversationId"] = conversationId;
+    wsMessage["content"] = trimmedContent;
+    wsMessage["senderId"] = m_currentUserId;
+    wsMessage["timestamp"] = currentTimestamp;
+    wsMessage["status"] = 1;
+    wsMessage["clientMessageId"] = localMessageId;
 
-    // 4. 发出信号供QML响应（滚动到底部等）
+    QVariantMap retryInfo;
+    retryInfo["conversationId"] = conversationId;
+    retryInfo["messageType"] = 0;
+    retryInfo["content"] = trimmedContent;
+    retryInfo["timestamp"] = currentTimestamp;
+    rememberRetryableMessage(localMessageId, retryInfo);
+
+    dispatchOutgoingMessage(conversationId, localMessageId, wsMessage, queuedBeforeDispatch);
+
     emit messageReceived(conversationId, message);
 }
 
@@ -244,7 +351,36 @@ void ChatService::markConversationRead(const QString &conversationId)
 void ChatService::refreshMessages(const QString &conversationId)
 {
     qDebug() << "[ChatService] Refreshing messages for:" << conversationId;
+    m_loadingMessages[conversationId] = true;
+    m_messageOffsets[conversationId] = 0;
+    m_hasMoreMessages[conversationId] = true;
     m_messageDAO->getConversationMessages(conversationId, 50);
+}
+
+bool ChatService::loadOlderMessages(const QString &conversationId)
+{
+    if (conversationId.isEmpty()) {
+        return false;
+    }
+
+    if (m_loadingMessages.value(conversationId, false) || !m_hasMoreMessages.value(conversationId, true)) {
+        return false;
+    }
+
+    const int offset = m_messageOffsets.value(conversationId, 0);
+    m_loadingMessages[conversationId] = true;
+    m_messageDAO->getConversationMessages(conversationId, 50, offset);
+    return true;
+}
+
+bool ChatService::hasMoreMessages(const QString &conversationId) const
+{
+    return m_hasMoreMessages.value(conversationId, true);
+}
+
+bool ChatService::isLoadingMessages(const QString &conversationId) const
+{
+    return m_loadingMessages.value(conversationId, false);
 }
 
 void ChatService::searchUsers(const QString &searchTerm)
@@ -267,7 +403,131 @@ void ChatService::saveUserProfile(const QVariantMap &profile)
         emit userProfileSaveResult(false, "未登录，无法保存资料");
         return;
     }
-    m_userDAO->updateMyProfile(profile);
+
+    QVariantMap normalizedProfile = profile;
+    const QString avatar = normalizedProfile.value("avatar").toString();
+    if (!avatar.isEmpty()) {
+        normalizedProfile["avatar"] = DatabaseConfig::toServerRelativePath(avatar);
+    }
+
+    m_userDAO->updateMyProfile(normalizedProfile);
+}
+
+void ChatService::uploadAvatar(const QString &filePath)
+{
+    if (m_currentUserId.isEmpty()) {
+        emit avatarUploadResult(false, "", "未登录，无法上传头像");
+        return;
+    }
+
+    if (filePath.trimmed().isEmpty()) {
+        emit avatarUploadResult(false, "", "请选择头像图片");
+        return;
+    }
+
+    QFileInfo fileInfo(filePath);
+    if (!fileInfo.exists() || !fileInfo.isFile()) {
+        emit avatarUploadResult(false, "", "头像文件不存在");
+        return;
+    }
+
+    QImageReader reader(filePath);
+    reader.setAutoTransform(true);
+    if (!reader.canRead()) {
+        emit avatarUploadResult(false, "", "请选择有效的图片文件");
+        return;
+    }
+
+    QImage image = reader.read();
+    if (image.isNull()) {
+        emit avatarUploadResult(false, "", "头像读取失败");
+        return;
+    }
+
+    const int cropSize = qMin(image.width(), image.height());
+    if (cropSize > 0 && (image.width() != image.height())) {
+        const QRect cropRect(
+            (image.width() - cropSize) / 2,
+            (image.height() - cropSize) / 2,
+            cropSize,
+            cropSize
+        );
+        image = image.copy(cropRect);
+    }
+
+    const QSize maxAvatarSize(512, 512);
+    if (image.width() > maxAvatarSize.width() || image.height() > maxAvatarSize.height()) {
+        image = image.scaled(maxAvatarSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    }
+
+    const QString tempDirPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    QDir tempDir(tempDirPath);
+    if (!tempDir.exists()) {
+        tempDir.mkpath(".");
+    }
+
+    const bool keepAlpha = image.hasAlphaChannel();
+    const QString suffix = keepAlpha ? "png" : "jpg";
+    const QString optimizedAvatarPath = tempDir.filePath(
+        QString("chatapp-avatar-%1-%2.%3")
+            .arg(m_currentUserId)
+            .arg(QDateTime::currentMSecsSinceEpoch())
+            .arg(suffix)
+    );
+
+    QImageWriter writer(optimizedAvatarPath, suffix.toUpper().toLatin1());
+    writer.setOptimizedWrite(true);
+    if (!keepAlpha) {
+        writer.setQuality(85);
+    }
+
+    if (!writer.write(image)) {
+        emit avatarUploadResult(false, "", "头像压缩失败");
+        return;
+    }
+
+    emit avatarUploadProgressChanged(0);
+
+    QNetworkReply *reply = NetworkClient::instance()->uploadFile(
+        "/users/profile/avatar",
+        optimizedAvatarPath,
+        "avatar",
+        QJsonObject(),
+        [this](const QJsonObject &, qint64 bytesSent, qint64 bytesTotal) {
+            const int progress = bytesTotal > 0
+                ? static_cast<int>((bytesSent * 100) / bytesTotal)
+                : 0;
+            emit avatarUploadProgressChanged(progress);
+        },
+        [this](const QJsonObject &response) {
+            emit avatarUploadProgressChanged(100);
+            const QString avatarUrl = response.value("avatarUrl").toString();
+            const QString avatarPath = response.value("avatarPath").toString();
+            const QString message = response.value("message").toString();
+            const QString resolvedAvatarUrl = DatabaseConfig::resolveServerUrl(
+                avatarUrl.isEmpty() ? avatarPath : avatarUrl
+            );
+
+            if (resolvedAvatarUrl.isEmpty()) {
+                emit avatarUploadResult(false, "", "头像上传失败");
+                return;
+            }
+
+            emit avatarUploadResult(true, resolvedAvatarUrl, message.isEmpty() ? "头像上传成功" : message);
+        },
+        [this](const QString &error) {
+            emit avatarUploadResult(false, "", error.isEmpty() ? "头像上传失败" : error);
+        }
+    );
+
+    if (!reply) {
+        QFile::remove(optimizedAvatarPath);
+        return;
+    }
+
+    connect(reply, &QNetworkReply::finished, this, [optimizedAvatarPath]() {
+        QFile::remove(optimizedAvatarPath);
+    });
 }
 
 // 拉取离线消息
@@ -348,24 +608,47 @@ void ChatService::recallMessage(const QString &conversationId, const QString &me
         return;
     }
     
-    Logger::instance()->info(QString("Recalling message %1 in conversation %2").arg(messageId).arg(conversationId), "chatservice");
+    MessageModel *model = getMessageModel(conversationId);
+    QString resolvedMessageId = messageId;
+    if (model) {
+        const QList<QVariantMap> messages = model->messages();
+        for (const QVariantMap &message : messages) {
+            if (message.value("messageId").toString() == messageId
+                || message.value("serverMessageId").toString() == messageId) {
+                const QString serverMessageId = message.value("serverMessageId").toString();
+                if (!serverMessageId.isEmpty()) {
+                    resolvedMessageId = serverMessageId;
+                }
+                break;
+            }
+        }
+    }
+
+    if (resolvedMessageId.startsWith(QStringLiteral("local-"))) {
+        Logger::instance()->warning("Recall message failed - message has not been acknowledged by server yet", "chatservice");
+        return;
+    }
+
+    Logger::instance()->info(QString("Recalling message %1 in conversation %2").arg(resolvedMessageId).arg(conversationId), "chatservice");
     
     // 通过 WebSocket 发送撤回请求
     QVariantMap recallRequest;
     recallRequest["type"] = "recall_message";
     recallRequest["conversationId"] = conversationId;
-    recallRequest["messageId"] = messageId;
+    recallRequest["messageId"] = resolvedMessageId;
     recallRequest["timestamp"] = QDateTime::currentMSecsSinceEpoch();
     
     m_webSocketClient->sendMessage(recallRequest);
     
     // 乐观更新：立即在本地标记为已撤回
-    MessageModel *model = getMessageModel(conversationId);
     if (model) {
-        // 查找并更新消息
-        // 注意：这里需要 MessageModel 支持更新消息的方法
-        // 暂时通过重新加载消息来实现
-        refreshMessages(conversationId);
+        QVariantMap updates;
+        updates["messageId"] = resolvedMessageId;
+        updates["serverMessageId"] = resolvedMessageId;
+        updates["conversationId"] = conversationId;
+        updates["recalled"] = true;
+        model->upsertMessage(updates);
+        MessageCache::instance()->cacheMessage(conversationId, updates);
     }
 }
 
@@ -465,6 +748,8 @@ void ChatService::logout()
     // 清理消息模型缓存
     qDeleteAll(m_messageModels);
     m_messageModels.clear();
+    m_pendingOutgoingMessages.clear();
+    m_retryableMessages.clear();
 
     // 通知对话模型更新
     if (m_conversationModel) {
@@ -525,8 +810,9 @@ void ChatService::setCurrentUserName(const QString &userName)
 
 void ChatService::setCurrentUserAvatar(const QString &avatar)
 {
-    if (m_currentUserAvatar != avatar) {
-        m_currentUserAvatar = avatar;
+    const QString resolvedAvatar = DatabaseConfig::resolveServerUrl(avatar);
+    if (m_currentUserAvatar != resolvedAvatar) {
+        m_currentUserAvatar = resolvedAvatar;
         emit currentUserAvatarChanged();
     }
 }
@@ -592,22 +878,102 @@ bool ChatService::isConnected() const
     return m_webSocketClient->isConnected();
 }
 
+QString ChatService::connectionState() const
+{
+    return m_webSocketClient->connectionState();
+}
+
+bool ChatService::isReconnecting() const
+{
+    return m_webSocketClient->isReconnecting();
+}
+
 void ChatService::onWebSocketMessageReceived(const QVariantMap &rawMessage)
 {
     QString msgType = rawMessage.value("type").toString();
 
     if (msgType == "message") {
         processIncomingMessage(rawMessage);
+    } else if (msgType == "message_ack") {
+        const QString clientMessageId = rawMessage.value("clientMessageId").toString();
+        const QString conversationId = rawMessage.value("conversationId").toString();
+        const QString originalConversationId = m_pendingOutgoingMessages.value(clientMessageId);
+        const QString serverMessageId = rawMessage.value("messageId").toString();
+        const bool success = rawMessage.value("success", true).toBool();
+        const QString errorText = rawMessage.value("error").toString();
+
+        if (clientMessageId.isEmpty()) {
+            qWarning() << "[ChatService] Received message_ack without clientMessageId";
+            return;
+        }
+
+        const QString resolvedConversationId = !originalConversationId.isEmpty()
+            ? originalConversationId
+            : conversationId;
+
+        QVariantMap updates;
+        updates["messageId"] = clientMessageId;
+        updates["conversationId"] = resolvedConversationId;
+        updates["serverMessageId"] = serverMessageId;
+
+        if (success) {
+            if (!conversationId.isEmpty() && !originalConversationId.isEmpty() && conversationId != originalConversationId) {
+                migrateConversationContext(originalConversationId, conversationId);
+            }
+
+            updates["status"] = static_cast<int>(MessageStatus::Sent);
+            updates["isOffline"] = false;
+            updates["errorText"] = QString();
+            getMessageModel(resolvedConversationId)->upsertMessage(updates);
+            MessageCache::instance()->cacheMessage(resolvedConversationId, updates);
+            m_pendingOutgoingMessages.remove(clientMessageId);
+            clearRetryableMessage(clientMessageId);
+            qDebug() << "[ChatService] Message acknowledged by server:" << clientMessageId << serverMessageId;
+        } else {
+            updates["status"] = static_cast<int>(MessageStatus::Failed);
+            updates["isOffline"] = true;
+            updates["errorText"] = errorText.isEmpty() ? QStringLiteral("消息发送失败，点击重试") : errorText;
+            getMessageModel(resolvedConversationId)->upsertMessage(updates);
+            MessageCache::instance()->cacheMessage(resolvedConversationId, updates);
+            m_pendingOutgoingMessages.remove(clientMessageId);
+            qWarning() << "[ChatService] Message rejected by server:" << clientMessageId << errorText;
+        }
+    } else if (msgType == "message_recalled") {
+        const QString conversationId = rawMessage.value("conversationId").toString();
+        const QString messageId = rawMessage.value("messageId").toString();
+        const bool success = rawMessage.value("success", true).toBool();
+        const QString errorText = rawMessage.value("error").toString();
+
+        if (conversationId.isEmpty() || messageId.isEmpty()) {
+            qWarning() << "[ChatService] Received invalid message_recalled payload";
+            return;
+        }
+
+        if (!success) {
+            qWarning() << "[ChatService] Message recall failed:" << messageId << errorText;
+            return;
+        }
+
+        QVariantMap updates;
+        updates["messageId"] = messageId;
+        updates["serverMessageId"] = messageId;
+        updates["conversationId"] = conversationId;
+        updates["recalled"] = true;
+        getMessageModel(conversationId)->upsertMessage(updates);
+        MessageCache::instance()->cacheMessage(conversationId, updates);
     } else if (msgType == "system") {
         QString subtype = rawMessage.value("subtype").toString();
         if (subtype == "conversation_created") {
             QString convId = rawMessage.value("conversationId").toString();
             QString title = rawMessage.value("title").toString();
-            QString type = rawMessage.value("type", "user").toString();
+            QString conversationType = rawMessage.value("conversationType",
+                                                        rawMessage.value("chatType", "user")).toString();
+            QString avatar = DatabaseConfig::resolveServerUrl(rawMessage.value("avatar").toString());
 
             m_conversationModel->updateConversation(convId, {
                 {"title", title},
-                {"type", type}
+                {"type", conversationType},
+                {"avatar", avatar}
             });
             qDebug() << "[ChatService] Created new conversation:" << convId << title;
         }
@@ -635,18 +1001,14 @@ void ChatService::onWebSocketMessageReceived(const QVariantMap &rawMessage)
         QVariantMap updatedProfile;
         updatedProfile["userId"] = userId;
         updatedProfile["username"] = rawMessage.value("username").toString();
-        updatedProfile["avatar"] = rawMessage.value("avatar").toString();
+        updatedProfile["avatar"] = DatabaseConfig::resolveServerUrl(rawMessage.value("avatar").toString());
         updatedProfile["gender"] = rawMessage.value("gender").toString();
         updatedProfile["region"] = rawMessage.value("region").toString();
         updatedProfile["signature"] = rawMessage.value("signature").toString();
         updatedProfile["age"] = rawMessage.value("age").toInt();
         updatedProfile["version"] = rawMessage.value("version").toInt();
-        updatedProfile["status"] = rawMessage.value("status").toString();
-        if (updatedProfile["status"].toString().isEmpty()) {
-            updatedProfile["status"] = "offline";
-        }
 
-        qDebug() << "[ChatService] Emitting friendDetailLoaded with:" << updatedProfile;
+        qDebug() << "[ChatService] Emitting friendProfileUpdated with:" << updatedProfile;
 
         // 更新本地版本缓存
         int version = updatedProfile["version"].toInt();
@@ -654,8 +1016,26 @@ void ChatService::onWebSocketMessageReceived(const QVariantMap &rawMessage)
             m_friendVersions[userId] = version;
         }
 
+        syncSingleConversationProfile(m_conversationModel,
+                                      userId,
+                                      updatedProfile.value("username").toString(),
+                                      updatedProfile.value("avatar").toString());
+
         // 发出信号通知 QML 更新
-        emit friendDetailLoaded(updatedProfile);
+        emit friendProfileUpdated(updatedProfile);
+    } else if (msgType == "presence_update") {
+        QString userId = rawMessage.value("userId").toString();
+        if (userId.isEmpty()) {
+            return;
+        }
+
+        QVariantMap presenceInfo;
+        presenceInfo["userId"] = userId;
+        const QString status = rawMessage.value("status").toString();
+        presenceInfo["status"] = status.isEmpty() ? QString("offline") : status;
+
+        qDebug() << "[ChatService] Received presence update:" << presenceInfo;
+        emit friendPresenceUpdated(presenceInfo);
     } else if (msgType == "friends_updates") {
         // 收到好友批量更新（上线后拉取）
         QVariantList updates = rawMessage.value("updates").toList();
@@ -675,7 +1055,7 @@ void ChatService::onWebSocketMessageReceived(const QVariantMap &rawMessage)
             QVariantMap friendInfo;
             friendInfo["userId"] = userId;
             friendInfo["username"] = updateMap["username"].toString();
-            friendInfo["avatar"] = updateMap["avatar"].toString();
+            friendInfo["avatar"] = DatabaseConfig::resolveServerUrl(updateMap["avatar"].toString());
             friendInfo["gender"] = updateMap["gender"].toString();
             friendInfo["region"] = updateMap["region"].toString();
             friendInfo["signature"] = updateMap["signature"].toString();
@@ -686,7 +1066,17 @@ void ChatService::onWebSocketMessageReceived(const QVariantMap &rawMessage)
             }
             friendInfo["version"] = version;
 
-            emit friendDetailLoaded(friendInfo);
+            syncSingleConversationProfile(m_conversationModel,
+                                          userId,
+                                          friendInfo.value("username").toString(),
+                                          friendInfo.value("avatar").toString());
+
+            QVariantMap presenceInfo;
+            presenceInfo["userId"] = userId;
+            presenceInfo["status"] = friendInfo.value("status").toString();
+
+            emit friendProfileUpdated(friendInfo);
+            emit friendPresenceUpdated(presenceInfo);
         }
     } else if (msgType == "auth_success") {
         // WebSocket 认证成功
@@ -703,10 +1093,15 @@ void ChatService::onWebSocketMessageReceived(const QVariantMap &rawMessage)
 
 void ChatService::processIncomingMessage(const QVariantMap &message)
 {
-    QString conversationId = message.value("conversationId").toString();
-    QString senderId = message.value("senderId").toString();
-    QString content = message.value("content").toString();
-    qint64 timestamp = message.value("timestamp").toLongLong();
+    QVariantMap normalizedMessage = message;
+    if (normalizedMessage.value("serverMessageId").toString().isEmpty()) {
+        normalizedMessage["serverMessageId"] = normalizedMessage.value("messageId").toString();
+    }
+
+    QString conversationId = normalizedMessage.value("conversationId").toString();
+    QString senderId = normalizedMessage.value("senderId").toString();
+    QString content = normalizedMessage.value("content").toString();
+    qint64 timestamp = normalizedMessage.value("timestamp").toLongLong();
 
     if (conversationId.isEmpty() || senderId.isEmpty() || content.isEmpty()) {
         qWarning() << "[ChatService] Invalid message format";
@@ -721,7 +1116,8 @@ void ChatService::processIncomingMessage(const QVariantMap &message)
     }
 
     // 1. 添加到消息模型（来自其他用户的消息）
-    getMessageModel(conversationId)->addMessage(message);
+    getMessageModel(conversationId)->addMessage(normalizedMessage);
+    MessageCache::instance()->cacheMessage(conversationId, normalizedMessage);
 
     // 2. 更新会话元数据
     bool isCurrent = (conversationId == m_currentConversationId);
@@ -750,7 +1146,7 @@ void ChatService::processIncomingMessage(const QVariantMap &message)
     }
 
     // 3. 发出信号
-    emit messageReceived(conversationId, message);
+    emit messageReceived(conversationId, normalizedMessage);
     emit conversationUpdated(conversationId);
 
     qDebug() << "[ChatService] Processed incoming message from" << senderId
@@ -761,6 +1157,11 @@ void ChatService::onWebSocketConnected()
 {
     qDebug() << "[ChatService] WebSocket connected";
     emit connectedChanged(true);
+    emit connectionStateChanged();
+
+    for (auto it = m_pendingOutgoingMessages.constBegin(); it != m_pendingOutgoingMessages.constEnd(); ++it) {
+        updateLocalMessageState(it.value(), it.key(), MessageStatus::Sending, false, QString(), true);
+    }
 
     // 重置认证状态
     m_wsAuthenticated = false;
@@ -784,7 +1185,266 @@ void ChatService::onWebSocketDisconnected()
     qDebug() << "[ChatService] WebSocket disconnected";
     // 重置认证状态
     m_wsAuthenticated = false;
+
+    for (auto it = m_pendingOutgoingMessages.constBegin(); it != m_pendingOutgoingMessages.constEnd(); ++it) {
+        updateLocalMessageState(it.value(), it.key(), MessageStatus::Sending, true,
+                                QStringLiteral("网络已断开，正在自动重连；点击可立即重试"), true);
+    }
+
     emit connectedChanged(false);
+    emit connectionStateChanged();
+}
+
+void ChatService::onWebSocketReconnectFailed()
+{
+    qWarning() << "[ChatService] WebSocket reconnect failed, marking pending messages as failed";
+
+    for (auto it = m_pendingOutgoingMessages.constBegin(); it != m_pendingOutgoingMessages.constEnd(); ++it) {
+        updateLocalMessageState(it.value(), it.key(), MessageStatus::Failed, true,
+                                QStringLiteral("网络重连失败，点击重试"), true);
+    }
+
+    m_pendingOutgoingMessages.clear();
+    emit connectionStateChanged();
+}
+
+void ChatService::dispatchOutgoingMessage(const QString &conversationId,
+                                         const QString &localMessageId,
+                                         QVariantMap messagePayload,
+                                         bool queuedBeforeDispatch)
+{
+    if (localMessageId.isEmpty()) {
+        m_webSocketClient->sendMessage(messagePayload);
+        return;
+    }
+
+    messagePayload["clientMessageId"] = localMessageId;
+    m_webSocketClient->sendMessage(messagePayload);
+
+    m_pendingOutgoingMessages.insert(localMessageId, conversationId);
+
+    if (queuedBeforeDispatch) {
+        updateLocalMessageState(conversationId, localMessageId, MessageStatus::Sending, true, QString(), true);
+        qDebug() << "[ChatService] Message queued for resend after reconnect:" << localMessageId;
+        return;
+    }
+
+    updateLocalMessageState(conversationId, localMessageId, MessageStatus::Sending, false, QString(), true);
+    qDebug() << "[ChatService] Message dispatched via WebSocket, awaiting ack:" << localMessageId;
+}
+
+void ChatService::updateLocalMessageState(const QString &conversationId,
+                                         const QString &messageId,
+                                         MessageStatus status,
+                                         bool isOffline,
+                                         const QString &errorText,
+                                         bool overwriteErrorText)
+{
+    if (conversationId.isEmpty() || messageId.isEmpty()) {
+        return;
+    }
+
+    QVariantMap updates;
+    updates["messageId"] = messageId;
+    updates["conversationId"] = conversationId;
+    updates["status"] = static_cast<int>(status);
+    updates["isOffline"] = isOffline;
+    if (overwriteErrorText) {
+        updates["errorText"] = errorText;
+    }
+
+    getMessageModel(conversationId)->upsertMessage(updates);
+    MessageCache::instance()->cacheMessage(conversationId, updates);
+}
+
+void ChatService::rememberRetryableMessage(const QString &messageId, const QVariantMap &retryInfo)
+{
+    if (messageId.isEmpty()) {
+        return;
+    }
+
+    m_retryableMessages.insert(messageId, retryInfo);
+}
+
+void ChatService::clearRetryableMessage(const QString &messageId)
+{
+    if (messageId.isEmpty()) {
+        return;
+    }
+
+    m_retryableMessages.remove(messageId);
+}
+
+void ChatService::retryMessage(const QString &conversationId, const QString &messageId)
+{
+    const QVariantMap retryInfo = m_retryableMessages.value(messageId);
+    if (retryInfo.isEmpty()) {
+        qWarning() << "[ChatService] Retry requested for unknown message:" << messageId;
+        return;
+    }
+
+    const int messageType = retryInfo.value("messageType").toInt();
+    const qint64 timestamp = retryInfo.value("timestamp").toLongLong();
+    const bool hasUploadedPayload = !retryInfo.value("fileId").toString().isEmpty()
+        && !retryInfo.value("fileUrl").toString().isEmpty();
+
+    updateLocalMessageState(conversationId, messageId, MessageStatus::Sending,
+                            !m_webSocketClient->isConnected(), QString(), true);
+
+    if (!m_webSocketClient->isConnected()) {
+        connectToDefaultChatServer();
+    }
+
+    if (messageType == 1) {
+        if (hasUploadedPayload) {
+            resendUploadedAttachmentMessage(conversationId, messageId, retryInfo, timestamp);
+            return;
+        }
+
+        sendImageMessageInternal(conversationId,
+                                 retryInfo.value("localFilePath").toString(),
+                                 messageId,
+                                 timestamp,
+                                 true);
+        return;
+    }
+
+    if (messageType == 2) {
+        if (hasUploadedPayload) {
+            resendUploadedAttachmentMessage(conversationId, messageId, retryInfo, timestamp);
+            return;
+        }
+
+        sendFileMessageInternal(conversationId,
+                                retryInfo.value("localFilePath").toString(),
+                                messageId,
+                                timestamp,
+                                true);
+        return;
+    }
+
+    sendTextMessageInternal(conversationId,
+                            retryInfo.value("content").toString(),
+                            messageId,
+                            timestamp,
+                            true);
+}
+
+void ChatService::resendUploadedAttachmentMessage(const QString &conversationId,
+                                                  const QString &messageId,
+                                                  const QVariantMap &retryInfo,
+                                                  qint64 timestamp)
+{
+    const int messageType = retryInfo.value("messageType").toInt();
+    const bool queuedBeforeDispatch = !m_webSocketClient->isConnected();
+    const QString content = retryInfo.value("content").toString();
+
+    QVariantMap localMessage;
+    localMessage["messageId"] = messageId;
+    localMessage["conversationId"] = conversationId;
+    localMessage["type"] = messageType;
+    localMessage["content"] = content;
+    localMessage["senderId"] = m_currentUserId;
+    localMessage["timestamp"] = timestamp;
+    localMessage["status"] = static_cast<int>(MessageStatus::Sending);
+    localMessage["isOffline"] = queuedBeforeDispatch;
+    localMessage["errorText"] = QString();
+    localMessage["fileId"] = retryInfo.value("fileId").toString();
+    localMessage["fileName"] = retryInfo.value("fileName").toString();
+    localMessage["fileUrl"] = retryInfo.value("fileUrl").toString();
+    localMessage["thumbnailUrl"] = retryInfo.value("thumbnailUrl").toString();
+    localMessage["fileSize"] = retryInfo.value("fileSize").toString();
+    getMessageModel(conversationId)->upsertMessage(localMessage);
+
+    QVariantMap wsMessage;
+    wsMessage["type"] = "message";
+    wsMessage["messageType"] = messageType;
+    wsMessage["conversationId"] = conversationId;
+    wsMessage["content"] = content;
+    wsMessage["senderId"] = m_currentUserId;
+    wsMessage["timestamp"] = timestamp;
+    wsMessage["status"] = 1;
+    wsMessage["fileId"] = retryInfo.value("fileId").toString();
+    wsMessage["fileName"] = retryInfo.value("fileName").toString();
+    wsMessage["fileUrl"] = retryInfo.value("fileUrl").toString();
+
+    if (messageType == static_cast<int>(MessageType::Image)) {
+        wsMessage["thumbnailUrl"] = retryInfo.value("thumbnailUrl").toString();
+    }
+
+    if (messageType == static_cast<int>(MessageType::File)) {
+        wsMessage["fileSize"] = retryInfo.value("fileSize").toString();
+    }
+
+    dispatchOutgoingMessage(conversationId, messageId, wsMessage, queuedBeforeDispatch);
+}
+
+void ChatService::migrateConversationContext(const QString &oldConversationId, const QString &newConversationId)
+{
+    if (oldConversationId.isEmpty() || newConversationId.isEmpty() || oldConversationId == newConversationId) {
+        return;
+    }
+
+    const QVariantMap oldConversation = m_conversationModel->getById(oldConversationId);
+    QVariantMap updates = oldConversation;
+    updates.remove("id");
+    if (!updates.contains("type") || updates.value("type").toString().isEmpty()) {
+        updates["type"] = QStringLiteral("single");
+    }
+
+    m_conversationModel->replaceConversationId(oldConversationId, newConversationId, updates);
+
+    MessageModel *oldModel = m_messageModels.value(oldConversationId, nullptr);
+    MessageModel *newModel = m_messageModels.value(newConversationId, nullptr);
+    if (oldModel) {
+        const QList<QVariantMap> existingMessages = oldModel->messages();
+        if (newModel && newModel != oldModel) {
+            for (QVariantMap message : existingMessages) {
+                message["conversationId"] = newConversationId;
+                newModel->upsertMessage(message);
+            }
+            MessageCache::instance()->cacheMessages(newConversationId, existingMessages);
+            MessageCache::instance()->clear(oldConversationId);
+            m_messageModels.remove(oldConversationId);
+            oldModel->deleteLater();
+        } else {
+            oldModel->setConversationId(newConversationId);
+            for (const QVariantMap &message : existingMessages) {
+                QVariantMap updatesMessage;
+                updatesMessage["messageId"] = message.value("messageId").toString();
+                updatesMessage["conversationId"] = newConversationId;
+                oldModel->upsertMessage(updatesMessage);
+            }
+            MessageCache::instance()->cacheMessages(newConversationId, oldModel->messages());
+            MessageCache::instance()->clear(oldConversationId);
+            m_messageModels.remove(oldConversationId);
+            m_messageModels.insert(newConversationId, oldModel);
+        }
+    }
+
+    auto pendingIt = m_pendingOutgoingMessages.begin();
+    while (pendingIt != m_pendingOutgoingMessages.end()) {
+        if (pendingIt.value() == oldConversationId) {
+            pendingIt.value() = newConversationId;
+        }
+        ++pendingIt;
+    }
+
+    auto retryIt = m_retryableMessages.begin();
+    while (retryIt != m_retryableMessages.end()) {
+        QVariantMap retryInfo = retryIt.value();
+        if (retryInfo.value("conversationId").toString() == oldConversationId) {
+            retryInfo["conversationId"] = newConversationId;
+            retryIt.value() = retryInfo;
+        }
+        ++retryIt;
+    }
+
+    if (m_currentConversationId == oldConversationId) {
+        setCurrentConversationId(newConversationId);
+    }
+
+    emit conversationIdResolved(oldConversationId, newConversationId);
 }
 
 void ChatService::validateUserLogin(const QString &username, const QString &password)
@@ -1012,14 +1672,14 @@ void ChatService::getFriendList()
     m_friendRequestDAO->getFriends();
 }
 
-void ChatService::getFriendDetail(const QString &friendId)
+void ChatService::getFriendProfile(const QString &friendId)
 {
     if (friendId.isEmpty()) {
-        qWarning() << "[ChatService] getFriendDetail called with empty friendId";
+        qWarning() << "[ChatService] getFriendProfile called with empty friendId";
         return;
     }
-    qDebug() << "[ChatService] Getting friend detail for:" << friendId;
-    m_friendRequestDAO->getFriendDetail(friendId);
+    qDebug() << "[ChatService] Getting friend profile for:" << friendId;
+    m_friendRequestDAO->getFriendProfile(friendId);
 }
 
 void ChatService::handleFriendListLoaded(const QVector<FriendRequestDAO::FriendInfo> &friends)
@@ -1045,10 +1705,10 @@ void ChatService::handleFriendListLoaded(const QVector<FriendRequestDAO::FriendI
     emit friendListLoaded(list);
 }
 
-void ChatService::handleFriendDetailLoaded(const FriendRequestDAO::FriendInfo &friendInfo)
+void ChatService::handleFriendProfileLoaded(const FriendRequestDAO::FriendInfo &friendInfo)
 {
     if (friendInfo.userId.isEmpty()) {
-        qWarning() << "[ChatService] handleFriendDetailLoaded: empty friend info";
+        qWarning() << "[ChatService] handleFriendProfileLoaded: empty friend info";
         return;
     }
     
@@ -1061,9 +1721,14 @@ void ChatService::handleFriendDetailLoaded(const FriendRequestDAO::FriendInfo &f
     map["isMale"]    = friendInfo.isMale;
     map["age"]       = friendInfo.age;
     map["region"]    = friendInfo.region;
+
+    syncSingleConversationProfile(m_conversationModel,
+                                  friendInfo.userId,
+                                  friendInfo.username,
+                                  friendInfo.avatar);
     
     qDebug() << "[ChatService] Friend detail loaded:" << friendInfo.username;
-    emit friendDetailLoaded(map);
+    emit friendProfileUpdated(map);
 }
 
 void ChatService::checkIsFriend(const QString &userId)

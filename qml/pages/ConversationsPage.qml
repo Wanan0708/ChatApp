@@ -8,7 +8,7 @@ import "../components"
 
 ColumnLayout {
     id: root
-    signal conversationSelected(string conversationId, string title)
+    signal conversationSelected(string conversationId, string title, string avatar)
 
     // 搜索关键词
     property string searchText: ""
@@ -94,7 +94,7 @@ ColumnLayout {
 
     Rectangle {
         id: networkStatus
-        Layout.preferredHeight: statusVisible ? 30 : 0  // ✅ 动态高度：0 ↔ 30
+        Layout.preferredHeight: statusVisible ? 36 : 0
         Layout.fillWidth: true
         color: statusColor
         border.color: statusBorderColor
@@ -110,24 +110,30 @@ ColumnLayout {
         property bool statusVisible: !networkStatus.isConnected || networkStatus.showConnectedMessage
         property color statusColor: networkStatus.isConnected
                                     ? (networkStatus.showConnectedMessage ? "#e8f5e9" : "transparent")
-                                    : "#ffebee"
+                                    : (networkStatus.isReconnecting ? "#fff8e1" : "#ffebee")
         property color statusBorderColor: networkStatus.isConnected
                                           ? (networkStatus.showConnectedMessage ? "#4caf50" : "transparent")
-                                          : "#f44336"
+                                          : (networkStatus.isReconnecting ? "#f59e0b" : "#f44336")
         property bool isConnected: ChatService.isConnected
+        property bool isReconnecting: ChatService.isReconnecting
+        property string connectionState: ChatService.connectionState
         property bool showConnectedMessage: false  // 连接成功后短暂显示
+        property string disconnectedText: networkStatus.isReconnecting
+                                          ? "网络已断开，正在自动重连..."
+                                          : "网络连接不可用"
 
-        // 连接中动画
-        Item {
-            anchors.centerIn: parent
-            anchors.horizontalCenterOffset: -22
+        Row {
+            anchors.fill: parent
+            anchors.leftMargin: 10
+            anchors.rightMargin: 8
+            spacing: 8
             visible: !networkStatus.isConnected
 
-            // 旋转圆圈动画
             Shape {
                 id: spinner
                 width: 16; height: 16
-                anchors.centerIn: parent
+                anchors.verticalCenter: parent.verticalCenter
+                visible: networkStatus.isReconnecting
 
                 property real spinnerAngle: 0
 
@@ -150,20 +156,66 @@ ColumnLayout {
                 }
 
                 SequentialAnimation on spinnerAngle {
-                    running: true
+                    running: networkStatus.visible && networkStatus.isReconnecting
                     loops: Animation.Infinite
                     NumberAnimation { from: 0; to: 360; duration: 1000; easing.type: Easing.Linear }
                 }
             }
 
+            Rectangle {
+                width: 16
+                height: 16
+                radius: 8
+                color: "#fde68a"
+                border.color: "#d97706"
+                border.width: 1
+                anchors.verticalCenter: parent.verticalCenter
+                visible: !networkStatus.isReconnecting
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "!"
+                    color: "#92400e"
+                    font.pixelSize: 12
+                    font.bold: true
+                }
+            }
+
             Text {
-                anchors.left: spinner.right
-                anchors.leftMargin: 8
-                anchors.verticalCenter: spinner.verticalCenter
-                text: "连接中..."
+                anchors.verticalCenter: parent.verticalCenter
+                text: networkStatus.disconnectedText
                 font.pixelSize: 13
-                color: "#d32f2f"
+                color: networkStatus.isReconnecting ? "#b45309" : "#d32f2f"
                 font.family: "Microsoft YaHei, SimSun, sans-serif"
+            }
+
+            Item {
+                width: 1
+                height: 1
+            }
+
+            Button {
+                anchors.verticalCenter: parent.verticalCenter
+                text: networkStatus.isReconnecting ? "立即重试" : "重连"
+                visible: !networkStatus.isConnected
+                font.pixelSize: 12
+                font.family: "Microsoft YaHei, SimSun, sans-serif"
+
+                background: Rectangle {
+                    radius: 5
+                    color: parent.pressed ? "#d97706" : "#f59e0b"
+                }
+
+                contentItem: Text {
+                    text: parent.text
+                    color: "white"
+                    font.pixelSize: parent.font.pixelSize
+                    font.family: parent.font.family
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                onClicked: ChatService.connectToDefaultChatServer()
             }
         }
 
@@ -275,6 +327,7 @@ ColumnLayout {
                     property string convTitle: convData && convData.title ? convData.title : ""
                     property string convLastMessage: convData && convData.lastMessage ? convData.lastMessage : ""
                     property string convTime: convData && convData.time ? convData.time : ""
+                    property string convAvatar: convData && convData.avatar ? convData.avatar : ""
                     property int convUnreadCount: convData && convData.unreadCount !== undefined ? convData.unreadCount : 0
                     property string convType: convData && convData.type ? convData.type : "user"
                     property bool convIsCurrent: convData && convData.isCurrent ? convData.isCurrent : false
@@ -295,7 +348,7 @@ ColumnLayout {
                         Avatar {
                             id: avatar
                             isSelf: false
-                            avatarSource: "qrc:/new/prefix1/image/boy.png"
+                            avatarSource: convAvatar || "qrc:/new/prefix1/image/boy.png"
                         }
 
                         Item {
@@ -378,7 +431,7 @@ ColumnLayout {
                                 ChatService.markConversationRead(convId)
                             }
                             ChatService.setCurrentConversation(convId)
-                            root.conversationSelected(convId, convTitle)
+                            root.conversationSelected(convId, convTitle, convAvatar)
                         }
                     }
                 }

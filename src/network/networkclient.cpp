@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QTimer>
 #include <QFileInfo>
+#include <QMimeDatabase>
+#include <QMimeType>
 
 NetworkClient* NetworkClient::instance()
 {
@@ -168,7 +170,12 @@ QNetworkReply* NetworkClient::uploadFile(const QString &path, const QString &fil
     
     // 添加文件部分
     QHttpPart filePart;
-    filePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
+    QMimeDatabase mimeDatabase;
+    const QMimeType mimeType = mimeDatabase.mimeTypeForFile(filePath, QMimeDatabase::MatchContent);
+    const QString contentType = mimeType.isValid() && !mimeType.name().isEmpty()
+        ? mimeType.name()
+        : QStringLiteral("application/octet-stream");
+    filePart.setHeader(QNetworkRequest::ContentTypeHeader, contentType);
     filePart.setHeader(QNetworkRequest::ContentDispositionHeader, 
                        QString("form-data; name=\"%1\"; filename=\"%2\"")
                            .arg(fileFieldName).arg(QFileInfo(filePath).fileName()));

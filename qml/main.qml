@@ -50,15 +50,7 @@ ApplicationWindow {
             color: "#f5f5f5"
             z: 100
 
-            // 网络状态提示条（嵌入标题栏下方）
-            NetworkStatus {
-                anchors.top: parent.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
-                onReconnectClicked: {
-                    ChatService.connectToDefaultChatServer()
-                }
-            }
+            // 顶部不再显示全局网络提示（改为在会话列表中显示更小的网络状态）
             
             // ... (标题栏内容保持不变)
             MouseArea {

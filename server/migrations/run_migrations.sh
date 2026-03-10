@@ -57,13 +57,6 @@ echo -e "${YELLOW}检查迁移历史...${NC}"
 psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
     -f "$SCRIPT_DIR/000_create_schema_migrations_table.sql" &> /dev/null || true
 
-# 获取已应用的版本
-APPLIED_VERSIONS=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c \
-    "SELECT version FROM schema_migrations ORDER BY version;" 2>/dev/null | tr -d ' ')
-
-echo -e "${GREEN}✓ 已应用的迁移：${NC}${APPLIED_VERSIONS:-无}"
-echo ""
-
 # 获取待应用的迁移文件
 MIGRATION_FILES=$(ls "$SCRIPT_DIR"/[0-9][0-9][0-9]_*.sql 2>/dev/null | sort)
 
@@ -78,10 +71,11 @@ echo ""
 
 for migration_file in $MIGRATION_FILES; do
     filename=$(basename "$migration_file")
-    version=$(echo "$filename" | grep -oE '^[0-9]+' | sed 's/^0*//')
+    version=$(echo "$filename" | grep -oE '^[0-9]{3}')
     
     # 检查是否已应用
-    if echo "$APPLIED_VERSIONS" | grep -q "^${version}$"; then
+    if psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -A -c \
+        "SELECT 1 FROM schema_migrations WHERE version = '${version}' LIMIT 1;" 2>/dev/null | grep -q '^1$'; then
         echo -e "${YELLOW}⊘ 跳过：$filename (已应用)${NC}"
         continue
     fi

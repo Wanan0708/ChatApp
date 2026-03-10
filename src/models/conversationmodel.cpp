@@ -24,6 +24,7 @@ QVariant ConversationModel::data(const QModelIndex &index, int role) const
     switch (role) {
     case IdRole: return conv.value("id");
     case TitleRole: return conv.value("title");
+    case AvatarRole: return conv.value("avatar");
     case LastMessageRole: return conv.value("lastMessage");
     case TimeRole: return conv.value("time");
     case UnreadCountRole: return conv.value("unreadCount", 0);
@@ -38,6 +39,7 @@ QHash<int, QByteArray> ConversationModel::roleNames() const
     return {
         {IdRole, "id"},
         {TitleRole, "title"},
+        {AvatarRole, "avatar"},
         {LastMessageRole, "lastMessage"},
         {TimeRole, "time"},
         {UnreadCountRole, "unreadCount"},
@@ -55,6 +57,14 @@ int ConversationModel::getUnreadCount(const QString &id) const
 {
     int idx = indexById(id);
     return (idx != -1) ? m_conversations.at(idx).value("unreadCount", 0).toInt() : 0;
+}
+
+void ConversationModel::rebuildIdIndex()
+{
+    m_idToIndex.clear();
+    for (int index = 0; index < m_conversations.count(); ++index) {
+        m_idToIndex[m_conversations.at(index).value("id").toString()] = index;
+    }
 }
 
 void ConversationModel::insertConversation(const QVariantMap &conv)
@@ -100,6 +110,7 @@ void ConversationModel::updateConversation(const QString &id, const QVariantMap 
         QVariantMap conv;
         conv["id"] = id;
         conv["title"] = updates.value("title", "New Chat");
+        conv["avatar"] = updates.value("avatar", "");
         conv["type"] = updates.value("type", "user");
         conv["lastMessage"] = "";
         conv["time"] = "";
@@ -111,6 +122,52 @@ void ConversationModel::updateConversation(const QString &id, const QVariantMap 
     }
 
     updateConversationInternal(idx, updates);
+}
+
+void ConversationModel::replaceConversationId(const QString &oldId, const QString &newId, const QVariantMap &updates)
+{
+    if (oldId.isEmpty() || newId.isEmpty() || oldId == newId) {
+        if (!newId.isEmpty() && !updates.isEmpty()) {
+            updateConversation(newId, updates);
+        }
+        return;
+    }
+
+    const int oldIndex = indexById(oldId);
+    if (oldIndex == -1) {
+        updateConversation(newId, updates);
+        return;
+    }
+
+    const int newIndex = indexById(newId);
+    if (newIndex != -1) {
+        QVariantMap mergedUpdates = m_conversations.at(oldIndex);
+        mergedUpdates["id"] = newId;
+        for (auto it = updates.constBegin(); it != updates.constEnd(); ++it) {
+            mergedUpdates[it.key()] = it.value();
+        }
+
+        updateConversationInternal(newIndex, mergedUpdates);
+
+        beginRemoveRows(QModelIndex(), oldIndex, oldIndex);
+        m_conversations.removeAt(oldIndex);
+        endRemoveRows();
+        rebuildIdIndex();
+        emit countChanged();
+        emit modelDataChanged();
+        return;
+    }
+
+    QVariantMap mergedConversation = m_conversations.at(oldIndex);
+    mergedConversation["id"] = newId;
+    for (auto it = updates.constBegin(); it != updates.constEnd(); ++it) {
+        mergedConversation[it.key()] = it.value();
+    }
+
+    m_conversations[oldIndex] = mergedConversation;
+    rebuildIdIndex();
+    emit dataChanged(index(oldIndex, 0), index(oldIndex, 0));
+    emit modelDataChanged();
 }
 
 QString ConversationModel::findOrStartConversation(const QString &userId, const QString &/*userName*/)
@@ -180,5 +237,15 @@ QVariantMap ConversationModel::get(int index) const
         return conv;
     }
     qDebug() << "[ConversationModel] get(" << index << ") - out of range";
+    return QVariantMap();
+}
+
+QVariantMap ConversationModel::getById(const QString &id) const
+{
+    const int idx = indexById(id);
+    if (idx >= 0 && idx < m_conversations.count()) {
+        return m_conversations.at(idx);
+    }
+
     return QVariantMap();
 }

@@ -9,11 +9,31 @@ ColumnLayout {
     id: root
     property string currentConversationId: ""
     property string currentTitle: ""
+    property string currentAvatar: ""
     property var messageModel: null
+    property bool pendingOlderMessagesLoad: false
+    property real historyContentHeightBeforeLoad: 0
+
+    function syncConversationMeta() {
+        if (currentConversationId === "") {
+            return
+        }
+
+        var conversation = ChatService.conversationModel.getById(currentConversationId)
+        if (conversation && conversation.title) {
+            currentTitle = conversation.title
+        }
+        if (conversation && conversation.avatar !== undefined) {
+            currentAvatar = conversation.avatar || ""
+        }
+    }
 
     // 当会话 ID 改变时，刷新消息模型
     onCurrentConversationIdChanged: {
         messageModel = ChatService.getMessageModel(currentConversationId)
+        pendingOlderMessagesLoad = false
+        historyContentHeightBeforeLoad = 0
+        syncConversationMeta()
         console.log("[ChatPage] Switched to conversation:", currentConversationId)
 
         if (currentConversationId !== "") {
@@ -26,6 +46,16 @@ ColumnLayout {
 
     Component.onCompleted: {
         messageModel = ChatService.getMessageModel(currentConversationId)
+        syncConversationMeta()
+    }
+
+    Connections {
+        target: ChatService
+        function onConversationIdResolved(fromConversationId, toConversationId) {
+            if (root.currentConversationId === fromConversationId) {
+                root.currentConversationId = toConversationId
+            }
+        }
     }
 
     Connections {
@@ -43,10 +73,45 @@ ColumnLayout {
         target: ChatService
         function onMessagesRefreshed(conversationId) {
             if (conversationId === root.currentConversationId) {
+                pendingOlderMessagesLoad = false
                 Qt.callLater(function() {
                     chatView.positionViewAtEnd()
                 })
             }
+        }
+    }
+
+    Connections {
+        target: ChatService
+        function onConversationUpdated(conversationId) {
+            if (conversationId === root.currentConversationId) {
+                syncConversationMeta()
+            }
+        }
+    }
+
+    Connections {
+        target: ChatService.conversationModel
+        function onModelDataChanged() {
+            root.syncConversationMeta()
+        }
+    }
+
+    Connections {
+        target: ChatService
+        function onOlderMessagesLoaded(conversationId, addedCount, hasMore) {
+            if (conversationId !== root.currentConversationId) {
+                return
+            }
+
+            pendingOlderMessagesLoad = false
+
+            Qt.callLater(function() {
+                var delta = chatView.contentHeight - historyContentHeightBeforeLoad
+                if (delta > 0) {
+                    chatView.contentY = delta
+                }
+            })
         }
     }
 
@@ -64,12 +129,41 @@ ColumnLayout {
         }
     }
 
+    function loadOlderMessagesIfNeeded() {
+        if (pendingOlderMessagesLoad || currentConversationId === "") {
+            return
+        }
+
+        if (!ChatService.hasMoreMessages(currentConversationId) || ChatService.isLoadingMessages(currentConversationId)) {
+            return
+        }
+
+        historyContentHeightBeforeLoad = chatView.contentHeight
+        pendingOlderMessagesLoad = ChatService.loadOlderMessages(currentConversationId)
+    }
+
+    function normalizeLocalPath(fileUrl) {
+        var path = fileUrl ? fileUrl.toString() : ""
+        if (path.indexOf("file:///") === 0) {
+            path = decodeURIComponent(path.substring("file:///".length))
+        }
+        return path
+    }
+
     // 上传并发送文件
     function uploadAndSendFile(fileUrl) {
-        console.log("上传文件:", fileUrl)
-        
-        // 调用 ChatService 发送文件消息
-        ChatService.sendFileMessage(currentConversationId, fileUrl.toString().replace("file:///", ""))
+        var localPath = normalizeLocalPath(fileUrl)
+        console.log("上传文件:", localPath)
+
+        ChatService.sendFileMessage(currentConversationId, localPath)
+    }
+
+    // 上传并发送图片
+    function uploadAndSendImage(fileUrl) {
+        var localPath = normalizeLocalPath(fileUrl)
+        console.log("上传图片:", localPath)
+
+        ChatService.sendImageMessage(currentConversationId, localPath)
     }
 
     // 如果未选择会话，显示占位提示
@@ -123,7 +217,7 @@ ColumnLayout {
                     isSelf: false
                     width: 36
                     height: 36
-                    avatarSource: "qrc:/new/prefix1/image/boy.png"
+                    avatarSource: root.currentAvatar || "qrc:/new/prefix1/image/boy.png"
                 }
 
                 ColumnLayout {
@@ -176,7 +270,35 @@ ColumnLayout {
             clip: true
             model: root.messageModel
             spacing: 1
+            verticalLayoutDirection: ListView.TopToBottom
             highlightRangeMode: ListView.StrictlyEnforceRange
+            onContentYChanged: {
+                if (contentY <= 0 && movingVertically) {
+                    root.loadOlderMessagesIfNeeded()
+                }
+            }
+
+            header: Item {
+                width: chatView.width
+                height: root.pendingOlderMessagesLoad || ChatService.hasMoreMessages(root.currentConversationId) ? 36 : 18
+
+                BusyIndicator {
+                    anchors.centerIn: parent
+                    running: root.pendingOlderMessagesLoad
+                    visible: running
+                    width: 24
+                    height: 24
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: !root.pendingOlderMessagesLoad && root.currentConversationId !== "" && !ChatService.hasMoreMessages(root.currentConversationId)
+                    text: "没有更早的消息了"
+                    font.pixelSize: 12
+                    color: "#999"
+                    font.family: "Microsoft YaHei, SimSun, sans-serif"
+                }
+            }
 
             delegate: Item {
                 width: ListView.view.width
@@ -190,7 +312,7 @@ ColumnLayout {
                     x: 12
                     y: 8
                     visible: !isSelfMessage
-                    avatarSource: "qrc:/new/prefix1/image/boy.png"
+                    avatarSource: root.currentAvatar || "qrc:/new/prefix1/image/boy.png"
                 }
 
                 Avatar {
@@ -212,12 +334,27 @@ ColumnLayout {
                     timestamp: model.timestamp
                     timeAlignment: isSelfMessage ? "right" : "left"
                     // 绑定消息类型和状态
-                    messageType: model.type || 0
+                    messageType: {
+                        if (typeof model.type === "number") return model.type
+                        if (model.type === "image") return 1
+                        if (model.type === "file") return 2
+                        if (model.type === "system") return 3
+                        var parsedType = parseInt(model.type, 10)
+                        return isNaN(parsedType) ? 0 : parsedType
+                    }
+                    messageStatus: {
+                        if (typeof model.status === "number") return model.status
+                        var parsedStatus = parseInt(model.status, 10)
+                        return isNaN(parsedStatus) ? 1 : parsedStatus
+                    }
                     fileName: model.fileName || ""
                     fileSize: model.fileSize || ""
                     fileUrl: model.fileUrl || ""
                     thumbnailUrl: model.thumbnailUrl || ""
                     messageId: model.messageId || ""
+                    internalMessageId: model.internalMessageId || model.messageId || ""
+                    isOffline: !!model.isOffline
+                    errorText: model.errorText || ""
                     // 判断是否可撤回（2 分钟内）
                     isRecalled: model.recalled || false
                     canRecall: {
@@ -230,6 +367,11 @@ ColumnLayout {
                     onMessageRecalled: {
                         if (messageId) {
                             ChatService.recallMessage(currentConversationId, messageId)
+                        }
+                    }
+                    onRetryRequested: {
+                        if (internalMessageId) {
+                            ChatService.retryMessage(currentConversationId, internalMessageId)
                         }
                     }
                 }
@@ -287,7 +429,7 @@ ColumnLayout {
                         onClicked: {
                             var path = ChatService.pickLocalFile(true)
                             if (path && path.length > 0) {
-                                uploadAndSendFile(path)
+                                uploadAndSendImage(path)
                             }
                         }
                     }

@@ -10,17 +10,38 @@ Rectangle {
     id: contactsPage
     color: "white"
 
-    signal contactSelected(string contactId, string contactName)
+    signal contactSelected(string contactId, string contactName, string contactAvatar)
     signal addContactRequested()
 
     property var pendingRequests: []
     property bool hasPendingRequests: pendingRequests.length > 0
+    property int refreshCooldownMs: 5000
+    property double lastContactsRefreshAt: 0
+    property string selectedContactUserId: ""
     
     // 搜索关键词
     property string searchText: ""
 
     Component.onCompleted: {
         console.log("[ContactsPage] Component completed, refreshing data...")
+        refreshContactsSnapshot("component-completed", true)
+    }
+
+    onVisibleChanged: {
+        if (visible) {
+            refreshContactsSnapshot("page-visible", false)
+        }
+    }
+
+    function refreshContactsSnapshot(reason, force) {
+        let now = Date.now()
+        if (!force && now - lastContactsRefreshAt < refreshCooldownMs) {
+            console.log("[ContactsPage] Skip snapshot refresh:", reason)
+            return
+        }
+
+        lastContactsRefreshAt = now
+        console.log("[ContactsPage] Snapshot refresh:", reason)
         refreshRequests()
         refreshFriends()
     }
@@ -68,34 +89,54 @@ Rectangle {
     // 更新本地联系人数据
     function updateContactDetail(updatedInfo) {
         let userId = updatedInfo.userId
+        let updated = false
+        let nextContacts = []
+
         for (let i = 0; i < contacts.length; i++) {
-            if (contacts[i].userId === userId || contacts[i].id === userId) {
-                contacts[i].username = updatedInfo.username || contacts[i].username
-                contacts[i].name = updatedInfo.username || contacts[i].name
-                contacts[i].avatar = updatedInfo.avatar || contacts[i].avatar
-                contacts[i].signature = updatedInfo.signature !== undefined ? updatedInfo.signature : contacts[i].signature
-                contacts[i].region = updatedInfo.region !== undefined ? updatedInfo.region : contacts[i].region
-                contacts[i].age = updatedInfo.age || contacts[i].age
-                contacts[i].isMale = updatedInfo.isMale !== undefined ? updatedInfo.isMale : contacts[i].isMale
-                
-                // 更新状态（需要转换）
+            let contact = contacts[i]
+            if (contact.userId === userId || contact.id === userId) {
+                let nextStatus = contact.status
                 if (updatedInfo.status !== undefined) {
-                    let newStatus = updatedInfo.status
-                    if (newStatus === "online") newStatus = "在线"
-                    else if (newStatus === "offline") newStatus = "离线"
-                    else if (newStatus === "busy") newStatus = "忙碌"
-                    contacts[i].status = newStatus
+                    nextStatus = updatedInfo.status
+                    if (nextStatus === "online") nextStatus = "在线"
+                    else if (nextStatus === "offline") nextStatus = "离线"
+                    else if (nextStatus === "busy") nextStatus = "忙碌"
                 }
-                
-                contactsVersion++
-                console.log("[ContactsPage] Contact updated:", userId)
-                break
+
+                nextContacts.push({
+                    id: contact.id,
+                    userId: contact.userId,
+                    name: updatedInfo.username || contact.name,
+                    username: updatedInfo.username || contact.username,
+                    initial: (updatedInfo.username || contact.name || "#").charAt(0).toUpperCase().match(/^[A-Z]$/)
+                        ? (updatedInfo.username || contact.name || "#").charAt(0).toUpperCase()
+                        : "#",
+                    avatar: updatedInfo.avatar !== undefined ? updatedInfo.avatar : contact.avatar,
+                    isMale: updatedInfo.isMale !== undefined ? updatedInfo.isMale : contact.isMale,
+                    age: updatedInfo.age !== undefined ? updatedInfo.age : contact.age,
+                    region: updatedInfo.region !== undefined ? updatedInfo.region : contact.region,
+                    status: nextStatus,
+                    signature: updatedInfo.signature !== undefined ? updatedInfo.signature : contact.signature
+                })
+                updated = true
+            } else {
+                nextContacts.push(contact)
             }
         }
+
+        if (!updated) {
+            return
+        }
+
+        contacts = nextContacts
+        contactsVersion++
+        console.log("[ContactsPage] Contact updated:", userId)
     }
     
     function handleFriendsLoaded(friends) {
         console.log("[ContactsPage] handleFriendsLoaded called, friends count:", friends.length)
+        let previousSelectedIndex = selectedContactIndex
+        let previousSelectedUserId = selectedContactUserId
         let newContacts = []
         for (let i = 0; i < friends.length; i++) {
             // 从后端获取头像数据，如果没有则使用默认头像
@@ -148,7 +189,37 @@ Rectangle {
 
         contacts = newContacts
         contactsVersion++  // 触发 filteredContacts 更新
+
+        if (previousSelectedIndex === -2) {
+            selectedContactIndex = -2
+        } else if (previousSelectedUserId !== "") {
+            selectedContactIndex = findFilteredContactIndex(previousSelectedUserId, newContacts)
+        }
+
         console.log("[ContactsPage] contacts updated, count:", contacts.length, "version:", contactsVersion)
+    }
+
+    function findFilteredContactIndex(userId, sourceContacts) {
+        if (!userId || userId === "") {
+            return -1
+        }
+
+        let searchLower = searchText.toLowerCase()
+        let filteredIndex = 0
+        for (let i = 0; i < sourceContacts.length; i++) {
+            let contact = sourceContacts[i]
+            if (searchText !== "" && contact.name.toLowerCase().indexOf(searchLower) < 0) {
+                continue
+            }
+
+            if (contact.userId === userId || contact.id === userId) {
+                return filteredIndex
+            }
+
+            filteredIndex++
+        }
+
+        return -1
     }
 
     function addContact(user) {
@@ -157,8 +228,61 @@ Rectangle {
         refreshRequests()
     }
 
+    function applyFriendProfileUpdate(friendInfo) {
+        // 检查是否是空的好友信息（表示加载失败）
+        if (!friendInfo || !friendInfo.userId || friendInfo.userId === "") {
+            refreshFailCount++
+            console.log("[ContactsPage] Friend profile load failed (count:", refreshFailCount, ")")
+
+            if (refreshFailCount >= 3) {
+                lastRefreshedFriendId = ""
+            }
+            return
+        }
+
+        console.log("[ContactsPage] onFriendProfileUpdated received for:", friendInfo.userId)
+        console.log("[ContactsPage] Friend profile updated:", {
+            username: friendInfo.username,
+            signature: friendInfo.signature,
+            region: friendInfo.region,
+            age: friendInfo.age
+        })
+
+        updateContactDetail(friendInfo)
+        refreshFailCount = 0
+
+        if (detailItem.selectedContact &&
+            (detailItem.selectedContact.userId === friendInfo.userId ||
+             detailItem.selectedContact.id === friendInfo.userId)) {
+            detailItem.updateSelectedContact()
+            console.log("[ContactsPage] Detail view updated for:", friendInfo.username)
+        } else {
+            console.log("[ContactsPage] Contact profile updated in cache")
+        }
+    }
+
+    function applyFriendPresenceUpdate(presenceInfo) {
+        if (!presenceInfo || !presenceInfo.userId || presenceInfo.userId === "") {
+            return
+        }
+
+        console.log("[ContactsPage] onFriendPresenceUpdated received for:", presenceInfo.userId, presenceInfo.status)
+        updateContactDetail(presenceInfo)
+
+        if (detailItem.selectedContact &&
+            (detailItem.selectedContact.userId === presenceInfo.userId ||
+             detailItem.selectedContact.id === presenceInfo.userId)) {
+            detailItem.updateSelectedContact()
+        }
+    }
+
     Connections {
         target: ChatService
+        function onConnectedChanged(connected) {
+            if (connected && contactsPage.visible) {
+                refreshContactsSnapshot("websocket-reconnected", false)
+            }
+        }
         onFriendRequestReceived: {
             refreshRequests()
         }
@@ -174,40 +298,19 @@ Rectangle {
             console.log("[ContactsPage] onFriendListLoaded signal received, count:", friends.length)
             handleFriendsLoaded(friends)
         }
-        onFriendDetailLoaded: {
-            // 检查是否是空的好友信息（表示加载失败）
-            if (!friendInfo || !friendInfo.userId || friendInfo.userId === "") {
-                refreshFailCount++
-                console.log("[ContactsPage] Friend detail load failed (count:", refreshFailCount, ")")
+        onFriendProfileUpdated: {
+            applyFriendProfileUpdate(friendInfo)
+        }
+        onFriendPresenceUpdated: {
+            applyFriendPresenceUpdate(presenceInfo)
+        }
+    }
 
-                // 失败后重置 lastRefreshedFriendId，允许下次重试
-                if (refreshFailCount >= 3) {
-                    lastRefreshedFriendId = ""
-                }
-                return
-            }
-
-            console.log("[ContactsPage] onFriendDetailLoaded received for:", friendInfo.userId)
-            console.log("[ContactsPage] Friend info updated:", {
-                username: friendInfo.username,
-                signature: friendInfo.signature,
-                region: friendInfo.region,
-                age: friendInfo.age,
-                status: friendInfo.status
-            })
-            updateContactDetail(friendInfo)
-
-            // 重置失败计数
-            refreshFailCount = 0
-
-            // 如果当前选中的是该联系人，立即更新详情显示
-            if (detailItem.selectedContact &&
-                (detailItem.selectedContact.userId === friendInfo.userId ||
-                 detailItem.selectedContact.id === friendInfo.userId)) {
-                detailItem.updateSelectedContact()
-                console.log("[ContactsPage] Detail view updated for:", friendInfo.username)
-            } else {
-                console.log("[ContactsPage] Contact is not currently selected, but cache updated")
+    Connections {
+        target: Qt.application
+        function onStateChanged() {
+            if (Qt.application.state === Qt.ApplicationActive && contactsPage.visible) {
+                refreshContactsSnapshot("application-foreground", false)
             }
         }
     }
@@ -232,7 +335,7 @@ Rectangle {
         onTriggered: {
             // 定时器触发时执行刷新
             if (pendingRefreshFriendId && pendingRefreshFriendId !== "") {
-                ChatService.getFriendDetail(pendingRefreshFriendId)
+                ChatService.getFriendProfile(pendingRefreshFriendId)
             }
         }
     }
@@ -246,6 +349,7 @@ Rectangle {
 
     // 过滤后的联系人列表
     property var filteredContacts: {
+        contactsVersion
         var result = []
         var searchLower = searchText.toLowerCase()
         for (var i = 0; i < contacts.length; i++) {
@@ -476,13 +580,13 @@ Rectangle {
                                 spacing: 10
 
                                 // 头像
-                                Rectangle {
-                                    Layout.preferredWidth: 40; Layout.preferredHeight: 40; radius: 20; color: "#e8f1ff"; clip: true
-                                    Image {
-                                        anchors.centerIn: parent
-                                        source: contact.avatar || "qrc:/new/prefix1/image/boy.png"
-                                        width: 36; height: 36; fillMode: Image.PreserveAspectCrop
-                                    }
+                                Avatar {
+                                    Layout.preferredWidth: 40
+                                    Layout.preferredHeight: 40
+                                    width: 40
+                                    height: 40
+                                    isSelf: false
+                                    avatarSource: contact.avatar || "qrc:/new/prefix1/image/boy.png"
                                 }
 
                                 // 用户信息
@@ -521,6 +625,7 @@ Rectangle {
                                 hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     console.log("[ContactsPage] Contact clicked:", contact.name, "index:", index)
+                                    selectedContactUserId = contact.userId || contact.id
                                     selectedContactIndex = index
                                 }
                             }
@@ -809,6 +914,7 @@ Rectangle {
 
                         // 总是更新 selectedContact，确保 UI 刷新
                         selectedContact = newContact
+                        selectedContactUserId = newContact.userId || newContact.id
                         console.log("[ContactsPage] selectedContact updated:", {
                             id: selectedContact.id,
                             name: selectedContact.name,
@@ -825,6 +931,9 @@ Rectangle {
                         refreshFriendDetail(selectedContact.userId)
                     } else {
                         selectedContact = null
+                        if (selectedContactIndex !== -2) {
+                            selectedContactUserId = ""
+                        }
                     }
                 }
 
@@ -856,22 +965,13 @@ Rectangle {
                                 spacing: 12
 
                                 // 大头像
-                                Rectangle {
+                                Avatar {
                                     Layout.preferredWidth: 80
                                     Layout.preferredHeight: 80
-                                    radius: 40
-                                    color: "#e8f1ff"
-                                    border.color: "#d0e0ff"
-                                    border.width: 2
-                                    clip: true
-
-                                    Image {
-                                        anchors.centerIn: parent
-                                        source: detailItem.selectedContact ? (detailItem.selectedContact.avatar || "qrc:/new/prefix1/image/boy.png") : ""
-                                        width: 76
-                                        height: 76
-                                        fillMode: Image.PreserveAspectCrop
-                                    }
+                                    width: 80
+                                    height: 80
+                                    isSelf: false
+                                    avatarSource: detailItem.selectedContact ? (detailItem.selectedContact.avatar || "qrc:/new/prefix1/image/boy.png") : ""
                                 }
 
                                 // 用户信息
@@ -1106,7 +1206,7 @@ Rectangle {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             if (detailItem.selectedContact && detailItem.selectedContact.id !== "" && detailItem.selectedContact.name !== "") {
-                                                contactsPage.contactSelected(detailItem.selectedContact.id, detailItem.selectedContact.name)
+                                                contactsPage.contactSelected(detailItem.selectedContact.id, detailItem.selectedContact.name, detailItem.selectedContact.avatar || "")
                                             }
                                         }
                                     }

@@ -21,7 +21,7 @@ public:
     void markMessagesAsRead(const QString &conversationId);
 
 signals:
-    void messagesLoaded(const QString &conversationId, const QVector<Message> &messages);
+    void messagesLoaded(const QString &conversationId, const QVector<Message> &messages, int offset, int limit);
     void messagesMarkedRead(const QString &conversationId, bool success);
 
 private:

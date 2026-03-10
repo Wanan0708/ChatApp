@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "e2e:profile": "node e2e_chat_profile_check.js"
+  },
   "dependencies": {
     "ws": "^8.19.0"
   }

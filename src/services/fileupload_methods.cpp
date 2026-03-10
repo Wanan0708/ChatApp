@@ -5,10 +5,12 @@
 #include "../models/messagemodel.h"
 #include "../network/networkclient.h"
 #include "../network/websocketclient.h"
+#include "../utils/messagecache.h"
 #include <QDateTime>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QJsonObject>
+#include <QRandomGenerator>
 
 QString ChatService::pickLocalFile(bool imageOnly) const
 {
@@ -25,74 +27,128 @@ QString ChatService::pickLocalFile(bool imageOnly) const
 
 void ChatService::sendImageMessage(const QString &conversationId, const QString &filePath)
 {
+    sendImageMessageInternal(conversationId, filePath);
+}
+
+void ChatService::sendImageMessageInternal(const QString &conversationId,
+                                          const QString &filePath,
+                                          const QString &messageId,
+                                          qint64 timestamp,
+                                          bool updateExisting)
+{
     if (filePath.isEmpty()) return;
 
     qDebug() << "[ChatService] Sending image message:" << filePath;
+    const QString localMessageId = messageId.isEmpty()
+        ? QString("local-image-%1-%2")
+              .arg(QDateTime::currentMSecsSinceEpoch())
+              .arg(QRandomGenerator::global()->generate())
+        : messageId;
+    const qint64 currentTimestamp = timestamp > 0 ? timestamp : QDateTime::currentMSecsSinceEpoch();
 
-    // 创建临时消息（发送中状态）
     QVariantMap tempMessage;
+    tempMessage["messageId"] = localMessageId;
     tempMessage["type"] = 1;  // 图片类型
     tempMessage["conversationId"] = conversationId;
     tempMessage["content"] = "[图片]";
     tempMessage["senderId"] = m_currentUserId;
-    tempMessage["timestamp"] = QDateTime::currentMSecsSinceEpoch();
+    tempMessage["timestamp"] = currentTimestamp;
     tempMessage["status"] = 0;  // 发送中
     tempMessage["fileName"] = QFileInfo(filePath).fileName();
+    tempMessage["isOffline"] = false;
+    tempMessage["serverMessageId"] = QString();
 
-    // 立即显示在界面上
-    getMessageModel(conversationId)->addMessage(tempMessage);
+    getMessageModel(conversationId)->upsertMessage(tempMessage);
+    MessageCache::instance()->cacheMessage(conversationId, tempMessage);
 
-    // 调用文件上传
+    QVariantMap retryInfo;
+    retryInfo["conversationId"] = conversationId;
+    retryInfo["messageType"] = 1;
+    retryInfo["localFilePath"] = filePath;
+    retryInfo["timestamp"] = currentTimestamp;
+    retryInfo["content"] = QStringLiteral("[图片]");
+    retryInfo["fileName"] = QFileInfo(filePath).fileName();
+    rememberRetryableMessage(localMessageId, retryInfo);
+
     NetworkClient::UploadProgressHandler progressHandler = [](const QJsonObject &, qint64, qint64) {
-        // TODO: 更新上传进度
     };
 
-    QString fp = filePath;  // 复制 filePath 到局部变量
-    NetworkClient::SuccessHandler successHandler = [this, conversationId, fp](const QJsonObject &result) {
+    QString fp = filePath;
+    NetworkClient::SuccessHandler successHandler = [this, conversationId, fp, localMessageId, currentTimestamp](const QJsonObject &result) {
         QString fileId = result.value("fileId").toString();
         QString fileUrl = result.value("fileUrl").toString();
         QString thumbnailUrl = result.value("thumbnailUrl").toString(fileUrl);
+        const bool queuedBeforeDispatch = !m_webSocketClient->isConnected();
 
-        // 创建正式消息
         QVariantMap message;
+        message["messageId"] = localMessageId;
         message["type"] = 1;  // 图片类型
         message["conversationId"] = conversationId;
         message["content"] = "[图片]";
         message["senderId"] = m_currentUserId;
-        message["timestamp"] = QDateTime::currentMSecsSinceEpoch();
-        message["status"] = 1;  // 已发送
+        message["timestamp"] = currentTimestamp;
+        message["status"] = static_cast<int>(queuedBeforeDispatch ? MessageStatus::Sending : MessageStatus::Sent);
         message["fileId"] = fileId;
         message["fileName"] = QFileInfo(fp).fileName();
         message["fileUrl"] = fileUrl;
         message["thumbnailUrl"] = thumbnailUrl;
+        message["isOffline"] = queuedBeforeDispatch;
+        message["errorText"] = QString();
+        message["serverMessageId"] = QString();
 
-        // 通过 WebSocket 发送
-        if (m_webSocketClient->isConnected()) {
-            m_webSocketClient->sendMessage(message);
-        }
+        getMessageModel(conversationId)->upsertMessage(message);
+        MessageCache::instance()->cacheMessage(conversationId, message);
+
+        QVariantMap wsMessage;
+        wsMessage["type"] = "message";
+        wsMessage["messageType"] = 1;
+        wsMessage["conversationId"] = conversationId;
+        wsMessage["content"] = "[图片]";
+        wsMessage["senderId"] = m_currentUserId;
+        wsMessage["timestamp"] = currentTimestamp;
+        wsMessage["status"] = 1;
+        wsMessage["fileId"] = fileId;
+        wsMessage["fileName"] = QFileInfo(fp).fileName();
+        wsMessage["fileUrl"] = fileUrl;
+        wsMessage["thumbnailUrl"] = thumbnailUrl;
+
+        QVariantMap retryInfo = m_retryableMessages.value(localMessageId);
+        retryInfo["fileId"] = fileId;
+        retryInfo["fileUrl"] = fileUrl;
+        retryInfo["thumbnailUrl"] = thumbnailUrl;
+        retryInfo["content"] = "[图片]";
+        retryInfo["fileName"] = QFileInfo(fp).fileName();
+        rememberRetryableMessage(localMessageId, retryInfo);
+
+        dispatchOutgoingMessage(conversationId, localMessageId, wsMessage, queuedBeforeDispatch);
 
         emit messageReceived(conversationId, message);
     };
 
-    // 修复：在 errorHandler 中也捕获 fp
-    NetworkClient::ErrorHandler errorHandler = [this, conversationId, fp](const QString &error) {
+    NetworkClient::ErrorHandler errorHandler = [this, conversationId, fp, localMessageId, currentTimestamp](const QString &error) {
         qWarning() << "[ChatService] Image upload failed:" << error;
 
-        // 创建失败消息
         QVariantMap failedMessage;
+        failedMessage["messageId"] = localMessageId;
         failedMessage["type"] = 1;
         failedMessage["conversationId"] = conversationId;
         failedMessage["content"] = "[图片发送失败]";
         failedMessage["senderId"] = m_currentUserId;
-        failedMessage["timestamp"] = QDateTime::currentMSecsSinceEpoch();
+        failedMessage["timestamp"] = currentTimestamp;
         failedMessage["status"] = 3;  // 失败
         failedMessage["fileName"] = QFileInfo(fp).fileName();
+        failedMessage["isOffline"] = true;
+        failedMessage["errorText"] = error.isEmpty() ? QStringLiteral("图片上传失败，点击重试") : error;
+        failedMessage["serverMessageId"] = QString();
+
+        getMessageModel(conversationId)->upsertMessage(failedMessage);
+        MessageCache::instance()->cacheMessage(conversationId, failedMessage);
 
         emit messageReceived(conversationId, failedMessage);
     };
 
     NetworkClient::instance()->uploadFile(
-        "/api/upload/image",
+        "/upload/image",
         filePath,
         "image",
         QJsonObject(),
@@ -104,33 +160,58 @@ void ChatService::sendImageMessage(const QString &conversationId, const QString 
 
 void ChatService::sendFileMessage(const QString &conversationId, const QString &filePath)
 {
+    sendFileMessageInternal(conversationId, filePath);
+}
+
+void ChatService::sendFileMessageInternal(const QString &conversationId,
+                                         const QString &filePath,
+                                         const QString &messageId,
+                                         qint64 timestamp,
+                                         bool updateExisting)
+{
     if (filePath.isEmpty()) return;
 
     qDebug() << "[ChatService] Sending file message:" << filePath;
+    const QString localMessageId = messageId.isEmpty()
+        ? QString("local-file-%1-%2")
+              .arg(QDateTime::currentMSecsSinceEpoch())
+              .arg(QRandomGenerator::global()->generate())
+        : messageId;
+    const qint64 currentTimestamp = timestamp > 0 ? timestamp : QDateTime::currentMSecsSinceEpoch();
 
-    // 创建临时消息（发送中状态）
     QVariantMap tempMessage;
+    tempMessage["messageId"] = localMessageId;
     tempMessage["type"] = 2;  // 文件类型
     tempMessage["conversationId"] = conversationId;
     tempMessage["content"] = "[文件]";
     tempMessage["senderId"] = m_currentUserId;
-    tempMessage["timestamp"] = QDateTime::currentMSecsSinceEpoch();
+    tempMessage["timestamp"] = currentTimestamp;
     tempMessage["status"] = 0;  // 发送中
     tempMessage["fileName"] = QFileInfo(filePath).fileName();
+    tempMessage["isOffline"] = false;
+    tempMessage["serverMessageId"] = QString();
 
-    // 立即显示在界面上
-    getMessageModel(conversationId)->addMessage(tempMessage);
+    getMessageModel(conversationId)->upsertMessage(tempMessage);
+    MessageCache::instance()->cacheMessage(conversationId, tempMessage);
 
-    // 调用文件上传
+    QVariantMap retryInfo;
+    retryInfo["conversationId"] = conversationId;
+    retryInfo["messageType"] = 2;
+    retryInfo["localFilePath"] = filePath;
+    retryInfo["timestamp"] = currentTimestamp;
+    retryInfo["content"] = QStringLiteral("[文件]");
+    retryInfo["fileName"] = QFileInfo(filePath).fileName();
+    rememberRetryableMessage(localMessageId, retryInfo);
+
     NetworkClient::UploadProgressHandler progressHandler = [](const QJsonObject &, qint64, qint64) {
-        // TODO: 更新上传进度
     };
 
-    QString fp = filePath;  // 复制 filePath 到局部变量
-    NetworkClient::SuccessHandler successHandler = [this, conversationId, fp](const QJsonObject &result) {
+    QString fp = filePath;
+    NetworkClient::SuccessHandler successHandler = [this, conversationId, fp, localMessageId, currentTimestamp](const QJsonObject &result) {
         QString fileId = result.value("fileId").toString();
         QString fileUrl = result.value("fileUrl").toString();
         qint64 fileSize = result.value("fileSize").toVariant().toLongLong();
+        const bool queuedBeforeDispatch = !m_webSocketClient->isConnected();
 
         // 格式化文件大小
         QString sizeStr;
@@ -144,46 +225,76 @@ void ChatService::sendFileMessage(const QString &conversationId, const QString &
             sizeStr = QString::number(fileSize / (1024.0 * 1024.0 * 1024.0), 'f', 1) + " GB";
         }
 
-        // 创建正式消息
+        // 将临时消息更新为已发送状态
         QVariantMap message;
+        message["messageId"] = localMessageId;
         message["type"] = 2;  // 文件类型
         message["conversationId"] = conversationId;
         message["content"] = "[文件]";
         message["senderId"] = m_currentUserId;
-        message["timestamp"] = QDateTime::currentMSecsSinceEpoch();
-        message["status"] = 1;  // 已发送
+        message["timestamp"] = currentTimestamp;
+        message["status"] = static_cast<int>(queuedBeforeDispatch ? MessageStatus::Sending : MessageStatus::Sent);
         message["fileId"] = fileId;
         message["fileName"] = QFileInfo(fp).fileName();
         message["fileSize"] = sizeStr;
         message["fileUrl"] = fileUrl;
+        message["isOffline"] = queuedBeforeDispatch;
+        message["errorText"] = QString();
+        message["serverMessageId"] = QString();
 
-        // 通过 WebSocket 发送
-        if (m_webSocketClient->isConnected()) {
-            m_webSocketClient->sendMessage(message);
-        }
+        getMessageModel(conversationId)->upsertMessage(message);
+        MessageCache::instance()->cacheMessage(conversationId, message);
+
+        QVariantMap wsMessage;
+        wsMessage["type"] = "message";
+        wsMessage["messageType"] = 2;
+        wsMessage["conversationId"] = conversationId;
+        wsMessage["content"] = "[文件]";
+        wsMessage["senderId"] = m_currentUserId;
+        wsMessage["timestamp"] = currentTimestamp;
+        wsMessage["status"] = 1;
+        wsMessage["fileId"] = fileId;
+        wsMessage["fileName"] = QFileInfo(fp).fileName();
+        wsMessage["fileSize"] = sizeStr;
+        wsMessage["fileUrl"] = fileUrl;
+
+        QVariantMap retryInfo = m_retryableMessages.value(localMessageId);
+        retryInfo["fileId"] = fileId;
+        retryInfo["fileUrl"] = fileUrl;
+        retryInfo["fileSize"] = sizeStr;
+        retryInfo["content"] = "[文件]";
+        retryInfo["fileName"] = QFileInfo(fp).fileName();
+        rememberRetryableMessage(localMessageId, retryInfo);
+
+        dispatchOutgoingMessage(conversationId, localMessageId, wsMessage, queuedBeforeDispatch);
 
         emit messageReceived(conversationId, message);
     };
 
-    // 修复：在 errorHandler 中也捕获 fp
-    NetworkClient::ErrorHandler errorHandler = [this, conversationId, fp](const QString &error) {
+    NetworkClient::ErrorHandler errorHandler = [this, conversationId, fp, localMessageId, currentTimestamp](const QString &error) {
         qWarning() << "[ChatService] File upload failed:" << error;
 
-        // 创建失败消息
         QVariantMap failedMessage;
+        failedMessage["messageId"] = localMessageId;
         failedMessage["type"] = 2;
         failedMessage["conversationId"] = conversationId;
         failedMessage["content"] = "[文件发送失败]";
         failedMessage["senderId"] = m_currentUserId;
-        failedMessage["timestamp"] = QDateTime::currentMSecsSinceEpoch();
+        failedMessage["timestamp"] = currentTimestamp;
         failedMessage["status"] = 3;  // 失败
         failedMessage["fileName"] = QFileInfo(fp).fileName();
+        failedMessage["isOffline"] = true;
+        failedMessage["errorText"] = error.isEmpty() ? QStringLiteral("文件上传失败，点击重试") : error;
+        failedMessage["serverMessageId"] = QString();
+
+        getMessageModel(conversationId)->upsertMessage(failedMessage);
+        MessageCache::instance()->cacheMessage(conversationId, failedMessage);
 
         emit messageReceived(conversationId, failedMessage);
     };
 
     NetworkClient::instance()->uploadFile(
-        "/api/upload/file",
+        "/upload/file",
         filePath,
         "file",
         QJsonObject(),

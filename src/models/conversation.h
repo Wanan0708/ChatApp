@@ -6,6 +6,7 @@
 struct Conversation {
     QString id;
     QString title;
+    QString avatar;
     QString lastMessage;
     QString time;
     int unreadCount = 0;

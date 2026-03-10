@@ -42,17 +42,24 @@ void MessageCache::cacheMessage(const QString &conversationId, const QVariantMap
     
     QMutexLocker locker(&m_mutex);
     
-    QString messageId = message.value("messageId").toString();
-    if (messageId.isEmpty()) {
+    const QString internalMessageId = message.value("messageId").toString();
+    const QString serverMessageId = message.value("serverMessageId").toString();
+    const QString cacheMessageId = serverMessageId.isEmpty() ? internalMessageId : serverMessageId;
+    if (cacheMessageId.isEmpty()) {
         return;
+    }
+
+    if (!serverMessageId.isEmpty() && !internalMessageId.isEmpty() && serverMessageId != internalMessageId) {
+        m_messageCache[conversationId].remove(internalMessageId);
+        m_messageOrder[conversationId].removeAll(internalMessageId);
     }
     
     // 添加到缓存
-    m_messageCache[conversationId][messageId] = message;
+    m_messageCache[conversationId][cacheMessageId] = message;
     
     // 维护消息顺序（最新的在前面）
-    if (!m_messageOrder[conversationId].contains(messageId)) {
-        m_messageOrder[conversationId].prepend(messageId);
+    if (!m_messageOrder[conversationId].contains(cacheMessageId)) {
+        m_messageOrder[conversationId].prepend(cacheMessageId);
         
         // 限制缓存数量
         if (m_messageOrder[conversationId].size() > MAX_MESSAGES_PER_CONVERSATION) {
@@ -74,12 +81,19 @@ void MessageCache::cacheMessages(const QString &conversationId, const QList<QVar
     QMutexLocker locker(&m_mutex);
     
     for (const QVariantMap &message : messages) {
-        QString messageId = message.value("messageId").toString();
-        if (!messageId.isEmpty()) {
-            m_messageCache[conversationId][messageId] = message;
+        const QString internalMessageId = message.value("messageId").toString();
+        const QString serverMessageId = message.value("serverMessageId").toString();
+        const QString cacheMessageId = serverMessageId.isEmpty() ? internalMessageId : serverMessageId;
+        if (!cacheMessageId.isEmpty()) {
+            if (!serverMessageId.isEmpty() && !internalMessageId.isEmpty() && serverMessageId != internalMessageId) {
+                m_messageCache[conversationId].remove(internalMessageId);
+                m_messageOrder[conversationId].removeAll(internalMessageId);
+            }
+
+            m_messageCache[conversationId][cacheMessageId] = message;
             
-            if (!m_messageOrder[conversationId].contains(messageId)) {
-                m_messageOrder[conversationId].prepend(messageId);
+            if (!m_messageOrder[conversationId].contains(cacheMessageId)) {
+                m_messageOrder[conversationId].prepend(cacheMessageId);
             }
         }
     }
@@ -169,6 +183,13 @@ QVariantMap MessageCache::getMessage(const QString &conversationId, const QStrin
     
     auto msgIt = cacheIt->find(messageId);
     if (msgIt == cacheIt->end()) {
+        for (auto it = cacheIt->cbegin(); it != cacheIt->cend(); ++it) {
+            const QVariantMap &message = it.value();
+            if (message.value("messageId").toString() == messageId
+                || message.value("serverMessageId").toString() == messageId) {
+                return message;
+            }
+        }
         return QVariantMap();
     }
     

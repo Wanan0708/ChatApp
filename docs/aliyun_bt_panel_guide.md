@@ -1,142 +1,165 @@
-# ESChat 宝塔面板部署指南（阿里云专用）
+# ESChat 阿里云部署指南
 
-> 适用对象：使用宝塔面板管理阿里云服务器的用户  
-> 宝塔版本要求：v8.0+  
-> 更新时间：2026 年 3 月 6 日
+本文档面向当前仓库版本，适用于阿里云 ECS 部署 Node.js + PostgreSQL + Nginx。
 
----
+如果你使用宝塔面板，核心流程也一样：数据库先执行基础建表和迁移，Node 服务跑 server/index.js，Nginx 反向代理到 127.0.0.1:8080。
 
-## 📋 目录
+## 适用范围
 
-1. [宝塔面板安装](#1-宝塔面板安装)
-2. [环境软件安装](#2-环境软件安装)
-3. [数据库配置](#3-数据库配置)
-4. [后端服务部署](#4-后端服务部署)
-5. [网站与 SSL 配置](#5-网站与-ssl-配置)
-6. [Nginx 反向代理配置](#6-nginx-反向代理配置)
-7. [客户端配置](#7-客户端配置)
-8. [常见问题排查](#8-常见问题排查)
-9. [前端网站部署](#9-前端网站部署)
+- 阿里云 ECS Linux 服务器
+- Ubuntu 22.04 / Debian 12 / CentOS 7+ 均可参考
+- PostgreSQL 本机部署或阿里云 RDS PostgreSQL 均可
+- Nginx 对外提供 HTTPS 和 WebSocket 反向代理
 
----
+## 部署结构
 
-## 1. 宝塔面板安装
+推荐目录：
 
-### 1.1 安装宝塔面板
+```text
+/opt/eschat/
+├── server/
+├── web/
+├── qml/
+├── image/
+└── 其他仓库文件
+```
 
-通过 SSH 连接服务器后执行：
+当前服务约定：
+
+- 后端入口：server/index.js
+- 监听端口：8080
+- Nginx 反向代理目标：127.0.0.1:8080
+- 网站静态资源由 Node 服务直接读取 web 目录提供
+
+## 1. 准备服务器环境
+
+### Ubuntu / Debian
 
 ```bash
-# Ubuntu/Debian
-wget -O install.sh https://download.bt.cn/install/install-ubuntu_6.0.sh && bash install.sh
-
-# CentOS
-wget -O install.sh https://download.bt.cn/install/install_6.0.sh && bash install.sh
+sudo apt update
+sudo apt install -y nginx postgresql postgresql-client
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+sudo npm install -g pm2
 ```
 
-安装完成后，记录面板登录地址、用户名和密码。
+### CentOS
 
-### 1.2 登录面板
-
-浏览器访问面板地址，登录后建议：
-1. 修改默认用户名和密码
-2. 绑定宝塔账号（方便远程管理）
-3. 安装推荐插件套件
-
----
-
-## 2. 环境软件安装
-
-### 2.1 安装软件商店
-
-在宝塔左侧菜单点击 **「软件商店」**，安装以下软件：
-
-| 软件 | 版本建议 | 说明 |
-|------|----------|------|
-| Nginx | 1.24+ | Web 服务器 |
-| MySQL/PostgreSQL | PostgreSQL 15 | 数据库（二选一） |
-| Node.js | 20.x | 后端运行环境 |
-| PM2 管理器 | 最新版 | Node 进程管理 |
-
-### 2.2 安装 PostgreSQL
-
-1. 点击 **「数据库」** → 右侧 **「PostgreSQL」** → 点击安装
-2. 安装完成后，点击 **「设置」** 进行初始化
-3. 设置 `postgres` 用户密码（请记录并保存）
-
-### 2.3 安装 Nginx
-
-1. 点击 **「软件商店」** → 找到 Nginx → 点击安装
-2. 选择稳定版即可
-
-### 2.4 安装 Node.js 版本管理器
-
-1. 点击 **「Node 版本管理」** → 安装
-2. 添加 Node.js 版本：点击 **「添加」** → 选择 **20.x LTS** → 安装
-
----
-
-## 3. 数据库配置
-
-### 3.1 创建数据库
-
-1. 点击左侧 **「数据库」** 菜单
-2. 点击顶部 **「PostgreSQL」** 标签切换
-3. 点击 **「添加数据库」**
-
-填写信息：
-- **数据库名**: `chatapp`
-- **用户名**: `postgres`
-- **密码**: （设置强密码，记录到 `.env` 文件）
-- **权限**: `所有权限`
-
-### 3.2 导入数据表结构
-
-1. 点击刚创建的数据库右侧的 **「管理」** 按钮
-2. 进入 phpPgAdmin 管理界面
-3. 点击顶部菜单 **「SQL」** 标签
-4. 将本地 `server/init_db.sql` 文件内容粘贴到文本框
-5. 点击 **「执行」** 按钮
-
-验证导入结果：
-```sql
-SELECT tablename FROM pg_tables WHERE schemaname = 'public';
+```bash
+sudo yum install -y nginx postgresql postgresql-server
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo yum install -y nodejs
+sudo npm install -g pm2
 ```
 
-应该看到 `users`、`messages`、`conversations`、`friends` 等表。
+确认版本：
 
-### 3.3 配置数据库访问权限
+```bash
+node -v
+npm -v
+psql --version
+nginx -v
+pm2 -v
+```
 
-> ⚠️ **重要**: 默认仅允许本地连接，无需修改。如需远程管理：
+## 2. 上传代码
 
-1. 点击 **「数据库」** → PostgreSQL **「设置」**
-2. 在 `pg_hba.conf` 配置文件中，确保只有本地连接：
-   ```conf
-   host    all    all    127.0.0.1/32    md5
-   ```
-3. 点击 **「保存配置」**
+可以任选一种方式：
 
----
+### 方式一：git clone
 
-## 4. 后端服务部署
+```bash
+sudo mkdir -p /opt/eschat
+sudo chown -R $USER:$USER /opt/eschat
+cd /opt/eschat
+git clone 你的仓库地址 .
+```
 
-### 4.1 上传项目文件
+### 方式二：本地打包后上传
 
-1. 点击左侧 **「文件」** 菜单
-2. 进入 `/www/wwwroot/` 目录
-3. 新建文件夹 `eschat`
-4. 点击 **「上传」** 按钮，上传以下文件：
-   - `index.js`
-   - `package.json`
-   - `package-lock.json`
-   - `.env`（先不上传，下一步创建）
+将当前仓库上传到服务器，例如解压到：
 
-### 4.2 创建环境变量文件
+```text
+/opt/eschat
+```
 
-1. 进入 `/www/wwwroot/eschat` 目录
-2. 点击 **「新建」** → **「文件」**
-3. 命名为 `.env`
-4. 编辑内容如下：
+## 3. 安装后端依赖
+
+```bash
+cd /opt/eschat/server
+npm install
+```
+
+## 4. 配置数据库
+
+### 本机 PostgreSQL
+
+先创建数据库：
+
+```bash
+sudo -u postgres createdb chatapp
+```
+
+初始化基础表：
+
+```bash
+cd /opt/eschat
+sudo -u postgres psql -d chatapp -f server/init_db.sql
+```
+
+执行增量迁移：
+
+```bash
+cd /opt/eschat/server
+export CHATAPP_DB_HOST=localhost
+export CHATAPP_DB_PORT=5432
+export CHATAPP_DB_NAME=chatapp
+export CHATAPP_DB_USER=postgres
+./migrations/run_migrations.sh
+```
+
+如果 postgres 用户需要密码认证，再额外设置：
+
+```bash
+export PGPASSWORD=你的数据库密码
+export CHATAPP_DB_PASSWORD=你的数据库密码
+```
+
+### 阿里云 RDS PostgreSQL
+
+如果数据库在 RDS，把环境变量换成 RDS 地址：
+
+```bash
+cd /opt/eschat/server
+export CHATAPP_DB_HOST=你的RDS地址
+export CHATAPP_DB_PORT=5432
+export CHATAPP_DB_NAME=chatapp
+export CHATAPP_DB_USER=你的数据库用户
+export PGPASSWORD=你的数据库密码
+export CHATAPP_DB_PASSWORD=你的数据库密码
+psql -h "$CHATAPP_DB_HOST" -p "$CHATAPP_DB_PORT" -U "$CHATAPP_DB_USER" -d "$CHATAPP_DB_NAME" -f ../server/init_db.sql
+./migrations/run_migrations.sh
+```
+
+### 迁移说明
+
+当前项目数据库变更规则是：
+
+- server/init_db.sql 只负责基础建表
+- server/migrations/*.sql 负责增量升级
+- server/index.js 启动时只校验 schema，不再自动执行 ALTER TABLE
+
+所以服务启动前，基础建表和迁移必须先执行完成。
+
+## 5. 配置 server/.env
+
+在服务器创建或更新：
+
+```text
+/opt/eschat/server/.env
+```
+
+最少配置如下：
 
 ```env
 PORT=8080
@@ -144,198 +167,79 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=chatapp
 DB_USER=postgres
-DB_PASSWORD=你的数据库密码
-JWT_SECRET=eschat_secret_随机字符串_2026
+DB_PASSWORD=123456
+JWT_SECRET=replace_with_a_long_random_secret
 ```
 
-> ⚠️ **务必修改**:
-> - `DB_PASSWORD`: 改为你的 PostgreSQL 密码
-> - `JWT_SECRET`: 改为随机长字符串（可用 `openssl rand -base64 32` 生成）
+如果你连接的是 RDS，请把 DB_HOST、DB_USER、DB_PASSWORD 改成实际值。
 
-### 4.3 创建 Node.js 项目
+## 6. 启动 Node 服务
 
-1. 点击左侧 **「Node 项目」** 菜单
-2. 点击 **「添加 Node 项目」**
-
-填写配置：
-
-| 配置项 | 值 |
-|--------|-----|
-| 项目名称 | `eschat-server` |
-| Node 版本 | `20.x` |
-| 项目路径 | `/www/wwwroot/eschat` |
-| 启动方式 | `app.js` |
-| 项目入口 | `index.js` |
-| 安装依赖 | ✅ 勾选 |
-| 开机自启 | ✅ 勾选 |
-| 端口 | `8080` |
-
-3. 点击 **「提交」**
-
-### 4.4 安装项目依赖
-
-如果自动安装失败，手动操作：
-
-1. 点击项目名称 `eschat-server`
-2. 进入项目详情页
-3. 点击 **「模块」** 标签
-4. 点击 **「一键安装」** 按钮
-
-等待安装完成，确保以下模块已安装：
-- `express`
-- `ws`
-- `pg`
-- `jsonwebtoken`
-- `bcryptjs`
-- `dotenv`
-- `cors`
-- `uuid`
-
-### 4.5 启动服务
-
-1. 点击项目详情页的 **「启动选项」** 标签
-2. 确认启动命令为 `npm start` 或 `node index.js`
-3. 点击 **「启动」** 按钮
-4. 查看日志确认启动成功：
-
-```log
-[eschat-server] Server running on port 8080
-[eschat-server] Database connected successfully
-```
-
-### 4.6 验证后端服务
-
-在宝塔终端执行：
+### 方式一：pm2
 
 ```bash
-curl http://127.0.0.1:8080/api/health
+cd /opt/eschat/server
+pm2 start index.js --name eschat-server
+pm2 save
+pm2 startup
 ```
 
-应返回 JSON 响应，表示服务正常。
+常用命令：
 
----
-
-## 5. 网站与 SSL 配置
-
-### 5.1 创建网站站点
-
-1. 点击左侧 **「网站」** 菜单
-2. 点击 **「添加站点」**
-
-填写配置：
-
-| 配置项 | 值 |
-|--------|-----|
-| 域名 | `59.110.44.145`（或有域名则填域名） |
-| 根目录 | `/www/wwwroot/eschat_site`（自动创建） |
-| PHP 版本 | `纯静态` |
-| 数据库 | 无需创建 |
-
-3. 点击 **「提交」**
-
-### 5.2 申请 SSL 证书
-
-#### 方式一：Let's Encrypt（免费，推荐）
-
-1. 在网站列表点击刚创建站点的 **「设置」**
-2. 点击左侧 **「SSL」** 标签
-3. 选择 **「Let's Encrypt」**
-4. 勾选域名，点击 **「申请」**
-
-> ⚠️ **如果申请失败（403 错误）**:
-> 1. 检查域名是否已解析到服务器 IP
-> 2. 确保 80 端口未被占用
-> 3. 暂时关闭 WAF 防火墙
-> 4. 改用 DNS 验证方式（需要阿里云 DNS 权限）
-
-#### 方式二：阿里云 SSL 证书
-
-1. 登录 [阿里云 SSL 证书控制台](https://yundun.console.aliyun.com/?p=cas)
-2. 申请免费 DV SSL 证书
-3. 下载 Nginx 格式证书文件
-4. 在宝塔 SSL 设置中选择 **「其他证书」**
-5. 上传 `.crt` 和 `.key` 文件
-6. 点击 **「保存」**
-
-### 5.3 开启强制 HTTPS
-
-1. 在 SSL 设置页面
-2. 开启 **「强制 HTTPS」** 开关
-3. 保存配置
-
----
-
-## 6. Nginx 反向代理配置
-
-### 6.1 添加反向代理
-
-1. 在网站设置弹窗中，点击左侧 **「反向代理」**
-2. 点击 **「添加反向代理」**
-
-填写配置：
-
-| 配置项 | 值 |
-|--------|-----|
-| 代理名称 | `ws_proxy` |
-| 目标 URL | `http://127.0.0.1:8080` |
-| 发送域名 | `$host` |
-| 代理目录 | 留空（代理全部请求） |
-
-3. 点击 **「提交」**
-
-### 6.2 配置 WebSocket 支持
-
-1. 在反向代理列表，点击刚创建的代理右侧的 **「配置文件」**
-2. 检查配置是否包含以下内容：
-
-```nginx
-location / {
-    proxy_pass http://127.0.0.1:8080;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_cache_bypass $http_upgrade;
-    
-    # WebSocket 长连接超时（重要）
-    proxy_read_timeout 86400s;
-    proxy_send_timeout 86400s;
-}
+```bash
+pm2 status
+pm2 logs eschat-server --lines 100
+pm2 restart eschat-server
+pm2 stop eschat-server
 ```
 
-3. 如果缺少，手动添加后点击 **「保存」**
+### 方式二：systemd
 
-### 6.3 完整 Nginx 配置参考
+创建服务文件：
 
-如需完整控制，可在 **「配置文件」** 中替换为以下内容：
+```text
+/etc/systemd/system/eschat.service
+```
+
+内容示例：
+
+```ini
+[Unit]
+Description=ESChat Node Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/eschat/server
+ExecStart=/usr/bin/node /opt/eschat/server/index.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+```
+
+启用并启动：
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable eschat
+sudo systemctl start eschat
+sudo systemctl status eschat
+```
+
+## 7. 配置 Nginx
+
+Nginx 需要把所有流量转发到 Node 服务，并保留 WebSocket 升级头。
+
+示例配置：
 
 ```nginx
 server {
     listen 80;
-    server_name 59.110.44.145;
-    
-    # HTTP 重定向到 HTTPS
-    return 301 https://$server_name$request_uri;
-}
+    server_name 你的域名或公网IP;
 
-server {
-    listen 443 ssl http2;
-    server_name 59.110.44.145;
-    
-    # SSL 证书（宝塔自动管理）
-    ssl_certificate /www/server/panel/vhost/cert/59.110.44.145/fullchain.pem;
-    ssl_certificate_key /www/server/panel/vhost/cert/59.110.44.145/privkey.pem;
-    
-    # SSL 优化
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache shared:SSL:10m;
-    
-    # WebSocket 代理
     location / {
         proxy_pass http://127.0.0.1:8080;
         proxy_http_version 1.1;
@@ -344,338 +248,117 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 86400s;
-        proxy_send_timeout 86400s;
-    }
-    
-    # API 接口
-    location /api {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 86400;
+        proxy_send_timeout 86400;
     }
 }
 ```
 
-### 6.4 验证配置
+启用配置：
 
-1. 点击 Nginx 配置页面的 **「保存」**
-2. 宝塔会自动检查配置语法
-3. 重启 Nginx：点击左侧 **「软件商店」** → Nginx **「设置」** → **「重启」**
-
----
-
-## 7. 客户端配置
-
-### 7.1 环境变量配置
-
-客户端通过环境变量连接后端，发布包可附带启动脚本。
-
-**Windows 启动脚本 (`start.bat`):**
-```batch
-@echo off
-set CHATAPP_BACKEND_HOST=59.110.44.145
-set CHATAPP_BACKEND_PORT=443
-set CHATAPP_API_SCHEME=https
-set CHATAPP_WS_SCHEME=wss
-start ChatApp.exe
-```
-
-**配置文件位置**: `src/database/databaseconfig.cpp`
-- Release 模式默认主机：`59.110.44.145`
-- 支持环境变量覆盖配置
-
-### 7.2 Windows 打包步骤
-
-1. 在 Qt Creator 中以 **Release** 模式编译
-2. 打开 Qt 命令行，进入输出目录：
-   ```cmd
-   cd E:\Project\QtProject\ChatApp\bin\release
-   ```
-3. 部署 Qt 依赖：
-   ```cmd
-   windeployqt ChatApp.exe --qmldir E:\Project\QtProject\ChatApp\qml
-   ```
-4. 复制 PostgreSQL 驱动文件（从 PostgreSQL 安装目录的 `bin` 文件夹）：
-   - `libpq.dll`
-   - `libintl-9.dll`（版本号可能不同）
-   - `libiconv-2.dll`
-   - `libcrypto-1_1-x64.dll`
-   - `libssl-1_1-x64.dll`
-5. 确保 `sqldrivers/qsqlpsql.dll` 存在于打包目录
-
-### 7.3 测试连接
-
-启动客户端后，应能正常：
-- 注册/登录账号
-- 发送和接收消息
-- 添加好友
-- 显示在线状态
-
----
-
-## 8. 常见问题排查
-
-### 8.1 Node 项目启动失败
-
-**症状**: Node 项目状态显示「未运行」或「启动失败」
-
-**排查步骤**:
-1. 点击项目 → **「日志」** 查看错误信息
-2. 常见错误及解决：
-
-| 错误信息 | 解决方案 |
-|----------|----------|
-| `Cannot find module 'xxx'` | 点击「模块」→「一键安装」 |
-| `Database connection failed` | 检查 `.env` 数据库配置 |
-| `Port 8080 is already in use` | 检查端口占用或修改端口 |
-
-3. 检查 `.env` 文件是否存在且配置正确：
-   ```bash
-   cat /www/wwwroot/eschat/.env
-   ```
-
-### 8.2 数据库连接失败
-
-**症状**: 后端日志显示数据库连接错误
-
-**解决方案**:
-1. 检查 PostgreSQL 是否运行：
-   - 点击 **「数据库」** → 查看状态
-2. 验证数据库密码：
-   - 点击数据库右侧 **「权限」** → 重置密码
-3. 更新 `.env` 文件，重启 Node 项目
-
-### 8.3 SSL 证书申请失败
-
-**症状**: Let's Encrypt 申请返回 403 错误
-
-**解决方案**:
-
-1. **检查域名解析**:
-   ```bash
-   ping 59.110.44.145
-   ```
-
-2. **关闭 WAF 临时测试**:
-   - 点击左侧 **「WAF」** → 暂时关闭
-
-3. **使用 DNS 验证**（推荐）:
-   - 在 SSL 申请页面选择「DNS 验证」
-   - 选择「阿里云 DNS」
-   - 按提示添加 TXT 记录
-   - 验证通过后自动颁发证书
-
-4. **手动创建验证目录**:
-   ```bash
-   mkdir -p /www/wwwroot/eschat_site/.well-known/acme-challenge
-   chmod 755 /www/wwwroot/eschat_site/.well-known
-   ```
-
-### 8.4 WebSocket 连接断开
-
-**症状**: 客户端频繁显示「重新连接中」
-
-**解决方案**:
-
-1. 检查 Nginx 反向代理配置：
-   ```nginx
-   proxy_set_header Upgrade $http_upgrade;
-   proxy_set_header Connection "upgrade";
-   proxy_read_timeout 86400s;
-   ```
-
-2. 检查宝塔防火墙设置：
-   - 点击 **「安全」** → 确保 443 端口放行
-
-3. 查看 WebSocket 日志：
-   ```bash
-   pm2 logs eschat-server | grep -i websocket
-   ```
-
-### 8.5 502 Bad Gateway
-
-**症状**: 访问网站显示 502 错误
-
-**解决方案**:
-
-1. 检查后端服务状态：
-   - 点击 **「Node 项目」** → 查看运行状态
-2. 检查反向代理配置：
-   - 目标 URL 是否为 `http://127.0.0.1:8080`
-3. 重启服务：
-   - Node 项目点击「重启」
-   - Nginx 点击「重启」
-
-### 8.6 端口冲突
-
-**症状**: 服务启动失败，提示端口被占用
-
-**排查命令**:
 ```bash
-netstat -tlnp | grep 8080
+sudo nginx -t
+sudo systemctl restart nginx
 ```
 
-**解决方案**:
-1. 停止占用端口的进程
-2. 或修改 Node 项目端口为其他值（如 8081）
-3. 同步修改 Nginx 反向代理目标端口
+如果要上 HTTPS，建议配好证书后把 80 跳转到 443，并保留同样的 proxy 配置。
 
----
+## 8. 阿里云安全组与防火墙
 
-## 📊 宝塔面板日常运维
+至少放行：
 
-### 监控服务状态
+- 80
+- 443
+- 22
 
-1. **Node 项目监控**:
-   - 点击 **「Node 项目」** → 查看 CPU/内存占用
-   - 设置重启计划（可选）
+通常不建议直接暴露：
 
-2. **数据库监控**:
-   - 点击 **「数据库」** → 查看连接数
-   - 定期备份数据
+- 8080
+- 5432
 
-3. **网站监控**:
-   - 点击 **「网站」** → 查看访问统计
-   - 查看 Nginx 日志
+Node 和 PostgreSQL 应尽量只监听本机或内网，由 Nginx 对外提供访问入口。
 
-### 定期备份
+## 9. 部署后验证
 
-1. **数据库备份**:
-   - 点击 **「数据库」** → 右侧「备份」
-   - 设置自动备份计划（建议每天）
+### 检查服务日志
 
-2. **文件备份**:
-   - 点击 **「文件」** → 选择目录
-   - 右键「压缩」→ 下载到本地
-
-3. **整站备份**:
-   - 使用宝塔「计划任务」功能
-   - 设置每周自动备份到阿里云 OSS
-
-### 日志管理
-
-1. **应用日志**:
-   ```bash
-   pm2 logs eschat-server --lines 100
-   ```
-
-2. **Nginx 日志**:
-   - 网站设置 → 「日志」标签
-
-3. **数据库日志**:
-   - PostgreSQL 设置 → 「错误日志」
-
----
-
-## 🔐 安全加固建议
-
-### 1. 防火墙配置
-
-点击左侧 **「安全」**，确保：
-
-| 端口 | 状态 | 备注 |
-|------|------|------|
-| 22 | 放行 | SSH |
-| 80 | 放行 | HTTP |
-| 443 | 放行 | HTTPS |
-| 8080 | 拒绝 | 仅内网访问 |
-| 5432 | 拒绝 | 仅内网访问 |
-
-### 2. 修改默认配置
-
-- 修改宝塔面板默认端口（8888）
-- 修改面板登录用户名和密码
-- 修改数据库默认密码
-- 修改 `JWT_SECRET` 为强随机字符串
-
-### 3. 启用 WAF
-
-1. 点击 **「软件商店」** → 安装「Nginx 免费防火墙」
-2. 启用防火墙
-3. 配置防护规则
-
-### 4. 定期更新
-
-- 定期更新宝塔面板
-- 定期更新 Node.js 依赖
-- 定期更新 SSL 证书（Let's Encrypt 90 天有效期）
-
----
-
-## 🌐 前端网站部署
-
-### 9.1 前端文件结构
-
-前端网站文件位于项目根目录的 `web/` 目录下：
-
-```
-web/
-├── index.html          # 首页（登录/注册）
-├── download.html       # 下载页面
-├── about.html          # 关于页面
-├── css/
-│   ├── style.css       # 通用样式
-│   ├── download.css    # 下载页面样式
-│   └── about.css       # 关于页面样式
-├── js/
-│   └── main.js         # JavaScript 逻辑
-├── images/             # 图片资源
-└── downloads/          # 客户端安装包目录
+```bash
+pm2 logs eschat-server --lines 100
 ```
 
-### 9.2 上传前端文件
+或：
 
-1. 将 `web/` 目录上传到服务器项目目录
-2. 确保文件权限正确（通常 644 即可）
+```bash
+sudo journalctl -u eschat -n 100 --no-pager
+```
 
-### 9.3 配置客户端下载包
+### 检查数据库迁移状态
 
-将编译好的客户端安装包放入 `web/downloads/` 目录：
+```bash
+psql -h 127.0.0.1 -p 5432 -U postgres -d chatapp -c "SELECT version, applied_at FROM schema_migrations ORDER BY version;"
+```
 
-- `ESChat-Setup-Windows.exe` - Windows 安装包
-- `ESChat-Setup-macOS.dmg` - macOS 安装包
-- `ESChat-Setup-Linux.AppImage` - Linux 安装包
+### 检查网站和 API
 
-### 9.4 访问网站
+```bash
+curl http://127.0.0.1:8080/
+curl http://127.0.0.1:8080/download.html
+curl http://127.0.0.1:8080/api/conversations
+```
 
-部署完成后，通过以下方式访问：
+未带认证访问 API 返回未授权是正常现象，只要服务有响应即可。
 
-- **首页**: `https://your-domain.com/`
-- **下载页**: `https://your-domain.com/download.html`
-- **关于页**: `https://your-domain.com/about.html`
+## 10. 更新发布流程
 
-### 9.5 API 配置说明
+服务已上线后，推荐按下面顺序更新：
 
-前端 JavaScript 会自动根据环境配置 API 地址：
+```bash
+cd /opt/eschat
+git pull
+cd server
+npm install
+export CHATAPP_DB_HOST=localhost
+export CHATAPP_DB_PORT=5432
+export CHATAPP_DB_NAME=chatapp
+export CHATAPP_DB_USER=postgres
+export PGPASSWORD=你的数据库密码
+./migrations/run_migrations.sh
+pm2 restart eschat-server
+```
 
-- **本地开发**: `http://localhost:8080/api`
-- **生产环境**: `/api` (通过 Nginx 反向代理)
+如果是 systemd：
 
-确保 Nginx 反向代理配置正确，将 `/api` 请求代理到 Node.js 服务。
+```bash
+sudo systemctl restart eschat
+```
 
-### 9.6 自定义网站内容
+## 常见问题
 
-如需修改网站内容，编辑以下文件：
+### 服务启动时报数据库 schema 过旧
 
-- **网站标题/文案**: 编辑各 HTML 文件
-- **样式颜色**: 编辑 `css/style.css` 中的 CSS 变量
-- **联系方式**: 编辑 `about.html` 中的联系信息
+说明数据库没有执行完迁移。先运行：
 
----
+```bash
+cd /opt/eschat/server
+./migrations/run_migrations.sh
+```
 
-## 📞 技术支持
+### 端口 8080 被占用
 
-收集以下信息以便排查问题：
+检查占用进程：
 
-1. **Node 项目日志**: Node 项目 → 日志
-2. **Nginx 错误日志**: 网站设置 → 日志 → 错误日志
-3. **数据库状态**: 数据库 → 右侧「设置」
-4. **系统资源**: 首页 → 资源占用情况
+```bash
+sudo ss -ltnp | grep 8080
+```
 
----
+### 上传头像后文件访问不到
 
-**文档结束**
+确认 Node 服务可读取 web/uploads/avatars 目录，并且 Nginx 没有绕过 Node 直接指向错误站点根目录。
+
+## 相关文档
+
+- docs/运行部署指南.md
+- server/migrations/README_MIGRATIONS.md
+- database/README_DATABASE.md
+- web/DEPLOY.md

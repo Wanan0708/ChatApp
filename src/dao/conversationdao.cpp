@@ -1,4 +1,5 @@
 #include "conversationdao.h"
+#include "../database/databaseconfig.h"
 #include "../network/networkclient.h"
 #include "../utils/timeformatter.h"
 #include <QDebug>
@@ -22,6 +23,7 @@ void ConversationDAO::getUserConversations()
             Conversation conv;
             conv.id = obj["conversation_id"].toVariant().toString();
             conv.title = obj["name"].toVariant().toString();
+            conv.avatar = DatabaseConfig::resolveServerUrl(obj["avatar"].toVariant().toString());
             conv.type = obj["type"].toVariant().toString();
             
             // 使用 toVariant().toString() 确保正确获取字符串

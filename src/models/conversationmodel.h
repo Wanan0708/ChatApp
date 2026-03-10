@@ -15,6 +15,7 @@ public:
     enum Roles {
         IdRole = Qt::UserRole + 1,
         TitleRole,
+        AvatarRole,
         LastMessageRole,
         TimeRole,
         UnreadCountRole,
@@ -37,6 +38,8 @@ public:
     Q_INVOKABLE void updateConversation(const QString &id, const QVariantMap &updates);
     Q_INVOKABLE QString findOrStartConversation(const QString &userId, const QString &userName);
     Q_INVOKABLE QVariantMap get(int index) const;
+    Q_INVOKABLE QVariantMap getById(const QString &id) const;
+    void replaceConversationId(const QString &oldId, const QString &newId, const QVariantMap &updates = QVariantMap());
     void setCurrentConversation(const QString &id);
     void markRead(const QString &id);
     void clearAllUnread();
@@ -53,6 +56,7 @@ private:
     QHash<QString, int> m_idToIndex;
     QString m_currentUserId;
 
+    void rebuildIdIndex();
     void insertConversation(const QVariantMap &conv);
     void updateConversationInternal(int rowIndex, const QVariantMap &updates);
 };

@@ -46,6 +46,13 @@ WebSocketClient::~WebSocketClient()
     disconnectFromServer();
 }
 
+bool WebSocketClient::isReconnecting() const
+{
+    return !m_isConnected
+        && (m_connectionState.startsWith(QStringLiteral("Connecting"))
+            || m_connectionState.startsWith(QStringLiteral("Reconnecting")));
+}
+
 void WebSocketClient::connectToServer(const QString &url)
 {
     const QString normalizedUrl = url.trimmed();
@@ -55,10 +62,12 @@ void WebSocketClient::connectToServer(const QString &url)
     }
 
     m_manualDisconnectRequested = false;
+    m_reconnectTimer->stop();
 
     if (m_isConnected) {
         qDebug() << "[WebSocketClient] Already connected, disconnecting first";
         disconnectFromServer();
+        m_manualDisconnectRequested = false;
     }
 
     if (m_webSocket->state() == QAbstractSocket::ConnectingState) {
@@ -84,6 +93,9 @@ void WebSocketClient::disconnectFromServer()
     if (m_webSocket->state() == QAbstractSocket::ConnectedState) {
         qDebug() << "[WebSocketClient] Disconnecting from server";
         m_webSocket->close();
+    } else {
+        m_connectionState = QStringLiteral("Disconnected");
+        emit connectionStateChanged(m_connectionState);
     }
 
     resetReconnectState();
@@ -144,8 +156,13 @@ void WebSocketClient::onDisconnected()
     m_pongTimer->stop();
 
     // 自动重连（排除用户主动断开）
-    if (!m_manualDisconnectRequested && !m_serverUrl.isEmpty() && m_reconnectAttempts < m_maxReconnectAttempts) {
+    const bool unlimitedReconnect = (m_maxReconnectAttempts <= 0);
+    if (!m_manualDisconnectRequested && !m_serverUrl.isEmpty()
+        && (unlimitedReconnect || m_reconnectAttempts < m_maxReconnectAttempts)) {
         attemptReconnect();
+    } else if (!m_manualDisconnectRequested && !m_serverUrl.isEmpty() && !unlimitedReconnect
+               && m_reconnectAttempts >= m_maxReconnectAttempts) {
+        emit reconnectFailed();
     }
 
     qDebug() << "[WebSocketClient] Disconnected";
@@ -188,7 +205,7 @@ void WebSocketClient::onError(QAbstractSocket::SocketError error)
 
 void WebSocketClient::onReconnectTimer()
 {
-    if (m_reconnectAttempts >= m_maxReconnectAttempts) {
+    if (m_maxReconnectAttempts > 0 && m_reconnectAttempts >= m_maxReconnectAttempts) {
         qWarning() << "[WebSocketClient] Max reconnect attempts reached, giving up";
         return;
     }
@@ -214,7 +231,14 @@ void WebSocketClient::onPong(quint64 elapsedTime)
 void WebSocketClient::attemptReconnect()
 {
     m_reconnectAttempts++;
-    m_connectionState = QString("Reconnecting... (attempt %1/%2)").arg(m_reconnectAttempts).arg(m_maxReconnectAttempts);
+    if (m_maxReconnectAttempts > 0) {
+        m_connectionState = QString("Reconnecting... (attempt %1/%2)")
+            .arg(m_reconnectAttempts)
+            .arg(m_maxReconnectAttempts);
+    } else {
+        m_connectionState = QString("Reconnecting... (attempt %1)")
+            .arg(m_reconnectAttempts);
+    }
     emit connectionStateChanged(m_connectionState);
 
     // 在当前延迟基础上增加抖动，避免多个客户端同时重连

@@ -3,6 +3,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import QtGraphicalEffects 1.12
 import ChatApp.Network 1.0
+import "../components"
 
 Rectangle {
     id: settingsPage
@@ -319,17 +320,11 @@ Rectangle {
                         Layout.fillWidth: true
                         spacing: 16
 
-                        Rectangle {
-                            width: 52; height: 52; radius: 26; color: "#eff6ff"
-                            clip: true
-
-                            Image {
-                                anchors.centerIn: parent
-                                source: ChatService.currentUserAvatar || "qrc:/new/prefix1/image/boy.png"
-                                width: 48
-                                height: 48
-                                fillMode: Image.PreserveAspectCrop
-                            }
+                        Avatar {
+                            width: 52
+                            height: 52
+                            isSelf: true
+                            avatarSource: ChatService.currentUserAvatar || "qrc:/new/prefix1/image/boy.png"
                         }
 
                         ColumnLayout {

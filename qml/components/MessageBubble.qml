@@ -14,17 +14,27 @@ Item {
     // 新增：消息类型和状态
     property int messageType: 0  // 0=文本，1=图片，2=文件，3=系统
     property int messageStatus: 1  // 0=发送中，1=已发送，2=已读，3=失败
+    property bool isOffline: false
+    property string errorText: ""
     property string fileName: ""
     property string fileSize: ""
     property string fileUrl: ""
     property string thumbnailUrl: ""
     property string messageId: ""  // 消息 ID，用于撤回
+    property string internalMessageId: ""
     
     // 撤回相关
     property bool isRecalled: false
     property bool canRecall: false  // 2 分钟内可撤回
 
     readonly property real maxWidth: parent.width * 0.75
+    readonly property string statusText: {
+        if (!root.isSelf) return ""
+        if (messageStatus === 3) return "发送失败"
+        if (messageStatus === 2) return "已读"
+        if (messageStatus === 0) return root.isOffline ? "待发送" : "发送中"
+        return "已发送"
+    }
 
     // 气泡颜色
     readonly property string bubbleColor: {
@@ -50,6 +60,11 @@ Item {
     }
     
     signal messageRecalled()
+    signal retryRequested(string messageId)
+
+    readonly property bool showRetrySpinner: root.isSelf && !root.isRecalled && messageStatus === 0
+    // 当发送失败（3）或处于离线排队（发送中且 isOffline=true）时，显示黄色感叹并允许点击重发
+    readonly property bool showRetryAction: root.isSelf && !root.isRecalled && (messageStatus === 3 || (messageStatus === 0 && isOffline))
 
     // 长按显示菜单
     MouseArea {
@@ -212,6 +227,68 @@ Item {
         }
     }
 
+    Item {
+        visible: root.isSelf && (showRetrySpinner || showRetryAction)
+        width: 24
+        height: 24
+        x: contentColumn.x - width - 8
+        y: contentColumn.y + Math.max(0, (contentColumn.height - height) / 2)
+
+        // 当处于离线（排队）时，显示更明显的黄色环以提示发送未完成
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            visible: showRetrySpinner && isOffline
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 20
+                height: 20
+                radius: 10
+                color: "#fff6e0"
+                border.color: "#f59e0b"
+                border.width: 2
+            }
+        }
+
+        BusyIndicator {
+            anchors.fill: parent
+            running: showRetrySpinner
+            visible: showRetrySpinner
+        }
+
+        Rectangle {
+            visible: showRetryAction
+            anchors.centerIn: parent
+            width: 18
+            height: 18
+            radius: 9
+            color: "#facc15"
+            border.color: "#d97706"
+            border.width: 1
+
+            Text {
+                anchors.centerIn: parent
+                text: "!"
+                color: "#7c2d12"
+                font.pixelSize: 13
+                font.bold: true
+            }
+
+            MouseArea {
+                id: retryMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.retryRequested(root.internalMessageId)
+            }
+
+            ToolTip.visible: retryMouseArea.containsMouse && root.errorText !== ""
+            ToolTip.text: root.errorText
+            ToolTip.delay: 150
+        }
+    }
+
     // 时间戳
     Text {
         id: timestamp
@@ -236,5 +313,17 @@ Item {
             margins: 4
         }
         horizontalAlignment: timeAlignment === "right" ? Text.AlignRight : Text.AlignLeft
+    }
+
+    Text {
+        visible: root.isSelf && statusText !== "" && !showRetrySpinner && !showRetryAction
+        text: statusText
+        font.pixelSize: 11
+        color: messageStatus === 3 ? "#d32f2f" : (messageStatus === 0 ? "#f57c00" : "#888")
+        anchors {
+            right: timestamp.left
+            rightMargin: 6
+            verticalCenter: timestamp.verticalCenter
+        }
     }
 }

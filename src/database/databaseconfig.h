@@ -23,6 +23,9 @@ struct DatabaseConfig
     static QString defaultHost();
     static QString backendHost();
     static int backendPort();
+    static QString backendBaseUrl();
     static QString apiUrl();
     static QString wsUrl();
+    static QString resolveServerUrl(const QString &pathOrUrl);
+    static QString toServerRelativePath(const QString &pathOrUrl);
 };

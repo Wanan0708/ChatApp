@@ -44,3 +44,11 @@ qmlcache/
 # OS
 .DS_Store
 Thumbs.db
+
+# Server dependencies and secrets
+server/node_modules/
+server/.env
+server/.env.*
+
+# Runtime uploads
+web/uploads/

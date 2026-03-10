@@ -65,6 +65,7 @@ Item {
                         onConversationSelected: {
                             chatPage.currentConversationId = conversationId
                             chatPage.currentTitle = title
+                            chatPage.currentAvatar = avatar
                             console.log("main.qml: Received conversation selected - ID:", conversationId, "Title:", title)
                         }
                     }
@@ -98,7 +99,7 @@ Item {
                     var conversationId = ChatService.conversationModel.findOrStartConversation(userId, userName);
 
                     // 确保在会话列表中存在该联系人的项
-                    ChatService.conversationModel.updateConversation(conversationId, {"title": userName})
+                    ChatService.conversationModel.updateConversation(conversationId, {"title": userName, "avatar": contactAvatar, "type": "single"})
 
                     // 设置为当前会话
                     ChatService.setCurrentConversation(conversationId)
@@ -106,6 +107,7 @@ Item {
                     // 同步聊天页面属性
                     chatPage.currentConversationId = conversationId
                     chatPage.currentTitle = userName
+                    chatPage.currentAvatar = contactAvatar
 
                     // 切换到消息页面并更新侧边栏状态
                     roootItem.currentPageIndex = 0
@@ -129,17 +131,6 @@ Item {
         // ChatService 暴露的信号为 connectedChanged(bool) 和 messageReceived(conversationId, message)
         function onConnectedChanged(connected) {
             console.log("WebSocket状态:", connected ? "✓ 已连接" : "✗ 已断开")
-        }
-        function onMessageReceived(conversationId, message) {
-            try {
-                var msg = message // message is already a QVariantMap from C++
-                if (chatPage && chatPage.messageModel && chatPage.messageModel.addMessage) {
-                    // 以 QML 友好的方式追加消息（MessageModel 在 C++ 中实现 addMessage）
-                    chatPage.messageModel.addMessage(msg)
-                }
-            } catch (e) {
-                console.error("消息处理失败:", e)
-            }
         }
     }
 

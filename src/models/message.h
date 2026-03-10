@@ -43,6 +43,7 @@ struct Message {
     QString fileSize;       ///< 文件大小（格式化字符串）
     QString fileUrl;        ///< 文件 URL（用于下载/预览）
     QString thumbnailUrl;   ///< 缩略图 URL（图片消息）
+    bool recalled = false;  ///< 是否已撤回
 
     Message() 
         : type(MessageType::Text)
@@ -71,6 +72,7 @@ struct Message {
         map["fileSize"] = fileSize;
         map["fileUrl"] = fileUrl;
         map["thumbnailUrl"] = thumbnailUrl;
+        map["recalled"] = recalled;
         return map;
     }
 
@@ -91,6 +93,7 @@ struct Message {
         msg.fileSize = map.value("fileSize").toString();
         msg.fileUrl = map.value("fileUrl").toString();
         msg.thumbnailUrl = map.value("thumbnailUrl").toString();
+        msg.recalled = map.value("recalled", false).toBool();
         return msg;
     }
 

@@ -26,6 +26,24 @@ int DatabaseConfig::backendPort()
     return (ok && port > 0 && port <= 65535) ? port : 8080;
 }
 
+QString DatabaseConfig::backendBaseUrl()
+{
+    QUrl url(apiUrl());
+    if (url.isValid()) {
+        url.setPath(QString());
+        url.setQuery(QString());
+        url.setFragment(QString());
+        QString base = url.toString(QUrl::FullyEncoded);
+        if (base.endsWith('/')) {
+            base.chop(1);
+        }
+        return base;
+    }
+
+    const QString scheme = QProcessEnvironment::systemEnvironment().value("CHATAPP_API_SCHEME", "http");
+    return QString("%1://%2:%3").arg(scheme, backendHost()).arg(backendPort());
+}
+
 QString DatabaseConfig::apiUrl()
 {
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -85,6 +103,46 @@ QString DatabaseConfig::wsUrl()
     }
 #endif
     return QString("%1://%2:%3").arg(scheme, backendHost()).arg(backendPort());
+}
+
+QString DatabaseConfig::resolveServerUrl(const QString &pathOrUrl)
+{
+    const QString trimmed = pathOrUrl.trimmed();
+    if (trimmed.isEmpty()) {
+        return trimmed;
+    }
+
+    const QString lower = trimmed.toLower();
+    if (lower.startsWith("http://") || lower.startsWith("https://")
+        || lower.startsWith("file://") || lower.startsWith("qrc:")) {
+        return trimmed;
+    }
+
+    if (trimmed.startsWith('/')) {
+        return backendBaseUrl() + trimmed;
+    }
+
+    return backendBaseUrl() + "/" + trimmed;
+}
+
+QString DatabaseConfig::toServerRelativePath(const QString &pathOrUrl)
+{
+    const QString trimmed = pathOrUrl.trimmed();
+    if (trimmed.isEmpty()) {
+        return trimmed;
+    }
+
+    if (trimmed.startsWith('/')) {
+        return trimmed;
+    }
+
+    QUrl url(trimmed);
+    if (!url.isValid() || url.scheme().isEmpty()) {
+        return trimmed;
+    }
+
+    const QString path = url.path();
+    return path.isEmpty() ? trimmed : path;
 }
 
 DatabaseConfig DatabaseConfig::loadFromEnvironment()
