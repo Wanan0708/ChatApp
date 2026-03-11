@@ -71,6 +71,7 @@ QVariant MessageModel::data(const QModelIndex &index, int role) const
     case ServerMessageIdRole: return serverMessageId;
     case ContentRole: return msg.value("content");
     case SenderIdRole: return msg.value("senderId");
+    case SenderNameRole: return msg.value("senderName");
     case TimestampRole: return msg.value("timestamp");
     case IsSelfRole:
         return (msg.value("senderId").toString() == m_currentUserId);
@@ -96,6 +97,7 @@ QHash<int, QByteArray> MessageModel::roleNames() const
         {ServerMessageIdRole, "serverMessageId"},
         {ContentRole, "content"},
         {SenderIdRole, "senderId"},
+        {SenderNameRole, "senderName"},
         {TimestampRole, "timestamp"},
         {IsSelfRole, "isSelf"},
         {TypeRole, "type"},
@@ -175,6 +177,35 @@ void MessageModel::clearMessages()
     beginResetModel();
     m_messages.clear();
     endResetModel();
+}
+
+void MessageModel::removeMessage(const QString &messageId, const QString &serverMessageId)
+{
+    if (messageId.isEmpty() && serverMessageId.isEmpty()) {
+        return;
+    }
+
+    for (int index = 0; index < m_messages.count(); ++index) {
+        const QVariantMap &existing = m_messages.at(index);
+        const QString existingMessageId = existing.value("messageId").toString();
+        const QString existingServerMessageId = existing.value("serverMessageId").toString();
+        if ((!messageId.isEmpty() && (existingMessageId == messageId || existingServerMessageId == messageId))
+            || (!serverMessageId.isEmpty() && (existingMessageId == serverMessageId || existingServerMessageId == serverMessageId))) {
+            beginRemoveRows(QModelIndex(), index, index);
+            m_messages.removeAt(index);
+            endRemoveRows();
+            return;
+        }
+    }
+}
+
+QVariantMap MessageModel::get(int index) const
+{
+    if (index >= 0 && index < m_messages.count()) {
+        return m_messages.at(index);
+    }
+
+    return QVariantMap();
 }
 
 QList<QVariantMap> MessageModel::messages() const

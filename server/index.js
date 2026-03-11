@@ -1174,8 +1174,16 @@ app.get('/api/messages/:conversationId', authenticateToken, async (req, res) => 
     const { limit = 50, offset = 0 } = req.query;
     try {
         const result = await pool.query(
-            'SELECT * FROM messages WHERE conversation_id = $1 ORDER BY timestamp DESC LIMIT $2 OFFSET $3',
-            [conversationId, limit, offset]
+            `SELECT m.*, u.username AS sender_name
+             FROM messages m
+             JOIN conversation_members cm
+               ON cm.conversation_id = m.conversation_id
+              AND cm.user_id = $2
+             LEFT JOIN users u ON u.user_id = m.sender_id
+             WHERE m.conversation_id = $1
+             ORDER BY m.timestamp DESC
+             LIMIT $3 OFFSET $4`,
+            [conversationId, req.user.userId, limit, offset]
         );
         // 将秒级时间戳转换为毫秒级返回给客户端
         const messages = result.rows.reverse().map(row => ({
@@ -1631,6 +1639,7 @@ wss.on('connection', (ws) => {
                     messageId,
                     conversationId: transactionResult.finalConversationId,
                     senderId: currentUserId,
+                    senderName: clients.get(currentUserId)?.username || '',
                     content,
                     timestamp,
                     messageType: messageTypeToClientValue(normalizedMessageType),

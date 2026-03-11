@@ -29,6 +29,42 @@
 
 namespace {
 
+QString localStatePrefix(const QString &userId)
+{
+    return QStringLiteral("localState/%1").arg(userId);
+}
+
+QString hiddenConversationsKey(const QString &userId)
+{
+    return localStatePrefix(userId) + QStringLiteral("/hiddenConversations");
+}
+
+QString pinnedConversationsKey(const QString &userId)
+{
+    return localStatePrefix(userId) + QStringLiteral("/pinnedConversations");
+}
+
+QString deletedMessagesKey(const QString &userId, const QString &conversationId)
+{
+    return localStatePrefix(userId) + QStringLiteral("/deletedMessages/%1").arg(conversationId);
+}
+
+QString conversationPreviewForMessage(const QVariantMap &message,
+                                     const QString &currentUserId,
+                                     const QString &conversationType)
+{
+    if (message.value("recalled").toBool()) {
+        return MessagePreview::recalledPreviewForConversation(
+            message.value("senderId").toString() == currentUserId,
+            conversationType,
+            message.value("senderName").toString());
+    }
+
+    return MessagePreview::normalizeConversationPreview(
+        message.value("content").toString(),
+        message.value("type", message.value("messageType", 0)).toInt());
+}
+
 QString buildLocalMessageId(const QString &prefix)
 {
     return QString("local-%1-%2-%3")
@@ -165,8 +201,15 @@ void ChatService::initializeSampleData()
 void ChatService::handleConversationsLoaded(const QVector<Conversation> &conversations)
 {
     qDebug() << "[ChatService] Received" << conversations.size() << "conversations";
+
+    if (m_conversationModel) {
+        m_conversationModel->clear();
+    }
     
     for (const Conversation &conv : conversations) {
+        const bool isHidden = m_hiddenConversationIds.contains(conv.id);
+        const bool isPinned = m_pinnedConversationOrder.contains(conv.id);
+
         // 1. 更新对话列表模型
         m_conversationModel->updateConversation(conv.id, {
             {"title", conv.title},
@@ -174,11 +217,19 @@ void ChatService::handleConversationsLoaded(const QVector<Conversation> &convers
             {"lastMessage", conv.lastMessage},
             {"time", conv.time},
             {"type", conv.type},
-            {"unreadCount", conv.unreadCount}
+            {"unreadCount", conv.unreadCount},
+            {"isCurrent", conv.id == m_currentConversationId},
+            {"isHidden", isHidden},
+            {"isPinned", isPinned},
+            {"pinnedOrder", m_pinnedConversationOrder.value(conv.id, 0)}
         });
 
         // 2. 异步拉取每个对话的消息历史
         m_messageDAO->getConversationMessages(conv.id, 50);
+    }
+
+    if (m_conversationModel && !m_currentConversationId.isEmpty()) {
+        m_conversationModel->setCurrentConversation(m_currentConversationId);
     }
 }
 
@@ -195,12 +246,17 @@ void ChatService::handleMessagesLoaded(const QString &conversationId, const QVec
 
     QList<QVariantMap> cachedMessages;
     for (const Message &msg : messages) {
+        if (isMessageDeletedLocally(conversationId, msg.messageId)) {
+            continue;
+        }
+
         QVariantMap msgMap;
         msgMap["messageId"] = msg.messageId;
         msgMap["serverMessageId"] = msg.messageId;
         msgMap["conversationId"] = msg.conversationId;
         msgMap["content"] = msg.content;
         msgMap["senderId"] = msg.senderId;
+        msgMap["senderName"] = msg.senderName;
         msgMap["timestamp"] = msg.timestamp;
         msgMap["type"] = static_cast<int>(msg.type);
         msgMap["status"] = static_cast<int>(msg.status);
@@ -221,6 +277,8 @@ void ChatService::handleMessagesLoaded(const QString &conversationId, const QVec
     if (conversationId == m_currentConversationId) {
         syncConversationReadState(conversationId);
     }
+
+    updateConversationPreviewFromMessages(conversationId);
 
     m_messageOffsets[conversationId] = offset + messages.size();
     m_hasMoreMessages[conversationId] = (messages.size() >= limit);
@@ -251,6 +309,10 @@ MessageModel* ChatService::getMessageModel(const QString &conversationId)
 
 void ChatService::setCurrentConversationId(const QString &id)
 {
+    if (!id.isEmpty()) {
+        maybeRestoreConversationVisibility(id);
+    }
+
     if (m_currentConversationId != id) {
         m_currentConversationId = id;
         m_conversationModel->setCurrentConversation(id);
@@ -262,6 +324,229 @@ void ChatService::setCurrentConversationId(const QString &id)
 void ChatService::setCurrentConversation(const QString &conversationId)
 {
     setCurrentConversationId(conversationId);
+}
+
+void ChatService::resetConversationSessionState()
+{
+    const bool hadCurrentConversation = !m_currentConversationId.isEmpty();
+
+    m_currentConversationId.clear();
+    qDeleteAll(m_messageModels);
+    m_messageModels.clear();
+    m_messageOffsets.clear();
+    m_hasMoreMessages.clear();
+    m_loadingMessages.clear();
+    m_pendingOutgoingMessages.clear();
+    m_retryableMessages.clear();
+
+    if (m_conversationModel) {
+        m_conversationModel->clear();
+        m_conversationModel->setCurrentConversation(QString());
+    }
+
+    if (hadCurrentConversation) {
+        emit currentConversationIdChanged();
+    }
+}
+
+void ChatService::loadLocalConversationState()
+{
+    m_hiddenConversationIds.clear();
+    m_pinnedConversationOrder.clear();
+    m_deletedMessageIds.clear();
+
+    if (m_currentUserId.isEmpty()) {
+        return;
+    }
+
+    QSettings settings;
+
+    const QStringList hiddenConversationIds = settings.value(hiddenConversationsKey(m_currentUserId)).toStringList();
+    for (const QString &conversationId : hiddenConversationIds) {
+        if (!conversationId.isEmpty()) {
+            m_hiddenConversationIds.insert(conversationId);
+        }
+    }
+
+    const QVariantMap pinnedMap = settings.value(pinnedConversationsKey(m_currentUserId)).toMap();
+    for (auto it = pinnedMap.constBegin(); it != pinnedMap.constEnd(); ++it) {
+        const qint64 order = it.value().toLongLong();
+        if (!it.key().isEmpty() && order > 0) {
+            m_pinnedConversationOrder.insert(it.key(), order);
+        }
+    }
+
+    settings.beginGroup(localStatePrefix(m_currentUserId) + QStringLiteral("/deletedMessages"));
+    const QStringList conversationIds = settings.childKeys();
+    for (const QString &conversationId : conversationIds) {
+        const QStringList deletedIds = settings.value(conversationId).toStringList();
+        QSet<QString> deletedSet;
+        for (const QString &messageId : deletedIds) {
+            if (!messageId.isEmpty()) {
+                deletedSet.insert(messageId);
+            }
+        }
+        if (!deletedSet.isEmpty()) {
+            m_deletedMessageIds.insert(conversationId, deletedSet);
+        }
+    }
+    settings.endGroup();
+}
+
+void ChatService::persistHiddenConversations() const
+{
+    if (m_currentUserId.isEmpty()) {
+        return;
+    }
+
+    QSettings settings;
+    settings.setValue(hiddenConversationsKey(m_currentUserId), QStringList(m_hiddenConversationIds.values()));
+}
+
+void ChatService::persistPinnedConversations() const
+{
+    if (m_currentUserId.isEmpty()) {
+        return;
+    }
+
+    QVariantMap pinnedMap;
+    for (auto it = m_pinnedConversationOrder.constBegin(); it != m_pinnedConversationOrder.constEnd(); ++it) {
+        pinnedMap.insert(it.key(), it.value());
+    }
+
+    QSettings settings;
+    settings.setValue(pinnedConversationsKey(m_currentUserId), pinnedMap);
+}
+
+void ChatService::persistDeletedMessages(const QString &conversationId) const
+{
+    if (m_currentUserId.isEmpty() || conversationId.isEmpty()) {
+        return;
+    }
+
+    QSettings settings;
+    const QSet<QString> deletedIds = m_deletedMessageIds.value(conversationId);
+    if (deletedIds.isEmpty()) {
+        settings.remove(deletedMessagesKey(m_currentUserId, conversationId));
+        return;
+    }
+
+    settings.setValue(deletedMessagesKey(m_currentUserId, conversationId), QStringList(deletedIds.values()));
+}
+
+void ChatService::markMessageDeletedLocally(const QString &conversationId, const QString &messageId)
+{
+    if (conversationId.isEmpty() || messageId.isEmpty()) {
+        return;
+    }
+
+    m_deletedMessageIds[conversationId].insert(messageId);
+}
+
+bool ChatService::isMessageDeletedLocally(const QString &conversationId, const QString &messageId) const
+{
+    if (conversationId.isEmpty() || messageId.isEmpty()) {
+        return false;
+    }
+
+    const auto it = m_deletedMessageIds.constFind(conversationId);
+    return it != m_deletedMessageIds.constEnd() && it->contains(messageId);
+}
+
+void ChatService::setConversationHiddenState(const QString &conversationId, bool hidden, bool removeFromModel)
+{
+    if (conversationId.isEmpty()) {
+        return;
+    }
+
+    if (hidden) {
+        m_hiddenConversationIds.insert(conversationId);
+    } else {
+        m_hiddenConversationIds.remove(conversationId);
+    }
+
+    persistHiddenConversations();
+
+    if (removeFromModel) {
+        m_conversationModel->removeConversation(conversationId);
+    } else {
+        m_conversationModel->updateConversation(conversationId, {{"isHidden", hidden}});
+    }
+
+    emit conversationUpdated(conversationId);
+}
+
+void ChatService::setConversationPinnedState(const QString &conversationId, bool pinned)
+{
+    if (conversationId.isEmpty()) {
+        return;
+    }
+
+    if (pinned) {
+        m_pinnedConversationOrder.insert(conversationId, QDateTime::currentMSecsSinceEpoch());
+    } else {
+        m_pinnedConversationOrder.remove(conversationId);
+    }
+
+    persistPinnedConversations();
+    m_conversationModel->updateConversation(conversationId, {
+        {"isPinned", pinned},
+        {"pinnedOrder", m_pinnedConversationOrder.value(conversationId, 0)}
+    });
+    emit conversationUpdated(conversationId);
+}
+
+void ChatService::maybeRestoreConversationVisibility(const QString &conversationId)
+{
+    if (conversationId.isEmpty() || !m_hiddenConversationIds.contains(conversationId)) {
+        return;
+    }
+
+    setConversationHiddenState(conversationId, false, false);
+}
+
+void ChatService::updateConversationPreviewFromMessages(const QString &conversationId)
+{
+    if (conversationId.isEmpty()) {
+        return;
+    }
+
+    MessageModel *model = getMessageModel(conversationId);
+    if (!model) {
+        return;
+    }
+
+    const QList<QVariantMap> messages = model->messages();
+    const QVariantMap conversation = m_conversationModel->getById(conversationId);
+    const QString conversationType = conversation.value("type").toString();
+    QVariantMap lastVisibleMessage;
+    for (int index = messages.count() - 1; index >= 0; --index) {
+        const QVariantMap &message = messages.at(index);
+        const QString messageId = message.value("messageId").toString();
+        const QString serverMessageId = message.value("serverMessageId").toString();
+        if (isMessageDeletedLocally(conversationId, messageId) || isMessageDeletedLocally(conversationId, serverMessageId)) {
+            continue;
+        }
+
+        lastVisibleMessage = message;
+        break;
+    }
+
+    if (lastVisibleMessage.isEmpty()) {
+        m_conversationModel->updateConversation(conversationId, {
+            {"lastMessage", QString()},
+            {"time", QString()}
+        });
+        emit conversationUpdated(conversationId);
+        return;
+    }
+
+    const qint64 timestamp = lastVisibleMessage.value("timestamp").toLongLong();
+    m_conversationModel->updateConversation(conversationId, {
+        {"lastMessage", conversationPreviewForMessage(lastVisibleMessage, m_currentUserId, conversationType)},
+        {"time", TimeFormatter::formatChatTime(timestamp)}
+    });
+    emit conversationUpdated(conversationId);
 }
 
 void ChatService::refreshConversations()
@@ -297,6 +582,8 @@ void ChatService::sendTextMessageInternal(const QString &conversationId,
 {
     if (content.trimmed().isEmpty()) return;
 
+    maybeRestoreConversationVisibility(conversationId);
+
     const QString trimmedContent = content.trimmed();
     const QString localMessageId = messageId.isEmpty() ? buildLocalMessageId("text") : messageId;
     const qint64 currentTimestamp = timestamp > 0 ? timestamp : QDateTime::currentMSecsSinceEpoch();
@@ -308,6 +595,7 @@ void ChatService::sendTextMessageInternal(const QString &conversationId,
     message["conversationId"] = conversationId;
     message["content"] = trimmedContent;
     message["senderId"] = m_currentUserId;
+    message["senderName"] = m_currentUserName;
     message["timestamp"] = currentTimestamp;
     message["status"] = static_cast<int>(MessageStatus::Sending);
     message["isOffline"] = queuedBeforeDispatch;
@@ -332,6 +620,7 @@ void ChatService::sendTextMessageInternal(const QString &conversationId,
     wsMessage["conversationId"] = conversationId;
     wsMessage["content"] = trimmedContent;
     wsMessage["senderId"] = m_currentUserId;
+    wsMessage["senderName"] = m_currentUserName;
     wsMessage["timestamp"] = currentTimestamp;
     wsMessage["status"] = 1;
     wsMessage["clientMessageId"] = localMessageId;
@@ -679,7 +968,101 @@ void ChatService::recallMessage(const QString &conversationId, const QString &me
         updates["recalled"] = true;
         model->upsertMessage(updates);
         MessageCache::instance()->cacheMessage(conversationId, updates);
+        updateConversationPreviewFromMessages(conversationId);
     }
+}
+
+void ChatService::deleteLocalMessage(const QString &conversationId, const QString &messageId)
+{
+    if (conversationId.isEmpty() || messageId.isEmpty()) {
+        return;
+    }
+
+    MessageModel *model = getMessageModel(conversationId);
+    const QList<QVariantMap> messages = model ? model->messages() : QList<QVariantMap>();
+
+    QString internalMessageId = messageId;
+    QString serverMessageId;
+    for (const QVariantMap &message : messages) {
+        const QString currentMessageId = message.value("messageId").toString();
+        const QString currentServerMessageId = message.value("serverMessageId").toString();
+        if (currentMessageId == messageId || currentServerMessageId == messageId) {
+            internalMessageId = currentMessageId;
+            serverMessageId = currentServerMessageId;
+            break;
+        }
+    }
+
+    markMessageDeletedLocally(conversationId, internalMessageId);
+    markMessageDeletedLocally(conversationId, serverMessageId);
+    persistDeletedMessages(conversationId);
+
+    if (model) {
+        model->removeMessage(internalMessageId, serverMessageId);
+    }
+
+    MessageCache::instance()->removeMessage(conversationId, internalMessageId);
+    if (!serverMessageId.isEmpty() && serverMessageId != internalMessageId) {
+        MessageCache::instance()->removeMessage(conversationId, serverMessageId);
+    }
+
+    m_pendingOutgoingMessages.remove(internalMessageId);
+    m_pendingOutgoingMessages.remove(serverMessageId);
+    clearRetryableMessage(internalMessageId);
+    clearRetryableMessage(serverMessageId);
+
+    updateConversationPreviewFromMessages(conversationId);
+}
+
+void ChatService::deleteLocalConversation(const QString &conversationId)
+{
+    if (conversationId.isEmpty()) {
+        return;
+    }
+
+    MessageModel *model = getMessageModel(conversationId);
+    if (model) {
+        const QList<QVariantMap> messages = model->messages();
+        for (const QVariantMap &message : messages) {
+            const QString internalMessageId = message.value("messageId").toString();
+            const QString serverMessageId = message.value("serverMessageId").toString();
+            markMessageDeletedLocally(conversationId, internalMessageId);
+            markMessageDeletedLocally(conversationId, serverMessageId);
+            m_pendingOutgoingMessages.remove(internalMessageId);
+            m_pendingOutgoingMessages.remove(serverMessageId);
+            clearRetryableMessage(internalMessageId);
+            clearRetryableMessage(serverMessageId);
+        }
+        persistDeletedMessages(conversationId);
+        model->clearMessages();
+    }
+
+    MessageCache::instance()->clear(conversationId);
+    setConversationHiddenState(conversationId, true, false);
+
+    if (m_currentConversationId == conversationId) {
+        setCurrentConversationId(QString());
+    }
+}
+
+void ChatService::hideConversation(const QString &conversationId)
+{
+    if (conversationId.isEmpty()) {
+        return;
+    }
+
+    setConversationHiddenState(conversationId, true, false);
+
+    if (m_currentConversationId == conversationId) {
+        setCurrentConversationId(QString());
+    }
+}
+
+bool ChatService::toggleConversationPinned(const QString &conversationId)
+{
+    const bool pinned = !m_pinnedConversationOrder.contains(conversationId);
+    setConversationPinnedState(conversationId, pinned);
+    return pinned;
 }
 
 void ChatService::handleSearchUserResult(const QVector<UserDAO::UserSearchResult> &results)
@@ -759,6 +1142,9 @@ void ChatService::logout()
     m_currentUserEmail = "";
     m_currentUserContact = "";
     m_currentUserBio = "";
+    m_hiddenConversationIds.clear();
+    m_pinnedConversationOrder.clear();
+    m_deletedMessageIds.clear();
 
     // 清除 NetworkClient 中的 Token
     NetworkClient::instance()->setToken("");
@@ -775,11 +1161,7 @@ void ChatService::logout()
     emit currentUserContactChanged();
     emit currentUserBioChanged();
 
-    // 清理消息模型缓存
-    qDeleteAll(m_messageModels);
-    m_messageModels.clear();
-    m_pendingOutgoingMessages.clear();
-    m_retryableMessages.clear();
+    resetConversationSessionState();
 
     // 通知对话模型更新
     if (m_conversationModel) {
@@ -824,6 +1206,8 @@ void ChatService::setCurrentUserId(const QString &userId)
         if (m_conversationModel) {
             m_conversationModel->setCurrentUserId(userId);
         }
+
+        loadLocalConversationState();
         
         // 用户ID变更时重新加载数据
         initializeSampleData();
@@ -991,6 +1375,7 @@ void ChatService::onWebSocketMessageReceived(const QVariantMap &rawMessage)
         updates["recalled"] = true;
         getMessageModel(conversationId)->upsertMessage(updates);
         MessageCache::instance()->cacheMessage(conversationId, updates);
+        updateConversationPreviewFromMessages(conversationId);
     } else if (msgType == "system") {
         QString subtype = rawMessage.value("subtype").toString();
         if (subtype == "conversation_created") {
@@ -1130,6 +1515,7 @@ void ChatService::processIncomingMessage(const QVariantMap &message)
 
     QString conversationId = normalizedMessage.value("conversationId").toString();
     QString senderId = normalizedMessage.value("senderId").toString();
+    QString senderName = normalizedMessage.value("senderName").toString();
     QString content = normalizedMessage.value("content").toString();
     qint64 timestamp = normalizedMessage.value("timestamp").toLongLong();
 
@@ -1145,6 +1531,15 @@ void ChatService::processIncomingMessage(const QVariantMap &message)
         return;
     }
 
+    const QString messageId = normalizedMessage.value("messageId").toString();
+    const QString serverMessageId = normalizedMessage.value("serverMessageId").toString();
+    if (isMessageDeletedLocally(conversationId, messageId) || isMessageDeletedLocally(conversationId, serverMessageId)) {
+        qDebug() << "[ChatService] Skipping locally deleted message:" << messageId << serverMessageId;
+        return;
+    }
+
+    maybeRestoreConversationVisibility(conversationId);
+
     // 1. 添加到消息模型（来自其他用户的消息）
     getMessageModel(conversationId)->addMessage(normalizedMessage);
     MessageCache::instance()->cacheMessage(conversationId, normalizedMessage);
@@ -1156,6 +1551,11 @@ void ChatService::processIncomingMessage(const QVariantMap &message)
     const QString displayContent = MessagePreview::normalizeConversationPreview(content, messageType);
     // 使用 TimeFormatter 统一时间格式
     QString displayTime = TimeFormatter::formatChatTime(timestamp);
+
+    if (senderName.isEmpty() && senderId == m_currentUserId) {
+        senderName = m_currentUserName;
+        normalizedMessage["senderName"] = senderName;
+    }
 
     if (isCurrent) {
         syncConversationReadState(conversationId);
@@ -1375,6 +1775,7 @@ void ChatService::resendUploadedAttachmentMessage(const QString &conversationId,
     localMessage["type"] = messageType;
     localMessage["content"] = content;
     localMessage["senderId"] = m_currentUserId;
+    localMessage["senderName"] = m_currentUserName;
     localMessage["timestamp"] = timestamp;
     localMessage["status"] = static_cast<int>(MessageStatus::Sending);
     localMessage["isOffline"] = queuedBeforeDispatch;
@@ -1392,6 +1793,7 @@ void ChatService::resendUploadedAttachmentMessage(const QString &conversationId,
     wsMessage["conversationId"] = conversationId;
     wsMessage["content"] = content;
     wsMessage["senderId"] = m_currentUserId;
+    wsMessage["senderName"] = m_currentUserName;
     wsMessage["timestamp"] = timestamp;
     wsMessage["status"] = 1;
     wsMessage["fileId"] = retryInfo.value("fileId").toString();
@@ -1489,6 +1891,7 @@ void ChatService::handleLoginResult(bool success, const QString &userId, const Q
     qDebug() << "[ChatService] handleLoginResult called, success:" << success << "userId:" << userId;
 
     if (success) {
+        resetConversationSessionState();
         m_currentUserId = userId;
         m_currentUserName = m_lastUsername;
         m_currentUserAvatar.clear();
@@ -1516,6 +1919,8 @@ void ChatService::handleLoginResult(bool success, const QString &userId, const Q
         if (m_conversationModel) {
             m_conversationModel->setCurrentUserId(userId);
         }
+
+        loadLocalConversationState();
 
         emit currentUserIdChanged();
         emit currentUserNameChanged();

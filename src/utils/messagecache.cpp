@@ -217,17 +217,42 @@ void MessageCache::clear(const QString &conversationId)
 void MessageCache::removeMessage(const QString &conversationId, const QString &messageId)
 {
     QMutexLocker locker(&m_mutex);
-    
+
     auto cacheIt = m_messageCache.find(conversationId);
     if (cacheIt != m_messageCache.end()) {
         cacheIt->remove(messageId);
+
+        QString matchedKey;
+        for (auto it = cacheIt->cbegin(); it != cacheIt->cend(); ++it) {
+            const QVariantMap &message = it.value();
+            if (message.value("messageId").toString() == messageId
+                || message.value("serverMessageId").toString() == messageId) {
+                matchedKey = it.key();
+                break;
+            }
+        }
+
+        if (!matchedKey.isEmpty()) {
+            cacheIt->remove(matchedKey);
+        }
     }
-    
+
     auto orderIt = m_messageOrder.find(conversationId);
     if (orderIt != m_messageOrder.end()) {
         orderIt->removeAll(messageId);
+
+        if (cacheIt != m_messageCache.end()) {
+            for (auto it = cacheIt->cbegin(); it != cacheIt->cend(); ++it) {
+                const QVariantMap &message = it.value();
+                if (message.value("messageId").toString() == messageId
+                    || message.value("serverMessageId").toString() == messageId) {
+                    orderIt->removeAll(it.key());
+                    break;
+                }
+            }
+        }
     }
-    
+
     m_dirty = true;
 }
 

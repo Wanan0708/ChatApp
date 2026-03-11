@@ -35,6 +35,7 @@ struct Message {
     QString conversationId; ///< 所属对话 ID
     QString content;        ///< 消息内容
     QString senderId;       ///< 发送者 ID
+    QString senderName;     ///< 发送者昵称
     qint64 timestamp;       ///< 时间戳 (毫秒)
     MessageType type;       ///< 消息类型
     MessageStatus status;   ///< 发送状态
@@ -64,6 +65,7 @@ struct Message {
         map["conversationId"] = conversationId;
         map["content"] = content;
         map["senderId"] = senderId;
+        map["senderName"] = senderName;
         map["timestamp"] = timestamp;
         map["type"] = static_cast<int>(type);
         map["status"] = static_cast<int>(status);
@@ -85,6 +87,7 @@ struct Message {
         msg.conversationId = map.value("conversationId").toString();
         msg.content = map.value("content").toString();
         msg.senderId = map.value("senderId").toString();
+        msg.senderName = map.value("senderName").toString();
         msg.timestamp = map.value("timestamp").toLongLong();
         msg.type = static_cast<MessageType>(map.value("type", 0).toInt());
         msg.status = static_cast<MessageStatus>(map.value("status", 1).toInt());

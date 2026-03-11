@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QHash>
+#include <QSet>
 #include <QVariantMap>
 #include <QVector>
 #include "../models/conversation.h"
@@ -79,6 +80,10 @@ public:
     Q_INVOKABLE void retryMessage(const QString &conversationId, const QString &messageId);
     Q_INVOKABLE QString pickLocalFile(bool imageOnly = false) const;
     Q_INVOKABLE void recallMessage(const QString &conversationId, const QString &messageId);  // 撤回消息
+    Q_INVOKABLE void deleteLocalMessage(const QString &conversationId, const QString &messageId);
+    Q_INVOKABLE void deleteLocalConversation(const QString &conversationId);
+    Q_INVOKABLE void hideConversation(const QString &conversationId);
+    Q_INVOKABLE bool toggleConversationPinned(const QString &conversationId);
     Q_INVOKABLE void markConversationRead(const QString &conversationId);
     Q_INVOKABLE void setCurrentConversation(const QString &conversationId);
     Q_INVOKABLE void refreshConversations();
@@ -290,10 +295,24 @@ private:
     void rememberRetryableMessage(const QString &messageId, const QVariantMap &retryInfo);
     void clearRetryableMessage(const QString &messageId);
     void syncConversationReadState(const QString &conversationId, bool notifyServer = true);
+    void resetConversationSessionState();
+    void loadLocalConversationState();
+    void persistHiddenConversations() const;
+    void persistPinnedConversations() const;
+    void persistDeletedMessages(const QString &conversationId) const;
+    void markMessageDeletedLocally(const QString &conversationId, const QString &messageId);
+    bool isMessageDeletedLocally(const QString &conversationId, const QString &messageId) const;
+    void setConversationHiddenState(const QString &conversationId, bool hidden, bool removeFromModel = false);
+    void setConversationPinnedState(const QString &conversationId, bool pinned);
+    void maybeRestoreConversationVisibility(const QString &conversationId);
+    void updateConversationPreviewFromMessages(const QString &conversationId);
 
     friend class ConversationModel;
     friend class MessageModel;
 
     QHash<QString, QString> m_pendingOutgoingMessages;
     QHash<QString, QVariantMap> m_retryableMessages;
+    QSet<QString> m_hiddenConversationIds;
+    QHash<QString, qint64> m_pinnedConversationOrder;
+    QHash<QString, QSet<QString>> m_deletedMessageIds;
 };

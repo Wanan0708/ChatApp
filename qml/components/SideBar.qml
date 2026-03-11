@@ -55,14 +55,14 @@ Rectangle {
                 color: {
                     if (sidebar.currentPageIndex === buttonWrapper.buttonIndex) return sidebar.primaryLight
                     if (mouseArea.pressed) return Qt.darker(sidebar.hoverColor, 1.05)
-                    if (mouseArea.containsMouse) return sidebar.hoverColor
+//                    if (mouseArea.containsMouse) return sidebar.hoverColor
                     return "transparent"
                 }
 
                 // 添加平滑过渡动画
-                Behavior on color {
-                    ColorAnimation { duration: 150 }
-                }
+//                Behavior on color {
+//                    ColorAnimation { duration: 150 }
+//                }
 
                 // 添加缩放点击效果
                 scale: mouseArea.pressed ? 0.92 : (mouseArea.containsMouse ? 1.02 : 1.0)
@@ -116,7 +116,9 @@ Rectangle {
                 id: mouseArea
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: buttonWrapper.clicked()
+                onClicked: {
+                    buttonWrapper.clicked()
+                }
                 cursorShape: Qt.PointingHandCursor
             }
         }

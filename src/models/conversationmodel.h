@@ -20,7 +20,10 @@ public:
         TimeRole,
         UnreadCountRole,
         TypeRole,
-        IsCurrentRole
+        IsCurrentRole,
+        IsHiddenRole,
+        IsPinnedRole,
+        PinnedOrderRole
     };
     Q_ENUM(Roles)
 
@@ -39,6 +42,8 @@ public:
     Q_INVOKABLE QString findOrStartConversation(const QString &userId, const QString &userName);
     Q_INVOKABLE QVariantMap get(int index) const;
     Q_INVOKABLE QVariantMap getById(const QString &id) const;
+    Q_INVOKABLE void removeConversation(const QString &id);
+    Q_INVOKABLE void clear();
     void replaceConversationId(const QString &oldId, const QString &newId, const QVariantMap &updates = QVariantMap());
     void setCurrentConversation(const QString &id);
     void markRead(const QString &id);

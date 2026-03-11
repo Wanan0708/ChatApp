@@ -47,6 +47,7 @@ void MessageDAO::getConversationMessages(const QString &conversationId, int limi
             msg.timestamp = obj["timestamp"].toVariant().toLongLong();
             msg.type = parseMessageType(obj["type"]);
             msg.status = static_cast<MessageStatus>(obj["status"].toInt(static_cast<int>(MessageStatus::Sent)));
+            msg.senderName = obj["sender_name"].toString();
             msg.fileId = obj["file_id"].toString();
             msg.fileName = obj["file_name"].toString();
             msg.fileSize = obj["file_size"].toString();

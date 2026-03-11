@@ -49,6 +49,8 @@ void ChatService::sendImageMessageInternal(const QString &conversationId,
 {
     if (filePath.isEmpty()) return;
 
+    maybeRestoreConversationVisibility(conversationId);
+
     qDebug() << "[ChatService] Sending image message:" << filePath;
     const QString localPreviewUrl = toLocalPreviewUrl(filePath);
     const QString localMessageId = messageId.isEmpty()
@@ -64,6 +66,7 @@ void ChatService::sendImageMessageInternal(const QString &conversationId,
     tempMessage["conversationId"] = conversationId;
     tempMessage["content"] = "[图片]";
     tempMessage["senderId"] = m_currentUserId;
+    tempMessage["senderName"] = m_currentUserName;
     tempMessage["timestamp"] = currentTimestamp;
     tempMessage["status"] = 0;  // 发送中
     tempMessage["fileName"] = QFileInfo(filePath).fileName();
@@ -107,6 +110,7 @@ void ChatService::sendImageMessageInternal(const QString &conversationId,
         message["conversationId"] = conversationId;
         message["content"] = "[图片]";
         message["senderId"] = m_currentUserId;
+        message["senderName"] = m_currentUserName;
         message["timestamp"] = currentTimestamp;
         message["status"] = static_cast<int>(queuedBeforeDispatch ? MessageStatus::Sending : MessageStatus::Sent);
         message["fileId"] = fileId;
@@ -126,6 +130,7 @@ void ChatService::sendImageMessageInternal(const QString &conversationId,
         wsMessage["conversationId"] = conversationId;
         wsMessage["content"] = "[图片]";
         wsMessage["senderId"] = m_currentUserId;
+        wsMessage["senderName"] = m_currentUserName;
         wsMessage["timestamp"] = currentTimestamp;
         wsMessage["status"] = 1;
         wsMessage["fileId"] = fileId;
@@ -155,6 +160,7 @@ void ChatService::sendImageMessageInternal(const QString &conversationId,
         failedMessage["conversationId"] = conversationId;
         failedMessage["content"] = "[图片发送失败]";
         failedMessage["senderId"] = m_currentUserId;
+        failedMessage["senderName"] = m_currentUserName;
         failedMessage["timestamp"] = currentTimestamp;
         failedMessage["status"] = 3;  // 失败
         failedMessage["fileName"] = QFileInfo(fp).fileName();
@@ -194,6 +200,8 @@ void ChatService::sendFileMessageInternal(const QString &conversationId,
 {
     if (filePath.isEmpty()) return;
 
+    maybeRestoreConversationVisibility(conversationId);
+
     qDebug() << "[ChatService] Sending file message:" << filePath;
     const QString localMessageId = messageId.isEmpty()
         ? QString("local-file-%1-%2")
@@ -208,6 +216,7 @@ void ChatService::sendFileMessageInternal(const QString &conversationId,
     tempMessage["conversationId"] = conversationId;
     tempMessage["content"] = "[文件]";
     tempMessage["senderId"] = m_currentUserId;
+    tempMessage["senderName"] = m_currentUserName;
     tempMessage["timestamp"] = currentTimestamp;
     tempMessage["status"] = 0;  // 发送中
     tempMessage["fileName"] = QFileInfo(filePath).fileName();
@@ -260,6 +269,7 @@ void ChatService::sendFileMessageInternal(const QString &conversationId,
         message["conversationId"] = conversationId;
         message["content"] = "[文件]";
         message["senderId"] = m_currentUserId;
+        message["senderName"] = m_currentUserName;
         message["timestamp"] = currentTimestamp;
         message["status"] = static_cast<int>(queuedBeforeDispatch ? MessageStatus::Sending : MessageStatus::Sent);
         message["fileId"] = fileId;
@@ -279,6 +289,7 @@ void ChatService::sendFileMessageInternal(const QString &conversationId,
         wsMessage["conversationId"] = conversationId;
         wsMessage["content"] = "[文件]";
         wsMessage["senderId"] = m_currentUserId;
+        wsMessage["senderName"] = m_currentUserName;
         wsMessage["timestamp"] = currentTimestamp;
         wsMessage["status"] = 1;
         wsMessage["fileId"] = fileId;
@@ -308,6 +319,7 @@ void ChatService::sendFileMessageInternal(const QString &conversationId,
         failedMessage["conversationId"] = conversationId;
         failedMessage["content"] = "[文件发送失败]";
         failedMessage["senderId"] = m_currentUserId;
+        failedMessage["senderName"] = m_currentUserName;
         failedMessage["timestamp"] = currentTimestamp;
         failedMessage["status"] = 3;  // 失败
         failedMessage["fileName"] = QFileInfo(fp).fileName();

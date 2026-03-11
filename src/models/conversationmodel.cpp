@@ -30,6 +30,9 @@ QVariant ConversationModel::data(const QModelIndex &index, int role) const
     case UnreadCountRole: return conv.value("unreadCount", 0);
     case TypeRole: return conv.value("type");
     case IsCurrentRole: return conv.value("isCurrent", false);
+    case IsHiddenRole: return conv.value("isHidden", false);
+    case IsPinnedRole: return conv.value("isPinned", false);
+    case PinnedOrderRole: return conv.value("pinnedOrder", 0);
     default: return QVariant();
     }
 }
@@ -44,7 +47,10 @@ QHash<int, QByteArray> ConversationModel::roleNames() const
         {TimeRole, "time"},
         {UnreadCountRole, "unreadCount"},
         {TypeRole, "type"},
-        {IsCurrentRole, "isCurrent"}
+        {IsCurrentRole, "isCurrent"},
+        {IsHiddenRole, "isHidden"},
+        {IsPinnedRole, "isPinned"},
+        {PinnedOrderRole, "pinnedOrder"}
     };
 }
 
@@ -116,6 +122,9 @@ void ConversationModel::updateConversation(const QString &id, const QVariantMap 
         conv["time"] = "";
         conv["unreadCount"] = 0;
         conv["isCurrent"] = false;
+        conv["isHidden"] = false;
+        conv["isPinned"] = false;
+        conv["pinnedOrder"] = 0;
 
         insertConversation(conv);
         idx = m_conversations.count() - 1;
@@ -254,4 +263,35 @@ QVariantMap ConversationModel::getById(const QString &id) const
     }
 
     return QVariantMap();
+}
+
+void ConversationModel::removeConversation(const QString &id)
+{
+    const int idx = indexById(id);
+    if (idx == -1) {
+        return;
+    }
+
+    beginRemoveRows(QModelIndex(), idx, idx);
+    m_conversations.removeAt(idx);
+    endRemoveRows();
+
+    rebuildIdIndex();
+    emit countChanged();
+    emit modelDataChanged();
+}
+
+void ConversationModel::clear()
+{
+    if (m_conversations.isEmpty()) {
+        return;
+    }
+
+    beginResetModel();
+    m_conversations.clear();
+    m_idToIndex.clear();
+    endResetModel();
+
+    emit countChanged();
+    emit modelDataChanged();
 }

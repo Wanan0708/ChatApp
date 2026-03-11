@@ -10,6 +10,7 @@ ColumnLayout {
     property string currentConversationId: ""
     property string currentTitle: ""
     property string currentAvatar: ""
+    property string currentConversationType: "single"
     property var messageModel: null
     property bool pendingOlderMessagesLoad: false
     property real historyContentHeightBeforeLoad: 0
@@ -28,6 +29,9 @@ ColumnLayout {
 
     function syncConversationMeta() {
         if (currentConversationId === "") {
+            currentTitle = ""
+            currentAvatar = ""
+            currentConversationType = "single"
             return
         }
 
@@ -38,11 +42,14 @@ ColumnLayout {
         if (conversation && conversation.avatar !== undefined) {
             currentAvatar = conversation.avatar || ""
         }
+        if (conversation && conversation.type !== undefined) {
+            currentConversationType = conversation.type || "single"
+        }
     }
 
     // 当会话 ID 改变时，刷新消息模型
     onCurrentConversationIdChanged: {
-        messageModel = ChatService.getMessageModel(currentConversationId)
+        messageModel = currentConversationId !== "" ? ChatService.getMessageModel(currentConversationId) : null
         pendingOlderMessagesLoad = false
         historyContentHeightBeforeLoad = 0
         stickToBottom = true
@@ -58,7 +65,7 @@ ColumnLayout {
     }
 
     Component.onCompleted: {
-        messageModel = ChatService.getMessageModel(currentConversationId)
+        messageModel = currentConversationId !== "" ? ChatService.getMessageModel(currentConversationId) : null
         syncConversationMeta()
     }
 
@@ -338,7 +345,14 @@ ColumnLayout {
 
             delegate: Item {
                 width: ListView.view.width
-                height: Math.max(bubble.height + 16, 44)
+                readonly property bool isGroupConversation: root.currentConversationType !== "single" && root.currentConversationType !== "user" && root.currentConversationType !== ""
+                readonly property var previousMessage: (root.messageModel && index > 0) ? root.messageModel.get(index - 1) : null
+                readonly property bool previousIsSystem: previousMessage && Number(previousMessage.type || 0) === 3
+                readonly property bool currentIsSystem: Number(model.type || 0) === 3
+                readonly property bool sameSenderAsPrevious: previousMessage && previousMessage.senderId === model.senderId
+                readonly property bool isGroupedMessage: isGroupConversation && sameSenderAsPrevious && !previousIsSystem && !currentIsSystem
+                readonly property real bubbleTopMargin: isGroupedMessage ? 2 : 10
+                height: Math.max(bubble.y + bubble.height + 8, (leftAvatar.visible ? leftAvatar.y + leftAvatar.height + 8 : bubble.y + bubble.height + 8), 44)
 
                 readonly property bool isSelfMessage: model.senderId === ChatService.currentUserId
 
@@ -346,8 +360,8 @@ ColumnLayout {
                     id: leftAvatar
                     isSelf: false
                     x: 12
-                    y: 8
-                    visible: !isSelfMessage
+                    y: bubble.showSenderName ? (bubble.y + 18) : bubble.y
+                    visible: !isSelfMessage && !isGroupedMessage
                     avatarSource: root.currentAvatar || "qrc:/new/prefix1/image/boy.png"
                 }
 
@@ -363,10 +377,14 @@ ColumnLayout {
                 MessageBubble {
                     id: bubble
                     x: isSelfMessage ? (rightAvatar.x - width - 8) : (leftAvatar.x + leftAvatar.width + 8)
-                    y: 8
+                    y: bubbleTopMargin
                     width: parent.width - 80
                     content: model.content
                     isSelf: model.senderId === ChatService.currentUserId
+                    senderId: model.senderId || ""
+                    senderName: model.senderName || ""
+                    conversationType: root.currentConversationType
+                    compactGroup: isGroupedMessage
                     timestamp: model.timestamp
                     timeAlignment: isSelfMessage ? "right" : "left"
                     // 绑定消息类型和状态
@@ -403,6 +421,12 @@ ColumnLayout {
                     onMessageRecalled: {
                         if (messageId) {
                             ChatService.recallMessage(currentConversationId, messageId)
+                        }
+                    }
+                    onMessageDeleteRequested: {
+                        var targetMessageId = internalMessageId || messageId
+                        if (targetMessageId) {
+                            ChatService.deleteLocalMessage(currentConversationId, targetMessageId)
                         }
                     }
                     onRetryRequested: {

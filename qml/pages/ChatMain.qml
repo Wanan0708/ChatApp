@@ -20,6 +20,19 @@ Item {
         }
     }
 
+    function clearChatSelection(expectedConversationId) {
+        if (expectedConversationId !== undefined
+                && expectedConversationId !== null
+                && expectedConversationId !== ""
+                && chatPage.currentConversationId !== expectedConversationId) {
+            return
+        }
+
+        chatPage.currentConversationId = ""
+        chatPage.currentTitle = ""
+        chatPage.currentAvatar = ""
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 1
@@ -63,6 +76,11 @@ Item {
                         Layout.maximumWidth: parent.width * 0.30
                         Layout.fillHeight: true
                         onConversationSelected: {
+                            if (!conversationId || conversationId === "") {
+                                roootItem.clearChatSelection(ChatService.currentConversationId)
+                                return
+                            }
+
                             chatPage.currentConversationId = conversationId
                             chatPage.currentTitle = title
                             chatPage.currentAvatar = avatar
@@ -131,6 +149,15 @@ Item {
         // ChatService 暴露的信号为 connectedChanged(bool) 和 messageReceived(conversationId, message)
         function onConnectedChanged(connected) {
             console.log("WebSocket状态:", connected ? "✓ 已连接" : "✗ 已断开")
+        }
+    }
+
+    Connections {
+        target: ChatService
+        function onCurrentConversationIdChanged() {
+            if (ChatService.currentConversationId === "" && chatPage.currentConversationId !== "") {
+                roootItem.clearChatSelection(chatPage.currentConversationId)
+            }
         }
     }
 

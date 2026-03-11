@@ -16,6 +16,7 @@ public:
         ServerMessageIdRole,
         ContentRole,
         SenderIdRole,
+        SenderNameRole,
         TimestampRole,
         IsSelfRole,
         TypeRole,
@@ -43,6 +44,8 @@ public:
     void addMessage(const QVariantMap &message);
     void upsertMessage(const QVariantMap &message);
     void clearMessages();
+    void removeMessage(const QString &messageId, const QString &serverMessageId = QString());
+    Q_INVOKABLE QVariantMap get(int index) const;
     QList<QVariantMap> messages() const;
     void setConversationId(const QString &conversationId) { m_conversationId = conversationId; }
 

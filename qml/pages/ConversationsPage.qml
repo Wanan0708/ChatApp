@@ -276,6 +276,9 @@ ColumnLayout {
         for (var i = 0; i < count; i++) {
             var conv = ChatService.conversationModel.get(i)
             if (conv) {
+                if (conv.isHidden) {
+                    continue
+                }
                 var title = conv.title || ""
                 var lastMessage = conv.lastMessage || ""
                 var time = conv.time || ""
@@ -284,10 +287,30 @@ ColumnLayout {
                 if (searchText === "" ||
                     title.toLowerCase().indexOf(searchLower) >= 0 ||
                     lastMessage.toLowerCase().indexOf(searchLower) >= 0) {
+                    conv._sourceIndex = i
                     result.push(conv)
                 }
             }
         }
+
+        result.sort(function(a, b) {
+            var aPinned = !!a.isPinned
+            var bPinned = !!b.isPinned
+            if (aPinned !== bPinned) {
+                return aPinned ? -1 : 1
+            }
+
+            if (aPinned && bPinned) {
+                var aOrder = Number(a.pinnedOrder || 0)
+                var bOrder = Number(b.pinnedOrder || 0)
+                if (aOrder !== bOrder) {
+                    return bOrder - aOrder
+                }
+            }
+
+            return Number(a._sourceIndex || 0) - Number(b._sourceIndex || 0)
+        })
+
         filteredConversations = result
     }
 
@@ -319,6 +342,7 @@ ColumnLayout {
                 model: root.filteredConversations
 
                 delegate: Rectangle {
+                    id: conversationDelegate
                     width: parent.width
                     height: 70
 
@@ -331,6 +355,7 @@ ColumnLayout {
                     property int convUnreadCount: convData && convData.unreadCount !== undefined ? convData.unreadCount : 0
                     property string convType: convData && convData.type ? convData.type : "user"
                     property bool convIsCurrent: convData && convData.isCurrent ? convData.isCurrent : false
+                    property bool convIsPinned: convData && convData.isPinned ? true : false
 
                     property bool isCurrent: convId === ChatService.currentConversationId
 
@@ -362,14 +387,38 @@ ColumnLayout {
                                 spacing: 4
                                 width: parent.width
 
-                                Text {
-                                    text: convTitle
-                                    font.pixelSize: 16
-                                    font.bold: true
-                                    color: "#212121"
-                                    elide: Text.ElideRight
+                                Row {
+                                    spacing: 6
                                     width: parent.width
-                                    font.family: "Microsoft YaHei, SimSun, sans-serif"
+
+                                    Rectangle {
+                                        visible: convIsPinned
+                                        width: visible ? 34 : 0
+                                        height: visible ? 18 : 0
+                                        radius: 9
+                                        color: "#fde7bf"
+                                        border.color: "#d9a441"
+                                        border.width: 1
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "置顶"
+                                            font.pixelSize: 10
+                                            color: "#8c5a12"
+                                            font.bold: true
+                                            font.family: "Microsoft YaHei, SimSun, sans-serif"
+                                        }
+                                    }
+
+                                    Text {
+                                        text: convTitle
+                                        font.pixelSize: 16
+                                        font.bold: true
+                                        color: "#212121"
+                                        elide: Text.ElideRight
+                                        width: parent.width - (convIsPinned ? 40 : 0)
+                                        font.family: "Microsoft YaHei, SimSun, sans-serif"
+                                    }
                                 }
 
                                 Text {
@@ -423,10 +472,133 @@ ColumnLayout {
                         }
                     }
 
+                    Popup {
+                        id: conversationMenu
+                        parent: root
+                        modal: false
+                        focus: true
+                        padding: 8
+                        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                        width: 168
+
+                        background: Rectangle {
+                            radius: 14
+                            color: "#fffdf8"
+                            border.color: "#eadfcd"
+                            border.width: 1
+                        }
+
+                        contentItem: Column {
+                            spacing: 6
+
+                            Rectangle {
+                                width: conversationMenu.width - 16
+                                height: 38
+                                radius: 10
+                                color: pinMouse.containsMouse ? "#f6efe4" : "transparent"
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    text: convIsPinned ? "取消置顶" : "置顶会话"
+                                    font.pixelSize: 13
+                                    color: "#7a4f18"
+                                    font.family: "Microsoft YaHei, SimSun, sans-serif"
+                                }
+
+                                MouseArea {
+                                    id: pinMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        ChatService.toggleConversationPinned(convId)
+                                        conversationMenu.close()
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                width: conversationMenu.width - 16
+                                height: 38
+                                radius: 10
+                                color: hideMouse.containsMouse ? "#f7f1e8" : "transparent"
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    text: "不显示会话"
+                                    font.pixelSize: 13
+                                    color: "#7a5c2e"
+                                    font.family: "Microsoft YaHei, SimSun, sans-serif"
+                                }
+
+                                MouseArea {
+                                    id: hideMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        ChatService.hideConversation(convId)
+                                        if (conversationDelegate.isCurrent) {
+                                            root.conversationSelected("", "", "")
+                                            ChatService.setCurrentConversation("")
+                                        }
+                                        conversationMenu.close()
+                                        Qt.callLater(root.updateFilteredConversations)
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                width: conversationMenu.width - 16
+                                height: 38
+                                radius: 10
+                                color: deleteMouse.containsMouse ? "#fff1ef" : "transparent"
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    text: "删除会话"
+                                    font.pixelSize: 13
+                                    color: "#b43f33"
+                                    font.family: "Microsoft YaHei, SimSun, sans-serif"
+                                }
+
+                                MouseArea {
+                                    id: deleteMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        ChatService.deleteLocalConversation(convId)
+                                        if (conversationDelegate.isCurrent) {
+                                            root.conversationSelected("", "", "")
+                                            ChatService.setCurrentConversation("")
+                                        }
+                                        conversationMenu.close()
+                                        Qt.callLater(root.updateFilteredConversations)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     MouseArea {
                         id: mouseArea
                         anchors.fill: parent
-                        onClicked: {
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onClicked: function(mouse) {
+                            if (mouse.button === Qt.RightButton) {
+                                conversationMenu.x = Math.max(8, Math.min(root.width - conversationMenu.width - 8, mouse.x + 6))
+                                conversationMenu.y = Math.max(8, Math.min(root.height - conversationMenu.height - 8, y + mouse.y))
+                                conversationMenu.open()
+                                return
+                            }
+
                             root.conversationSelected(convId, convTitle, convAvatar)
                             Qt.callLater(function() {
                                 ChatService.setCurrentConversation(convId)
